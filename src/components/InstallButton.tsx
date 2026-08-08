@@ -1,16 +1,15 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
-import { Download, CheckCircle, Smartphone, Info } from "lucide-react";
-
-interface BeforeInstallPromptEvent extends Event {
-  prompt: () => Promise<void>;
-  userChoice?: Promise<{ outcome: "accepted" | "dismissed"; platform: string }>;
-}
+import React, { useState, useEffect } from "react";
+import { Download, CheckCircle, Smartphone } from "lucide-react";
+import { usePwaStore } from "@/store/usePwaStore";
 
 export default function InstallButton() {
-  const deferredPromptRef = useRef<BeforeInstallPromptEvent | null>(null);
-  const [isInstallable, setIsInstallable] = useState(false);
+  const deferredPrompt = usePwaStore((state) => state.deferredPrompt);
+  const setDeferredPrompt = usePwaStore((state) => state.setDeferredPrompt);
+  const isInstallable = usePwaStore((state) => state.isInstallable);
+  const setIsInstallable = usePwaStore((state) => state.setIsInstallable);
+
   const [isInstalled, setIsInstalled] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
   const [showIosTooltip, setShowIosTooltip] = useState(false);
@@ -24,40 +23,19 @@ export default function InstallButton() {
 
       if (isStandalone) {
         setIsInstalled(true);
+        setIsInstallable(false);
         return;
       }
 
       // Detect iOS
       const userAgent = window.navigator.userAgent.toLowerCase();
       const isIosDevice = /iphone|ipad|ipod/.test(userAgent);
-      if (isIosDevice) {
+      if (isIosDevice && !isStandalone) {
         setIsIOS(true);
         setIsInstallable(true);
       }
     }
-
-    // Listen for beforeinstallprompt event on Chrome/Android/Desktop
-    const handleBeforeInstallPrompt = (e: Event) => {
-      e.preventDefault();
-      deferredPromptRef.current = e as BeforeInstallPromptEvent;
-      setIsInstallable(true);
-    };
-
-    const handleAppInstalled = () => {
-      setIsInstalled(true);
-      setIsInstallable(false);
-      deferredPromptRef.current = null;
-      console.log("[PWA] App successfully installed.");
-    };
-
-    window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
-    window.addEventListener("appinstalled", handleAppInstalled);
-
-    return () => {
-      window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
-      window.removeEventListener("appinstalled", handleAppInstalled);
-    };
-  }, []);
+  }, [setIsInstallable]);
 
   const handleInstallClick = async () => {
     if (isIOS) {
@@ -65,7 +43,7 @@ export default function InstallButton() {
       return;
     }
 
-    const promptEvent = deferredPromptRef.current;
+    const promptEvent = deferredPrompt;
 
     if (!promptEvent || typeof promptEvent.prompt !== "function") {
       console.warn("[PWA] Install prompt is not ready or unavailable in this browser.");
@@ -89,9 +67,13 @@ export default function InstallButton() {
     } catch (error) {
       console.error("[PWA] Error launching install prompt:", error);
     } finally {
-      deferredPromptRef.current = null;
+      setDeferredPrompt(null);
     }
   };
+
+  if (!isInstallable && !isInstalled) {
+    return null;
+  }
 
   if (isInstalled) {
     return (

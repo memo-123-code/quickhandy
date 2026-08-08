@@ -14,7 +14,7 @@ import { useLanguageStore } from "@/store/useLanguageStore";
 import { dictionary } from "@/locales/dictionary";
 import AnimatedCounter from "@/components/ui/AnimatedCounter";
 import { useSession, signOut } from "next-auth/react";
-import MobilePwaBanner from "@/components/MobilePwaBanner";
+import InstallButton from "@/components/InstallButton";
 
 export default function LandingPage() {
   const [mounted, setMounted] = useState(false);
@@ -59,8 +59,7 @@ export default function LandingPage() {
 
       {/* Sticky Top Group */}
       <div className="sticky top-0 z-50 flex flex-col w-full">
-        <MobilePwaBanner />
-        <header className="max-w-7xl w-full mx-auto px-4 sm:px-6 py-3 sm:py-5 flex items-center justify-between bg-slate-950/80 backdrop-blur-md rounded-b-2xl border-b border-slate-800/50 shadow-sm">
+        <header className="max-w-7xl w-full mx-auto px-4 sm:px-6 py-3 sm:py-5 flex flex-wrap items-center justify-between gap-y-3 bg-slate-950/80 backdrop-blur-md rounded-b-2xl border-b border-slate-800/50 shadow-sm">
           <div className="flex items-center gap-2">
             <div className="p-2 sm:p-2.5 bg-gradient-to-tr from-brand-blue-600 to-brand-orange-500 rounded-lg sm:rounded-xl shadow-lg">
               <Wrench className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
@@ -70,7 +69,10 @@ export default function LandingPage() {
             </span>
           </div>
         
-        <div className="flex items-center gap-4">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-4 ms-auto">
+          <div className="block">
+            <InstallButton />
+          </div>
           <LanguageSwitcher />
           {status === "loading" ? (
             <div className="w-24 h-8 bg-slate-800 animate-pulse rounded-lg"></div>
