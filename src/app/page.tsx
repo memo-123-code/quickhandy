@@ -14,6 +14,7 @@ import { useLanguageStore } from "@/store/useLanguageStore";
 import { dictionary } from "@/locales/dictionary";
 import AnimatedCounter from "@/components/ui/AnimatedCounter";
 import { useSession, signOut } from "next-auth/react";
+import MobilePwaBanner from "@/components/MobilePwaBanner";
 
 export default function LandingPage() {
   const [mounted, setMounted] = useState(false);
@@ -56,16 +57,18 @@ export default function LandingPage() {
       <div className="absolute top-[-10%] right-[-10%] w-[60%] h-[60%] rounded-full bg-brand-blue-950/20 blur-[140px] pointer-events-none" />
       <div className="absolute bottom-[-10%] left-[-10%] w-[60%] h-[60%] rounded-full bg-brand-orange-950/10 blur-[140px] pointer-events-none" />
 
-      {/* Header */}
-      <header className="max-w-7xl w-full mx-auto px-6 py-5 flex items-center justify-between z-40 sticky top-0 bg-slate-950/80 backdrop-blur-md rounded-b-2xl border-b border-slate-800/50 shadow-sm">
-        <div className="flex items-center gap-2">
-          <div className="p-2.5 bg-gradient-to-tr from-brand-blue-600 to-brand-orange-500 rounded-xl shadow-lg">
-            <Wrench className="w-5 h-5 text-white" />
+      {/* Sticky Top Group */}
+      <div className="sticky top-0 z-50 flex flex-col w-full">
+        <MobilePwaBanner />
+        <header className="max-w-7xl w-full mx-auto px-4 sm:px-6 py-3 sm:py-5 flex items-center justify-between bg-slate-950/80 backdrop-blur-md rounded-b-2xl border-b border-slate-800/50 shadow-sm">
+          <div className="flex items-center gap-2">
+            <div className="p-2 sm:p-2.5 bg-gradient-to-tr from-brand-blue-600 to-brand-orange-500 rounded-lg sm:rounded-xl shadow-lg">
+              <Wrench className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+            </div>
+            <span className="text-lg sm:text-xl font-extrabold tracking-tight text-white">
+              Quick<span className="text-brand-orange-500">Handy</span>
+            </span>
           </div>
-          <span className="text-xl font-extrabold tracking-tight text-white">
-            Quick<span className="text-brand-orange-500">Handy</span>
-          </span>
-        </div>
         
         <div className="flex items-center gap-4">
           <LanguageSwitcher />
@@ -98,7 +101,7 @@ export default function LandingPage() {
               </Link>
               <Link 
                 href="/signup" 
-                className="px-4 py-2 bg-brand-blue-600 hover:bg-brand-blue-500 text-xs font-bold rounded-lg text-white shadow-md shadow-brand-blue-600/15 transition-all"
+                className="px-3 py-1.5 sm:px-4 sm:py-2 bg-brand-blue-600 hover:bg-brand-blue-500 text-xs font-bold rounded-lg text-white shadow-md shadow-brand-blue-600/15 transition-all"
               >
                 {t.nav.register}
               </Link>
@@ -106,9 +109,10 @@ export default function LandingPage() {
           )}
         </div>
       </header>
+      </div>
 
       {/* Hero Section */}
-      <main className="max-w-7xl w-full mx-auto px-6 py-12 md:py-16 z-10 flex-1 flex flex-col justify-center space-y-16">
+      <main className="max-w-7xl w-full mx-auto px-4 sm:px-6 py-8 md:py-16 z-10 flex-1 flex flex-col justify-center space-y-10 sm:space-y-16">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center">
           
           {/* Hero Left Content */}
@@ -118,22 +122,22 @@ export default function LandingPage() {
               <span>{t.hero.badge}</span>
             </div>
 
-            <h1 dir="auto" className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-white tracking-tight leading-[1.1]">
+            <h1 dir="auto" className="text-3xl sm:text-5xl md:text-6xl font-extrabold text-white tracking-tight leading-[1.2] sm:leading-[1.1]">
               {t.hero.title1} <br />
               <span className="bg-gradient-to-r from-brand-blue-400 via-brand-orange-400 to-brand-gold-500 bg-clip-text text-transparent">
                 {t.hero.title2}
               </span>
             </h1>
 
-            <p dir="auto" className="text-sm sm:text-md text-slate-400 leading-relaxed max-w-xl">
+            <p dir="auto" className="text-sm sm:text-base text-slate-400 leading-relaxed max-w-xl">
               {t.hero.subtitle}
             </p>
 
             {/* CTAs */}
-            <div className="flex flex-col sm:flex-row gap-4 pt-2">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-2 w-full">
               <Link 
                 href="/login"
-                className="px-6 py-3.5 bg-gradient-to-r from-brand-blue-600 to-brand-blue-500 hover:from-brand-blue-500 hover:to-brand-blue-400 rounded-xl font-bold text-sm text-white flex items-center justify-center gap-2 shadow-lg shadow-brand-blue-500/20 hover:scale-[1.02] transition-all"
+                className="w-full sm:w-auto px-5 py-3 sm:px-6 sm:py-3.5 bg-gradient-to-r from-brand-blue-600 to-brand-blue-500 hover:from-brand-blue-500 hover:to-brand-blue-400 rounded-xl font-bold text-sm text-white flex items-center justify-center gap-2 shadow-lg shadow-brand-blue-500/20 hover:scale-[1.02] transition-all"
               >
                 <span dir="auto">{t.hero.bookNow}</span>
                 <ArrowRight className="w-4 h-4 rtl:rotate-180" />
@@ -141,31 +145,31 @@ export default function LandingPage() {
               
               <Link 
                 href="/signup"
-                className="px-6 py-3.5 bg-slate-900 hover:bg-slate-850 border border-slate-800 rounded-xl font-bold text-sm text-slate-200 flex items-center justify-center gap-2 hover:scale-[1.02] transition-all"
+                className="w-full sm:w-auto px-5 py-3 sm:px-6 sm:py-3.5 bg-slate-900 hover:bg-slate-850 border border-slate-800 rounded-xl font-bold text-sm text-slate-200 flex items-center justify-center gap-2 hover:scale-[1.02] transition-all"
               >
                 <span>{t.hero.becomeProvider}</span>
               </Link>
             </div>
 
             {/* Trust Indicators */}
-            <div className="grid grid-cols-3 gap-6 pt-8 border-t border-slate-900 max-w-lg">
+            <div className="grid grid-cols-3 gap-2 sm:gap-6 pt-6 sm:pt-8 border-t border-slate-900 max-w-lg">
               <div className="space-y-1">
-                <div className="text-2xl font-extrabold text-white">
+                <div className="text-lg sm:text-2xl font-extrabold text-white">
                   <AnimatedCounter targetValue={t.stats.arrival.value as number} decimals={t.stats.arrival.decimals} suffix={t.stats.arrival.suffix} />
                 </div>
-                <div className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">{t.stats.arrival.label}</div>
+                <div className="text-[9px] sm:text-[10px] text-slate-500 uppercase tracking-wider font-semibold mt-0.5 sm:mt-1 leading-tight sm:leading-normal">{t.stats.arrival.label}</div>
               </div>
               <div className="space-y-1">
-                <div className="text-2xl font-extrabold text-white">
+                <div className="text-lg sm:text-2xl font-extrabold text-white">
                   <AnimatedCounter targetValue={t.stats.jobs.value as number} decimals={t.stats.jobs.decimals} suffix={t.stats.jobs.suffix} />
                 </div>
-                <div className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">{t.stats.jobs.label}</div>
+                <div className="text-[9px] sm:text-[10px] text-slate-500 uppercase tracking-wider font-semibold mt-0.5 sm:mt-1 leading-tight sm:leading-normal">{t.stats.jobs.label}</div>
               </div>
               <div className="space-y-1">
-                <div className="text-2xl font-extrabold text-white">
+                <div className="text-lg sm:text-2xl font-extrabold text-white">
                   <AnimatedCounter targetValue={t.stats.rating.value as number} decimals={t.stats.rating.decimals} suffix={t.stats.rating.suffix} />
                 </div>
-                <div className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">{t.stats.rating.label}</div>
+                <div className="text-[9px] sm:text-[10px] text-slate-500 uppercase tracking-wider font-semibold mt-0.5 sm:mt-1 leading-tight sm:leading-normal">{t.stats.rating.label}</div>
               </div>
             </div>
           </div>
@@ -175,7 +179,7 @@ export default function LandingPage() {
             <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block text-start">{t.tracking.title}</span>
             
             {/* Mock Dashboard Tracking Card */}
-            <div className="glass-panel rounded-2xl p-5 border border-slate-800 shadow-2xl relative overflow-hidden space-y-4">
+            <div className="glass-panel rounded-2xl p-4 sm:p-5 border border-slate-800 shadow-2xl relative overflow-hidden space-y-4">
               <div className="flex justify-between items-start">
                 <div className="flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-brand-orange-500 pulse-online" />
@@ -251,7 +255,7 @@ export default function LandingPage() {
         </div>
 
         {/* Dedicated Expanded Category Section */}
-        <div className="space-y-6 pt-10 border-t border-slate-900">
+        <div className="space-y-5 sm:space-y-6 pt-8 sm:pt-10 border-t border-slate-900">
           <div className="text-center md:text-start space-y-2">
             <span className="text-[10px] font-bold text-brand-orange-500 uppercase tracking-widest block">{t.categories.badge}</span>
             <h2 dir="auto" className="text-2xl sm:text-3xl font-extrabold text-white">{t.categories.title}</h2>
@@ -260,7 +264,7 @@ export default function LandingPage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
             {(categories || []).map((cat, idx) => {
               const Icon = cat.icon;
               const catName = tServices[cat.name as keyof typeof tServices] || cat.name;
@@ -270,14 +274,14 @@ export default function LandingPage() {
                 <Link
                   key={idx}
                   href={`/dashboard/client?service=${encodeURIComponent(cat.name.toLowerCase())}`}
-                  className="p-5 rounded-2xl bg-slate-900 border border-slate-800 hover:border-brand-blue-500/30 hover:scale-[1.02] hover:shadow-xl hover:shadow-brand-blue-500/5 transition-all flex flex-col justify-between min-h-[140px] group cursor-pointer text-start"
+                  className="p-4 sm:p-5 rounded-2xl bg-slate-900 border border-slate-800 hover:border-brand-blue-500/30 hover:scale-[1.02] hover:shadow-xl hover:shadow-brand-blue-500/5 transition-all flex flex-col justify-between min-h-[120px] sm:min-h-[140px] group cursor-pointer text-start"
                 >
                   <div className={`p-2.5 rounded-xl bg-slate-950 border border-slate-850 w-fit ${cat.color}`}>
                     <Icon className="w-5 h-5" />
                   </div>
                   <div className="space-y-1 mt-4">
-                    <h4 dir="auto" className="text-sm font-bold text-white group-hover:text-brand-blue-400 transition-colors">{catName}</h4>
-                    <p dir="auto" className="text-[10px] text-slate-500 leading-normal">{catDesc}</p>
+                    <h4 dir="auto" className="text-xs sm:text-sm font-bold text-white group-hover:text-brand-blue-400 transition-colors">{catName}</h4>
+                    <p dir="auto" className="text-[9px] sm:text-[10px] text-slate-500 leading-normal">{catDesc}</p>
                   </div>
                 </Link>
               );

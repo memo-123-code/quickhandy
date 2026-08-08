@@ -22,7 +22,7 @@ export default function InstallPrompt() {
     if (isIosDevice && !isStandalone) {
       setIsIOS(true);
       const dismissed = localStorage.getItem("pwa_ios_prompt_dismissed");
-      if (!dismissed) {
+      if (!dismissed && window.innerWidth > 768) {
         setShowPrompt(true);
       }
     }
@@ -33,7 +33,7 @@ export default function InstallPrompt() {
       deferredPromptRef.current = e as BeforeInstallPromptEvent;
 
       const dismissed = localStorage.getItem("pwa_prompt_dismissed");
-      if (!dismissed) {
+      if (!dismissed && window.innerWidth > 768) {
         setShowPrompt(true);
       }
     };
