@@ -1,0 +1,54 @@
+{
+  "name": "QuickHandy Admin Panel & Dispatch",
+  "short_name": "QuickHandy",
+  "description": "Enterprise administration, handyman dispatching, KYC approvals, and dispute ticket management dashboard.",
+  "start_url": "/dashboard/admin",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#020617",
+  "theme_color": "#0f172a",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-maskable-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icons/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "categories": ["business", "productivity", "utilities"],
+  "shortcuts": [
+    {
+      "name": "Admin Dashboard",
+      "short_name": "Dashboard",
+      "description": "View KPIs, financial analytics, and operations",
+      "url": "/dashboard/admin",
+      "icons": [{ "src": "/icons/icon-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "KYC Approvals",
+      "short_name": "KYC",
+      "description": "Approve or reject provider licenses",
+      "url": "/dashboard/admin?tab=KYC",
+      "icons": [{ "src": "/icons/icon-192x192.png", "sizes": "192x192" }]
+    }
+  ]
+}

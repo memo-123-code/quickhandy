@@ -1,0 +1,165 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ==========================================
+// User & Auth Models
+// ==========================================
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?
+  role          String    @default("CLIENT") // Enums removed for SQLite compatibility (CLIENT, PROVIDER, ADMIN)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  profile       Profile?
+  accounts      Account[]
+  sessions      Session[]
+  clientBookings   Booking[] @relation("ClientBookings")
+  providerBookings Booking[] @relation("ProviderBookings")
+  reviewsGiven     Review[]  @relation("ReviewAuthor")
+  reviewsReceived  Review[]  @relation("ReviewTarget")
+  wallet           Wallet?
+}
+
+model Profile {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  phone       String?
+  bio         String?
+  address     String?
+  city        String?
+  isVerified  Boolean  @default(false)
+  
+  // Provider Specific
+  skills      String   @default("[]") // Arrays not supported in SQLite, storing as JSON string
+  rating      Float    @default(0.0)
+  totalJobs   Int      @default(0)
+  hourlyRate  Float?
+}
+
+// NextAuth Required Models
+model Account {
+  id                 String  @id @default(cuid())
+  userId             String
+  type               String
+  provider           String
+  providerAccountId  String
+  refresh_token      String?
+  access_token       String?
+  expires_at         Int?
+  token_type         String?
+  scope              String?
+  id_token           String?
+  session_state      String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ==========================================
+// Business Logic Models
+// ==========================================
+
+model ServiceCategory {
+  id          String    @id @default(cuid())
+  name        String    @unique
+  description String?
+  icon        String?
+  isActive    Boolean   @default(true)
+  bookings    Booking[]
+}
+
+model Booking {
+  id              String          @id @default(cuid())
+  clientId        String
+  providerId      String?
+  categoryId      String
+  status          String          @default("PENDING") // PENDING, ACCEPTED, IN_PROGRESS, COMPLETED, CANCELLED, DISPUTED
+  description     String
+  address         String
+  scheduledAt     DateTime
+  estimatedCost   Float?
+  finalCost       Float?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  client          User            @relation("ClientBookings", fields: [clientId], references: [id])
+  provider        User?           @relation("ProviderBookings", fields: [providerId], references: [id])
+  category        ServiceCategory @relation(fields: [categoryId], references: [id])
+  review          Review?
+  transactions    Transaction[]
+}
+
+model Review {
+  id          String   @id @default(cuid())
+  bookingId   String   @unique
+  authorId    String
+  targetId    String
+  rating      Int      @default(5)
+  comment     String?
+  createdAt   DateTime @default(now())
+
+  booking     Booking  @relation(fields: [bookingId], references: [id])
+  author      User     @relation("ReviewAuthor", fields: [authorId], references: [id])
+  target      User     @relation("ReviewTarget", fields: [targetId], references: [id])
+}
+
+// ==========================================
+// Financial Ledger Models
+// ==========================================
+
+model Wallet {
+  id          String        @id @default(cuid())
+  userId      String        @unique
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  balance     Float         @default(0.0)
+  currency    String        @default("EGP")
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  transactions Transaction[]
+}
+
+model Transaction {
+  id          String          @id @default(cuid())
+  walletId    String
+  bookingId   String?
+  type        String          // TOP_UP, WITHDRAWAL, PAYMENT, COMMISSION, REFUND
+  amount      Float
+  status      String          @default("COMPLETED")
+  referenceId String?         @unique
+  createdAt   DateTime        @default(now())
+
+  wallet      Wallet          @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  booking     Booking?        @relation(fields: [bookingId], references: [id])
+}
