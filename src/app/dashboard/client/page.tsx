@@ -16,6 +16,7 @@ import { SkeletonCard } from "@/components/ui/SkeletonCard";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useLanguageStore } from "@/store/useLanguageStore";
 import { dictionary } from "@/locales/dictionary";
+import { api } from "@/lib/api";
 
 const InteractiveMap = dynamic(() => import("@/components/InteractiveMap"), {
   ssr: false,
@@ -31,6 +32,11 @@ export default function ClientDashboard() {
 
   const [step, setStep] = useState<BookingStep>("SELECT_SERVICE");
   const [selectedService, setSelectedService] = useState("");
+  
+  // Backend Integration State
+  const [bookingId, setBookingId] = useState<string | null>(null);
+  const [quotes, setQuotes] = useState<any[]>([]);
+  const [activeQuote, setActiveQuote] = useState<any>(null);
   
   // Booking Form State (Defaulting to Cairo/Zagazig coordinates)
   const [address, setAddress] = useState("Detecting your location...");
@@ -130,16 +136,19 @@ export default function ClientDashboard() {
     return `${rateInfo.min} - ${rateInfo.max} EGP / Visit`;
   };
   
-  // Provider Mock Info
-  const provider = {
-    name: "Eng. Mohamed Romy",
-    rating: 4.95,
-    reviews: 142,
-    vehicle: "White Suzuki Carry Van (أ ج 5932)",
-    phone: "+20 10 9482 7361",
-    photoUrl: "https://images.unsplash.com/photo-1628157582853-a796fa650a6a?w=100&h=100&fit=crop&crop=faces",
+  // Dynamic Provider Info from Active Quote
+  const getProviderPhoto = (photoUrl?: string) => photoUrl || "https://images.unsplash.com/photo-1628157582853-a796fa650a6a?w=100&h=100&fit=crop&crop=faces";
+  
+  const provider = activeQuote?.provider || {
+    name: "Provider",
+    rating: 4.9,
+    reviews: 0,
+    vehicle: "Standard Vehicle",
+    phone: "",
+    photoUrl: getProviderPhoto(),
     priceRange: getLocalizedPriceRange(selectedService)
   };
+  const proposedPrice = activeQuote?.price || 0;
 
   const services = [
     { id: "Plumbing", name: "Plumbing", icon: Droplet, color: "text-blue-500", bg: "bg-blue-500/10", border: "border-blue-500/20" },
@@ -315,26 +324,64 @@ export default function ClientDashboard() {
     setLastSelectedAddress(selectedAddress);
   };
 
-  // Simulating provider search and then tracking
-  const handleRequestNow = () => {
+  // Sending real API request
+  const handleRequestNow = async () => {
     if (!problemDescription || problemDescription.trim() === "") {
       toast.error("Please describe the issue before posting.");
       return;
     }
-    setStep("WAITING_FOR_BIDS");
+    
+    try {
+      setStep("WAITING_FOR_BIDS");
+      const res = await api.post("/bookings", {
+        serviceType: selectedService,
+        locationLat: lat,
+        locationLng: lng,
+        address,
+        problemDescription,
+        isEmergency,
+        scheduleDate: isEmergency ? undefined : scheduleDate,
+        scheduleTime: isEmergency ? undefined : scheduleTime,
+      });
+      
+      if (res.data?.bookingId) {
+        setBookingId(res.data.bookingId);
+      } else if (res.data?.id) {
+        setBookingId(res.data.id);
+      }
+    } catch (error) {
+      console.error("Booking error:", error);
+      toast.error("Failed to post request. Please try again.");
+      setStep("BOOKING_FORM");
+    }
   };
 
-  // Simulating receiving a quote after 5 seconds of waiting
+  // Polling for real quotes
   useEffect(() => {
-    if (step === "WAITING_FOR_BIDS") {
-      const timer = setTimeout(() => {
-        setStep("QUOTE_RECEIVED");
-      }, 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [step]);
+    let intervalId: NodeJS.Timeout;
 
-  // Simulating provider moving closer
+    if (step === "WAITING_FOR_BIDS" && bookingId) {
+      intervalId = setInterval(async () => {
+        try {
+          const res = await api.get(`/bookings/${bookingId}/quotes`);
+          if (res.data && res.data.length > 0) {
+            setQuotes(res.data);
+            setActiveQuote(res.data[0]);
+            setStep("QUOTE_RECEIVED");
+            clearInterval(intervalId);
+          }
+        } catch (error) {
+          console.error("Failed to fetch quotes", error);
+        }
+      }, 4000);
+    }
+
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [step, bookingId]);
+
+  // Simulating provider moving closer (Tracking UI)
   useEffect(() => {
     let interval: NodeJS.Timeout;
     if (step === "TRACKING") {
@@ -355,6 +402,34 @@ export default function ClientDashboard() {
     }
     return () => clearInterval(interval);
   }, [step]);
+
+  const handleAcceptQuote = async () => {
+    if (!activeQuote) return;
+    try {
+      await api.post(`/quotes/${activeQuote.id}/accept`);
+      setStep("TRACKING");
+      setRouteProgress(0);
+      setEta(6);
+      toast.success("Quote accepted! Provider dispatched.");
+    } catch (error) {
+      console.error("Failed to accept quote", error);
+      toast.error("Could not accept quote.");
+    }
+  };
+
+  const handleDeclineQuote = async () => {
+    if (!activeQuote) return;
+    try {
+      await api.post(`/quotes/${activeQuote.id}/decline`);
+      setQuotes((prev) => prev.filter((q) => q.id !== activeQuote.id));
+      setActiveQuote(null);
+      setStep("WAITING_FOR_BIDS");
+      toast.success("Quote declined. Waiting for others.");
+    } catch (error) {
+      console.error("Failed to decline quote", error);
+      toast.error("Could not decline quote.");
+    }
+  };
 
   const handleLogout = () => {
     router.push("/login");
@@ -750,10 +825,10 @@ export default function ClientDashboard() {
                 <div className="p-3.5 rounded-xl bg-gradient-to-r from-brand-orange-950/20 to-slate-900 border border-brand-orange-500/25 flex justify-between items-center">
                   <div>
                     <span className="text-[9px] text-slate-400 uppercase tracking-wider block">Proposed Quote</span>
-                    <span className="text-lg font-extrabold text-brand-orange-400">200 EGP</span>
+                    <span className="text-lg font-extrabold text-brand-orange-400">{proposedPrice} EGP</span>
                   </div>
                   <div className="text-end">
-                    <span className="text-xs font-bold text-brand-orange-300 block" dir="rtl">السعر المقترح: ٢٠٠ جنيه</span>
+                    <span className="text-xs font-bold text-brand-orange-300 block" dir="rtl">السعر المقترح: {proposedPrice} جنيه</span>
                     <span className="text-[8px] text-slate-500">Subject to agreement</span>
                   </div>
                 </div>
@@ -771,11 +846,7 @@ export default function ClientDashboard() {
               {/* Action Buttons */}
               <div className="space-y-2.5">
                 <button
-                  onClick={() => {
-                    setStep("TRACKING");
-                    setRouteProgress(0);
-                    setEta(6);
-                  }}
+                  onClick={handleAcceptQuote}
                   className="w-full py-3 rounded-xl font-bold text-sm text-white transition-all shadow-lg bg-gradient-to-r from-green-600 to-emerald-500 hover:from-green-500 hover:to-emerald-400 shadow-green-600/20 flex flex-col items-center justify-center"
                 >
                   <span>Accept Quote & Dispatch Provider</span>
@@ -783,7 +854,7 @@ export default function ClientDashboard() {
                 </button>
 
                 <button
-                  onClick={() => setStep("BOOKING_FORM")}
+                  onClick={handleDeclineQuote}
                   className="w-full py-3 rounded-xl font-bold text-sm text-white transition-all shadow-lg bg-slate-950 hover:bg-slate-900 border border-slate-800 flex flex-col items-center justify-center"
                 >
                   <span className="text-red-400">Decline & Wait for Others</span>
