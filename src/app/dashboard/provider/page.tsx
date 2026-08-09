@@ -10,8 +10,7 @@ import {
 } from "lucide-react";
 import dynamic from "next/dynamic";
 import { toast } from "sonner";
-import { apiMock } from "@/services/apiMock";
-import { mockEndpoints } from "@/services/mockEndpoints";
+import { api } from "@/lib/api";
 import { SkeletonCard } from "@/components/ui/SkeletonCard";
 
 const Map = dynamic(() => import("@/components/InteractiveMap"), {
@@ -30,9 +29,16 @@ export default function ProviderDashboard() {
   // Wallet & Stats State (InDrive Prepaid Wallet model)
   const [prepaidBalance, setPrepaidBalance] = useState(0.00); // Default prepaid wallet balance
   
+  const [activeJob, setActiveJob] = useState<any>(null);
+  const [jobId, setJobId] = useState<string | null>(null);
+
   useEffect(() => {
-    // Fetch initial dummy data from mockEndpoints
-    mockEndpoints.getWalletBalance("provider-1").then((balance) => setPrepaidBalance(balance));
+    // Fetch actual wallet balance
+    api.get("/wallet/balance").then((res) => {
+      if (res.data?.balance !== undefined) {
+        setPrepaidBalance(res.data.balance);
+      }
+    }).catch(console.error);
   }, []);
 
   const [completedJobsCount, setCompletedJobsCount] = useState(3);
@@ -60,18 +66,6 @@ export default function ProviderDashboard() {
     }
   ]);
 
-  // Active Job Details (Localized to Egypt / 10th of Ramadan City)
-  const activeJob = {
-    clientName: "Ahmed Mohamed",
-    clientRating: 4.92,
-    clientPhone: "+20 10 3981 7432",
-    category: "Electrical",
-    description: "Living room main light circuit has shorted. Outlets are dead. Need safety inspection and repair.",
-    address: "Neighborhood 23, 10th of Ramadan City",
-    distance: "1.2 km",
-    clientCoords: { lat: 30.3071, lng: 31.7428 },
-    providerCoords: { lat: 30.3015, lng: 31.7406 }
-  };
 
   // Enforcement: Block going online if prepaidBalance <= 0
   useEffect(() => {
@@ -81,29 +75,40 @@ export default function ProviderDashboard() {
     }
   }, [prepaidBalance]);
 
-  // Trigger simulated request after going online
+  // Polling for incoming jobs
   useEffect(() => {
-    let timeout: NodeJS.Timeout;
+    let interval: NodeJS.Timeout;
     if (isOnline && dashboardState === "IDLE") {
-      timeout = setTimeout(() => {
-        setDashboardState("INCOMING_REQUEST");
-      }, 2500); // 2.5 seconds delay before popup
+      interval = setInterval(async () => {
+        try {
+          const res = await api.get("/provider/jobs/incoming");
+          if (res.data && res.data.id) {
+            setActiveJob(res.data);
+            setJobId(res.data.id);
+            setDashboardState("INCOMING_REQUEST");
+          }
+        } catch (error) {
+          console.error("Polling error", error);
+        }
+      }, 5000);
     } else if (!isOnline) {
       setDashboardState("IDLE");
+      setActiveJob(null);
+      setJobId(null);
     }
-    return () => clearTimeout(timeout);
+    return () => clearInterval(interval);
   }, [isOnline, dashboardState]);
 
   const handleSendQuote = async () => {
+    if (!jobId) return;
     setIsProcessing(true);
     try {
-      await apiMock.updateProviderProfile({}); // simulate network
-      setDashboardState("WAITING_CLIENT_APPROVAL");
+      await api.post("/quotes", {
+        bookingId: jobId,
+        price: parseFloat(bidAmount) || 250
+      });
       
-      // Simulate auto-accepting after 6 seconds for demo purposes
-      setTimeout(() => {
-        setDashboardState("EN_ROUTE");
-      }, 6000);
+      setDashboardState("WAITING_CLIENT_APPROVAL");
     } catch (err) {
       toast.error("Failed to send quote.");
     } finally {
@@ -128,7 +133,6 @@ export default function ProviderDashboard() {
   const handleCompleteJob = async () => {
     setIsProcessing(true);
     try {
-      await apiMock.updateProviderProfile({}); // simulate network
       const parsedBid = parseFloat(bidAmount) || 250;
       const commission = parsedBid * 0.10; // 10% commission
       const finalBalance = prepaidBalance - commission;
@@ -158,7 +162,7 @@ export default function ProviderDashboard() {
     setIsProcessing(true);
     const parsedAmount = parseFloat(topUpAmount) || 100;
     try {
-      await apiMock.processTopUp(parsedAmount, "vodafone");
+      // In a real app we'd call the backend to process payment
       setPrepaidBalance((prev) => prev + parsedAmount);
       setTopUpSuccess(true);
       setTimeout(() => {
@@ -394,7 +398,7 @@ export default function ProviderDashboard() {
               <div className="p-4 rounded-xl bg-slate-950 border border-slate-850 space-y-4">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full bg-slate-850 border border-slate-700 flex items-center justify-center text-brand-blue-400 font-extrabold text-sm">
-                    {activeJob?.clientName ? activeJob.clientName.split(" ").map(n=>n[0]).join("") : ""}
+                    {activeJob?.clientName ? activeJob.clientName.split(" ").map((n: string)=>n[0]).join("") : ""}
                   </div>
                   <div className="flex-1">
                     <h4 dir="auto" className="text-sm font-bold text-white">{activeJob.clientName}</h4>

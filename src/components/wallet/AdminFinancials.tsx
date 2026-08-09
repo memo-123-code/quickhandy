@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { DollarSign, TrendingUp, TrendingDown, Activity, ArrowUpRight, ArrowDownRight } from "lucide-react";
 
 export default function AdminFinancials() {
@@ -11,13 +11,7 @@ export default function AdminFinancials() {
     activeDisputes: 1200.00
   };
 
-  const ledger = [
-    { id: "1", type: "COMMISSION", desc: "20% Cut - Order #1024", amount: 80.00, date: "Today, 14:30" },
-    { id: "2", type: "COMMISSION", desc: "20% Cut - Order #1023", amount: 50.00, date: "Today, 11:15" },
-    { id: "3", type: "PAYOUT", desc: "Provider Payout - Eng. Mohamed Romy", amount: -800.00, date: "Yesterday, 09:00" },
-    { id: "4", type: "COMMISSION", desc: "20% Cut - Order #1021", amount: 120.00, date: "Yesterday, 16:45" },
-    { id: "5", type: "REFUND", desc: "Client Refund - Order #1012", amount: -300.00, date: "June 25, 2026" },
-  ];
+  const [transactions] = useState<any[]>([]);
 
   return (
     <div className="space-y-6">
@@ -72,7 +66,7 @@ export default function AdminFinancials() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800/50">
-              {ledger.map((row) => (
+              {transactions.map((row: any) => (
                 <tr key={row.id} className="hover:bg-slate-800/30 transition-colors">
                   <td className="py-3 px-4 text-xs font-mono text-slate-500">TXN-{row.id}982A</td>
                   <td className="py-3 px-4 text-xs text-slate-400">{row.date}</td>

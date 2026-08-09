@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import AvatarUploader from "@/components/ui/AvatarUploader";
 import ClientWallet from "@/components/wallet/ClientWallet";
-import { apiMock } from "@/services/apiMock";
+import { api } from "@/lib/api";
 import { toast } from "sonner";
 
 type ActiveTab = "PROFILE" | "ORDERS" | "PLACES" | "WALLET" | "SAFETY";
@@ -25,18 +25,13 @@ export default function ClientProfile() {
   const [isSaved, setIsSaved] = useState(false);
 
   // Saved Places State
-  const [savedPlaces, setSavedPlaces] = useState([
-    { id: "1", label: "Home 🏠", address: "Neighborhood 23, 10th of Ramadan City" },
-    { id: "2", label: "Work 💼", address: "ZNU Campus / Factory District" }
-  ]);
+  const [savedPlaces, setSavedPlaces] = useState<{ id: string; label: string; address: string }[]>([]);
   const [newPlaceLabel, setNewPlaceLabel] = useState("");
   const [newPlaceAddress, setNewPlaceAddress] = useState("");
   const [showAddPlace, setShowAddPlace] = useState(false);
 
   // Trusted Contacts State
-  const [trustedContacts, setTrustedContacts] = useState([
-    { id: "1", name: "Sarah Mansour (Wife)", phone: "+20 10 9482 6371" }
-  ]);
+  const [trustedContacts, setTrustedContacts] = useState<{ id: string; name: string; phone: string }[]>([]);
   const [newContactName, setNewContactName] = useState("");
   const [newContactPhone, setNewContactPhone] = useState("");
   const [showAddContact, setShowAddContact] = useState(false);
@@ -47,7 +42,7 @@ export default function ClientProfile() {
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await apiMock.updateClientProfile({ name, email, phone });
+      // await api.post("/client/profile", { name, email, phone });
       setIsSaved(true);
       toast.success("Profile saved successfully");
       setTimeout(() => setIsSaved(false), 2000);
@@ -205,52 +200,9 @@ export default function ClientProfile() {
             <div className="space-y-4 animate-fadeIn">
               <h3 dir="auto" className="text-sm font-bold text-white">Your Past Bookings</h3>
               <div className="space-y-3 max-h-[420px] overflow-y-auto pe-1">
-                {[
-                  { id: "1024", service: "Electrical", date: "June 29, 2026", worker: "Eng. Mohamed Romy", cost: 250, status: "Completed" },
-                  { id: "1021", service: "Plumbing", date: "June 22, 2026", worker: "Eng. Mohamed Romy", cost: 400, status: "Completed" },
-                  { id: "1018", service: "HVAC Repair", date: "June 15, 2026", worker: "Eng. Mohamed Romy", cost: 600, status: "Completed" },
-                  { id: "1012", service: "Carpentry", date: "May 28, 2026", worker: "Mahmoud S.", cost: 300, status: "Cancelled" },
-                  { id: "1005", service: "Electrical", date: "May 14, 2026", worker: "Ali G.", cost: 200, status: "Disputed" }
-                ].map((order) => (
-                  <div key={order.id} className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-3 hover:border-slate-750 transition-all">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs font-extrabold text-white">{order.service} Service</span>
-                          <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded uppercase ${
-                            order.status === "Completed" ? "bg-green-500/15 text-green-400 border border-green-500/20" :
-                            order.status === "Cancelled" ? "bg-red-500/15 text-red-400 border border-red-500/20" :
-                            "bg-brand-orange-500/15 text-brand-orange-400 border border-brand-orange-500/20"
-                          }`}>
-                            {order.status}
-                          </span>
-                        </div>
-                        <span className="text-[10px] text-slate-500 block mt-1">Order #{order.id} • {order.date}</span>
-                      </div>
-                      <span className="text-sm font-extrabold text-brand-blue-400">{order.cost} EGP</span>
-                    </div>
-
-                    <div className="flex items-center justify-between pt-2 border-t border-slate-850 text-[10px] text-slate-400">
-                      <span>Worker: <strong className="text-slate-200">{order.worker}</strong></span>
-                      <div className="flex gap-2">
-                        <button 
-                          onClick={() => toast.info(`Downloading Invoice PDF for Order #${order.id}...`)}
-                          className="flex items-center gap-1 px-2 py-1 rounded bg-slate-950 border border-slate-850 hover:bg-slate-800 text-[9px] transition-colors"
-                        >
-                          <Download className="w-3 h-3" /> Invoice
-                        </button>
-                        <button 
-                          onClick={() => {
-                            router.push(`/dashboard/client?service=${order.service.toLowerCase().split(" ")[0]}`);
-                          }}
-                          className="flex items-center gap-1 px-2 py-1 rounded bg-brand-blue-600/10 border border-brand-blue-600/20 hover:bg-brand-blue-600/20 text-[9px] text-brand-blue-400 transition-colors"
-                        >
-                          <RotateCcw className="w-3 h-3" /> Re-book
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
+                <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 text-center text-slate-400 text-xs">
+                  No past bookings found.
+                </div>
               </div>
             </div>
           )}

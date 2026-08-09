@@ -10,7 +10,7 @@ import {
 import WorkerFileUploader from "@/components/ui/WorkerFileUploader";
 import AvatarUploader from "@/components/ui/AvatarUploader";
 import ProviderWallet from "@/components/wallet/ProviderWallet";
-import { apiMock } from "@/services/apiMock";
+import { api } from "@/lib/api";
 import { toast } from "sonner";
 
 type ActiveTab = "OVERVIEW" | "PROFESSIONAL" | "WALLET" | "PREFERENCES";
@@ -21,7 +21,7 @@ export default function ProviderProfile() {
   
   // Profile Data
   const provider = {
-    name: "Eng. Mohamed Romy",
+    name: "Provider User",
     rating: 4.95,
     reviews: 142,
     completedJobs: 142,
@@ -56,7 +56,7 @@ export default function ProviderProfile() {
     try {
       if (type === "EMERGENCY") setAllowEmergency(value);
       if (type === "SCHEDULED") setAllowScheduled(value);
-      await apiMock.updateProviderProfile({ type, value });
+      // await api.post("/provider/profile", { type, value });
       toast.success("Availability updated");
     } catch (err) {
       toast.error("Failed to update availability");

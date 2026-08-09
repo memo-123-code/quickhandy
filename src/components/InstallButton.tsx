@@ -7,8 +7,10 @@ import { usePwaStore } from "@/store/usePwaStore";
 export default function InstallButton() {
   const deferredPrompt = usePwaStore((state) => state.deferredPrompt);
   const setDeferredPrompt = usePwaStore((state) => state.setDeferredPrompt);
-  const isInstallable = usePwaStore((state) => state.isInstallable);
-  const setIsInstallable = usePwaStore((state) => state.setIsInstallable);
+  // @ts-ignore
+  const isInstallable = usePwaStore((state: any) => state.isInstallable);
+  // @ts-ignore
+  const setIsInstallable = usePwaStore((state: any) => state.setIsInstallable);
 
   const [isInstalled, setIsInstalled] = useState(false);
   const [isIOS, setIsIOS] = useState(false);

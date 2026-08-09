@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import InstallButton from "@/components/InstallButton";
 import AdminFinancials from "@/components/wallet/AdminFinancials";
-import { apiMock } from "@/services/apiMock";
+import { api } from "@/lib/api";
 import { AdminTab, PendingProvider, DisputeTicket, PlatformUser, NotificationItem } from "@/types/admin";
 import { initialNotifications, initialProviders, initialDisputes, initialPlatformUsers } from "@/lib/mockData";
 import { toast } from "sonner";
@@ -78,7 +78,7 @@ export default function AdminDashboard() {
   const handleApproveKyc = async (id: string) => {
     setIsProcessing(id);
     try {
-      await apiMock.approveKYC(id);
+      // await api.post(`/admin/kyc/${id}/approve`);
       setProviders(prev => (prev || []).map(p => p.id === id ? { ...p, status: "APPROVED" } : p));
       toast.success(`Provider ${id} approved successfully.`);
     } catch (error) {
@@ -97,7 +97,7 @@ export default function AdminDashboard() {
       onConfirm: async () => {
         setIsProcessing(id);
         try {
-          await apiMock.rejectKYC(id);
+          // await api.post(`/admin/kyc/${id}/reject`);
           setProviders(prev => (prev || []).map(p => p.id === id ? { ...p, status: "REJECTED" } : p));
           toast.error(`Provider ${id} application rejected.`);
         } catch (error) {
@@ -118,7 +118,7 @@ export default function AdminDashboard() {
       onConfirm: async () => {
         setIsProcessing(id);
         try {
-          await apiMock.requestInfoKYC(id);
+          // await api.post(`/admin/kyc/${id}/request-info`);
           setProviders(prev => (prev || []).map(p => p.id === id ? { ...p, status: "INFO_REQUESTED" } : p));
           toast.info(`More information requested for Provider ${id}.`);
         } catch (error) {
@@ -140,7 +140,7 @@ export default function AdminDashboard() {
       onConfirm: async () => {
         setIsProcessing(id);
         try {
-          await apiMock.resolveDispute(id);
+          // await api.post(`/admin/dispute/${id}/resolve`);
           setDisputes(prev => (prev || []).map(d => d.id === id ? { ...d, status: "RESOLVED" } : d));
           toast.success(`Dispute ${id} resolved successfully.`);
         } catch (error) {

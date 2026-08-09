@@ -2,8 +2,7 @@
 
 import React, { useState } from "react";
 import { Landmark, ArrowDownToLine, Clock, TrendingUp, CheckCircle2, X } from "lucide-react";
-import { apiMock } from "@/services/apiMock";
-import { mockEndpoints } from "@/services/mockEndpoints";
+import { api } from "@/lib/api";
 import { toast } from "sonner";
 
 export default function ProviderWallet() {
@@ -14,9 +13,9 @@ export default function ProviderWallet() {
   });
 
   React.useEffect(() => {
-    mockEndpoints.getWalletBalance("provider-1").then(b => 
-      setBalances(prev => ({ ...prev, available: b }))
-    );
+    api.get("/wallet/balance").then((res) => {
+      if (res.data?.balance !== undefined) setBalances(prev => ({ ...prev, available: res.data.balance }));
+    }).catch(console.error);
   }, []);
 
   const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
@@ -31,7 +30,8 @@ export default function ProviderWallet() {
 
     setIsProcessing(true);
     try {
-      await apiMock.processWithdrawal(parseFloat(withdrawAmount), withdrawMethod);
+      await api.post("/wallet/withdraw", { amount: parseFloat(withdrawAmount), method: withdrawMethod });
+      setBalances(prev => ({ ...prev, available: prev.available - parseFloat(withdrawAmount) }));
       setSuccessMsg(`Successfully initiated withdrawal of ${withdrawAmount} EGP via ${withdrawMethod === 'vodafone' ? 'Vodafone Cash' : 'InstaPay'}.`);
       setTimeout(() => {
         setIsWithdrawModalOpen(false);

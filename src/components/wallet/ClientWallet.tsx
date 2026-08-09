@@ -2,15 +2,16 @@
 
 import React, { useState } from "react";
 import { CreditCard, Plus, Clock, ArrowUpRight, CheckCircle2 } from "lucide-react";
-import { apiMock } from "@/services/apiMock";
-import { mockEndpoints } from "@/services/mockEndpoints";
+import { api } from "@/lib/api";
 import { toast } from "sonner";
 
 export default function ClientWallet() {
   const [balance, setBalance] = React.useState(0.00);
   
   React.useEffect(() => {
-    mockEndpoints.getWalletBalance("client-1").then(setBalance);
+    api.get("/wallet/balance").then((res) => {
+      if (res.data?.balance !== undefined) setBalance(res.data.balance);
+    }).catch(console.error);
   }, []);
 
   const [isTopUpModalOpen, setIsTopUpModalOpen] = useState(false);
@@ -23,8 +24,8 @@ export default function ClientWallet() {
     
     setIsProcessing(true);
     try {
-      const response = await apiMock.processTopUp(parseFloat(topUpAmount), "visa-1234");
-      setBalance(response.newBalance);
+      await api.post("/wallet/topup", { amount: parseFloat(topUpAmount) });
+      setBalance(prev => prev + parseFloat(topUpAmount));
       toast.success(`Successfully added ${topUpAmount} EGP to wallet!`);
       setIsTopUpModalOpen(false);
       setTopUpAmount("");
