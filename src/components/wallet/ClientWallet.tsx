@@ -36,11 +36,7 @@ export default function ClientWallet() {
     }
   };
 
-  const transactions = [
-    { id: "1", date: "June 25, 2026", amount: 400.00, type: "PAYMENT", desc: "Electrical Service - Mohamed Romy" },
-    { id: "2", date: "June 22, 2026", amount: 1000.00, type: "TOPUP", desc: "Added via Visa ending in 1234" },
-    { id: "3", date: "June 10, 2026", amount: 250.00, type: "PAYMENT", desc: "Plumbing Service - Ali G." },
-  ];
+  const transactions: any[] = [];
 
   return (
     <div className="space-y-6">
