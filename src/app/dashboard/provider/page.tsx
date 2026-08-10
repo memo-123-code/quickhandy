@@ -19,7 +19,7 @@ const Map = dynamic(() => import("@/components/InteractiveMap"), {
   loading: () => <SkeletonCard className="w-full h-full min-h-[300px]" />
 });
 
-type ProviderState = "IDLE" | "INCOMING_REQUEST" | "WAITING_CLIENT_APPROVAL" | "EN_ROUTE" | "JOB_IN_PROGRESS" | "JOB_COMPLETED";
+type ProviderState = "IDLE" | "INCOMING_REQUEST" | "WAITING_CLIENT_APPROVAL" | "EN_ROUTE" | "ARRIVED" | "JOB_IN_PROGRESS" | "JOB_COMPLETED";
 
 export default function ProviderDashboard() {
   const router = useRouter();
@@ -167,7 +167,6 @@ export default function ProviderDashboard() {
 
   const handleDeclineJob = () => {
     setDashboardState("IDLE");
-    // Wait another 8 seconds to trigger another request
     if (isOnline) {
       setTimeout(() => {
         if (isOnline) setDashboardState("INCOMING_REQUEST");
@@ -175,9 +174,41 @@ export default function ProviderDashboard() {
     }
   };
 
-  const handleCompleteJob = async () => {
+  const handleArrivedAtLocation = async () => {
+    if (!jobId) return;
     setIsProcessing(true);
     try {
+      await api.patch(`/bookings/${jobId}`, { status: "ARRIVED" });
+      setDashboardState("ARRIVED");
+      toast.success("Arrival confirmed! Client notified.");
+    } catch (err) {
+      console.error("Failed to update status", err);
+      toast.error("Failed to update status.");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleStartJob = async () => {
+    if (!jobId) return;
+    setIsProcessing(true);
+    try {
+      await api.patch(`/bookings/${jobId}`, { status: "IN_PROGRESS" });
+      setDashboardState("JOB_IN_PROGRESS");
+      toast.success("Job started!");
+    } catch (err) {
+      console.error("Failed to start job", err);
+      toast.error("Failed to update status.");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleCompleteJob = async () => {
+    if (!jobId) return;
+    setIsProcessing(true);
+    try {
+      await api.patch(`/bookings/${jobId}`, { status: "COMPLETED" });
       const parsedBid = parseFloat(bidAmount) || 250;
       const commission = parsedBid * 0.10; // 10% commission
       const finalBalance = prepaidBalance - commission;
@@ -185,15 +216,17 @@ export default function ProviderDashboard() {
       setPrepaidBalance(finalBalance);
       setCompletedJobsCount((prev) => prev + 1);
       
-      // Show Toast Notification for Commission Deduction
       setCommissionNotification(
         `تم تحصيل 10% عمولة المنصة (${commission} جنيه). رصيد محفظتك الحالي: ${finalBalance} جنيه.`
       );
       
       setDashboardState("JOB_COMPLETED");
+      toast.success("Job completed successfully!");
       
       setTimeout(() => {
         setDashboardState("IDLE");
+        setActiveJob(null);
+        setJobId(null);
       }, 3500);
     } catch (err) {
       toast.error("Failed to complete job.");
@@ -424,13 +457,13 @@ export default function ProviderDashboard() {
             </div>
           )}
 
-          {/* STATE 2: ACTIVE TASK - EN ROUTE & IN PROGRESS */}
-          {(dashboardState === "EN_ROUTE" || dashboardState === "JOB_IN_PROGRESS") && (
+          {/* STATE 2: ACTIVE TASK - EN ROUTE, ARRIVED & IN PROGRESS */}
+          {(dashboardState === "EN_ROUTE" || dashboardState === "ARRIVED" || dashboardState === "JOB_IN_PROGRESS") && (
             <div className="space-y-5 animate-fadeIn">
               <div className="flex items-center justify-between">
                 <span className="px-2 py-0.5 rounded bg-brand-orange-500/20 text-brand-orange-400 text-[10px] font-bold uppercase flex items-center gap-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-brand-orange-500 pulse-online" />
-                  {dashboardState === "EN_ROUTE" ? "Navigating to Client" : "Job In Progress"}
+                  {dashboardState === "EN_ROUTE" ? "Navigating to Client" : dashboardState === "ARRIVED" ? "Arrived at Location" : "Job In Progress"}
                 </span>
                 <span className="text-xs text-slate-400 font-bold">Agreed Quote: {bidAmount} EGP</span>
               </div>
@@ -510,17 +543,27 @@ export default function ProviderDashboard() {
               <div className="space-y-2">
                 {dashboardState === "EN_ROUTE" ? (
                   <button
-                    onClick={() => setDashboardState("JOB_IN_PROGRESS")}
+                    onClick={handleArrivedAtLocation}
+                    disabled={isProcessing}
                     className="w-full py-3.5 rounded-xl bg-brand-orange-500 hover:bg-brand-orange-400 text-sm font-bold text-white flex items-center justify-center gap-2 transition-all shadow-lg shadow-brand-orange-500/10"
                   >
+                    <MapPin className="w-4 h-4" />
+                    <span>I Have Arrived at Location (لقد وصلت للموقع)</span>
+                  </button>
+                ) : dashboardState === "ARRIVED" ? (
+                  <button
+                    onClick={handleStartJob}
+                    disabled={isProcessing}
+                    className="w-full py-3.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-sm font-bold text-white flex items-center justify-center gap-2 transition-all shadow-lg shadow-blue-600/10"
+                  >
                     <Play className="w-4 h-4 fill-white" />
-                    <span>I Have Arrived / Start Job</span>
+                    <span>Start Work (بدء العمل)</span>
                   </button>
                 ) : (
                   <button
                     onClick={handleCompleteJob}
                     disabled={isProcessing}
-                    className="w-full py-3.5 rounded-xl bg-green-600 hover:bg-green-500 text-sm font-bold text-white flex items-center justify-center gap-2 transition-all shadow-lg shadow-green-500/10"
+                    className="w-full py-3.5 rounded-xl bg-green-600 hover:bg-green-500 text-sm font-bold text-white flex items-center justify-center gap-2 transition-all shadow-lg shadow-green-600/10"
                   >
                     {isProcessing ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <CheckSquare className="w-4 h-4" />}
                     <span>{isProcessing ? "Processing..." : "Complete Job / Deduct Commission"}</span>

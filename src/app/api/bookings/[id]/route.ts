@@ -58,3 +58,49 @@ export async function GET(
     return NextResponse.json({ error: 'Failed to fetch booking status' }, { status: 500 });
   }
 }
+
+export async function PATCH(
+  req: Request,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const { id } = params;
+    const body = await req.json();
+    const { status } = body;
+
+    if (!status) {
+      return NextResponse.json({ error: 'Status is required' }, { status: 400 });
+    }
+
+    const updatedBooking = await prisma.booking.update({
+      where: { id },
+      data: { status },
+      include: {
+        client: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            image: true,
+            profile: { select: { phone: true, city: true } }
+          }
+        },
+        provider: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            image: true,
+            profile: { select: { phone: true, rating: true } }
+          }
+        },
+        category: true,
+      }
+    });
+
+    return NextResponse.json(updatedBooking);
+  } catch (error) {
+    console.error('Failed to update booking status:', error);
+    return NextResponse.json({ error: 'Failed to update booking status' }, { status: 500 });
+  }
+}

@@ -53,7 +53,8 @@ export default function ClientDashboard() {
   
   // Tracking State
   const [eta, setEta] = useState(6); // minutes
-  const [routeProgress, setRouteProgress] = useState(0);
+  const [routeProgress, setRouteProgress] = useState(0.3);
+  const [liveBookingStatus, setLiveBookingStatus] = useState<string>("EN_ROUTE");
 
   // Chat State
   const [isChatOpen, setIsChatOpen] = useState(false);
@@ -386,27 +387,43 @@ export default function ClientDashboard() {
     };
   }, [step, bookingId]);
 
-  // Simulating provider moving closer (Tracking UI)
+  // Real-time synchronization with backend booking status during TRACKING
   useEffect(() => {
-    let interval: NodeJS.Timeout;
-    if (step === "TRACKING") {
-      interval = setInterval(() => {
-        setRouteProgress((prev) => {
-          if (prev >= 1) {
-            clearInterval(interval);
-            setStep("COMPLETED");
-            return 1;
+    let intervalId: NodeJS.Timeout;
+
+    if (step === "TRACKING" && bookingId) {
+      intervalId = setInterval(async () => {
+        try {
+          const res = await api.get(`/bookings/${bookingId}`);
+          if (res.data && res.data.status) {
+            const status = res.data.status;
+            setLiveBookingStatus(status);
+
+            if (status === "EN_ROUTE") {
+              setRouteProgress(0.35);
+              setEta(4);
+            } else if (status === "ARRIVED") {
+              setRouteProgress(0.66);
+              setEta(0);
+            } else if (status === "IN_PROGRESS") {
+              setRouteProgress(0.9);
+            } else if (status === "COMPLETED") {
+              setRouteProgress(1);
+              setStep("COMPLETED");
+              toast.success("Job completed by provider!");
+              clearInterval(intervalId);
+            }
           }
-          const nextProgress = prev + 0.05;
-          // Slowly decrease ETA
-          const newEta = Math.max(1, Math.round(6 * (1 - nextProgress)));
-          setEta(newEta);
-          return nextProgress;
-        });
-      }, 2000); // updates every 2 seconds
+        } catch (error) {
+          console.error("Tracking status poll error:", error);
+        }
+      }, 3000);
     }
-    return () => clearInterval(interval);
-  }, [step]);
+
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [step, bookingId]);
 
   const handleAcceptQuote = async () => {
     if (!activeQuote) return;
@@ -909,12 +926,26 @@ export default function ClientDashboard() {
           {step === "TRACKING" && (
             <div className="space-y-5 animate-fadeIn">
               <div className="flex items-center justify-between">
-                <span className="px-2 py-0.5 rounded bg-green-500/20 text-green-400 text-[10px] font-bold uppercase flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-green-500 pulse-online" />
-                  Provider En Route
+                <span className={`px-2.5 py-1 rounded text-[10px] font-bold uppercase flex items-center gap-1.5 ${
+                  liveBookingStatus === "ARRIVED" 
+                    ? "bg-amber-500/20 text-amber-400 border border-amber-500/30" 
+                    : liveBookingStatus === "IN_PROGRESS"
+                    ? "bg-blue-500/20 text-blue-400 border border-blue-500/30"
+                    : "bg-green-500/20 text-green-400 border border-green-500/30"
+                }`}>
+                  <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />
+                  {liveBookingStatus === "ARRIVED"
+                    ? "Provider Has Arrived 📍"
+                    : liveBookingStatus === "IN_PROGRESS"
+                    ? "Work In Progress 🛠️"
+                    : "Provider En Route 🚚"}
                 </span>
-                <div className="text-xs text-slate-400">
-                  ETA: <span className="font-bold text-brand-orange-500">{eta} mins</span>
+                <div className="text-xs text-slate-400 font-medium">
+                  {liveBookingStatus === "ARRIVED" 
+                    ? <span className="font-bold text-amber-400">At Location</span>
+                    : liveBookingStatus === "IN_PROGRESS"
+                    ? <span className="font-bold text-blue-400">Working</span>
+                    : <>ETA: <span className="font-bold text-brand-orange-500">{eta} mins</span></>}
                 </div>
               </div>
 
@@ -966,13 +997,13 @@ export default function ClientDashboard() {
               {/* Booking Progress Bar */}
               <div className="space-y-1">
                 <div className="flex justify-between text-[10px] text-slate-400 uppercase font-semibold">
-                  <span>Assigned</span>
-                  <span className={routeProgress >= 0.5 ? "text-brand-orange-400 font-bold" : ""}>Arriving</span>
-                  <span className={routeProgress >= 1 ? "text-green-400 font-bold" : ""}>Work</span>
+                  <span className="text-brand-orange-400 font-bold">Assigned</span>
+                  <span className={liveBookingStatus === "ARRIVED" || liveBookingStatus === "IN_PROGRESS" ? "text-amber-400 font-bold" : ""}>Arrived</span>
+                  <span className={liveBookingStatus === "IN_PROGRESS" ? "text-blue-400 font-bold" : ""}>Work</span>
                 </div>
                 <div className="h-1.5 bg-slate-950 rounded-full overflow-hidden border border-slate-850">
                   <div 
-                    className="h-full bg-gradient-to-r from-brand-orange-600 to-brand-orange-400 transition-all duration-1000 ease-out"
+                    className="h-full bg-gradient-to-r from-brand-orange-600 via-amber-500 to-green-500 transition-all duration-700 ease-out"
                     style={{ width: `${routeProgress * 100}%` }}
                   />
                 </div>
