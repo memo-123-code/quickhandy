@@ -34,6 +34,40 @@ export default function ProviderDashboard() {
   const [activeJob, setActiveJob] = useState<any>(null);
   const [jobId, setJobId] = useState<string | null>(null);
 
+  // Real GPS Provider Location State
+  const [providerCoords, setProviderCoords] = useState<{ lat: number; lng: number } | undefined>(undefined);
+
+  // Trigger and continuously watch real-time GPS location
+  useEffect(() => {
+    if (typeof window !== "undefined" && navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          setProviderCoords({
+            lat: pos.coords.latitude,
+            lng: pos.coords.longitude,
+          });
+        },
+        (err) => {
+          console.warn("Could not fetch provider GPS:", err);
+        },
+        { enableHighAccuracy: true, timeout: 10000 }
+      );
+
+      const watchId = navigator.geolocation.watchPosition(
+        (pos) => {
+          setProviderCoords({
+            lat: pos.coords.latitude,
+            lng: pos.coords.longitude,
+          });
+        },
+        (err) => console.warn("GPS watch position error:", err),
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 5000 }
+      );
+
+      return () => navigator.geolocation.clearWatch(watchId);
+    }
+  }, []);
+
   useEffect(() => {
     // Fetch actual wallet balance
     api.get("/wallet/balance").then((res) => {
@@ -548,8 +582,8 @@ export default function ProviderDashboard() {
       {/* MAP AREA: 100% width on mobile, fills remaining screen on desktop */}
       <div className="flex-1 h-[calc(100vh-280px)] md:h-screen relative z-10">
         <Map
-          providerLocation={activeJob?.providerCoords ?? undefined}
-          clientLocation={activeJob?.clientCoords ?? { lat: 30.3015, lng: 31.7406 }}
+          providerLocation={providerCoords || activeJob?.providerCoords}
+          clientLocation={activeJob?.clientCoords}
           showRoute={dashboardState === "EN_ROUTE" || dashboardState === "JOB_IN_PROGRESS"}
           routeProgress={dashboardState === "JOB_IN_PROGRESS" ? 1 : 0.3}
         />

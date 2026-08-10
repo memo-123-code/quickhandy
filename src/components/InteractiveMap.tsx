@@ -45,16 +45,20 @@ export default function InteractiveMap({
     mapRef.current = null;
   }, []);
 
-  // Smooth pan when clientLocation changes
+  // Smooth pan when clientLocation or providerLocation changes
   useEffect(() => {
-    if (mapRef.current && clientLocation) {
-      mapRef.current.panTo(clientLocation);
+    if (mapRef.current) {
+      if (providerLocation && (!clientLocation || (clientLocation.lat === 30.3015 && clientLocation.lng === 31.7406))) {
+        mapRef.current.panTo(providerLocation);
+      } else if (clientLocation) {
+        mapRef.current.panTo(clientLocation);
+      }
     }
-  }, [clientLocation]);
+  }, [clientLocation, providerLocation]);
 
   // Interpolate provider location based on progress along the route
-  let activeProviderLoc: { lat: number; lng: number } | null = null;
-  if (showRoute && providerLocation) {
+  let activeProviderLoc: { lat: number; lng: number } | null = providerLocation || null;
+  if (showRoute && providerLocation && clientLocation) {
     const interpolatedLat =
       providerLocation.lat +
       (clientLocation.lat - providerLocation.lat) * routeProgress;
@@ -149,11 +153,11 @@ export default function InteractiveMap({
           title="Service Location"
         />
 
-        {/* Provider Marker (arriving) */}
+        {/* Provider Marker */}
         {activeProviderLoc && (
           <Marker
             position={activeProviderLoc}
-            title="Handyman Arriving"
+            title="Provider GPS Location"
           />
         )}
       </GoogleMap>
