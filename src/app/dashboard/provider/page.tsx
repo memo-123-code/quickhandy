@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { useSession, signOut } from "next-auth/react";
 import { 
   Wrench, Shield, Check, X, Bell, Award, 
   TrendingUp, MapPin, Play, CheckSquare, 
@@ -22,6 +23,7 @@ type ProviderState = "IDLE" | "INCOMING_REQUEST" | "WAITING_CLIENT_APPROVAL" | "
 
 export default function ProviderDashboard() {
   const router = useRouter();
+  const { data: session, status } = useSession();
   const [isOnline, setIsOnline] = useState(false);
   const [dashboardState, setDashboardState] = useState<ProviderState>("IDLE");
   const [isProcessing, setIsProcessing] = useState(false);
@@ -58,13 +60,7 @@ export default function ProviderDashboard() {
   // Chat State
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [newMessage, setNewMessage] = useState("");
-  const [chatMessages, setChatMessages] = useState([
-    {
-      sender: "client",
-      text: "مرحباً يا هندسة، هل السعر شامل قطع الغيار؟",
-      time: "01:32 AM"
-    }
-  ]);
+  const [chatMessages, setChatMessages] = useState<{ sender: string; text: string; time: string }[]>([]);
 
 
   // Enforcement: Block going online if prepaidBalance <= 0
@@ -541,12 +537,13 @@ export default function ProviderDashboard() {
       {/* MAP AREA: 100% width on mobile, fills remaining screen on desktop */}
       <div className="flex-1 h-[calc(100vh-280px)] md:h-screen relative z-10">
         <Map
-          providerLocation={activeJob.providerCoords}
-          clientLocation={activeJob.clientCoords}
+          providerLocation={activeJob?.providerCoords ?? undefined}
+          clientLocation={activeJob?.clientCoords ?? { lat: 30.3015, lng: 31.7406 }}
           showRoute={dashboardState === "EN_ROUTE" || dashboardState === "JOB_IN_PROGRESS"}
           routeProgress={dashboardState === "JOB_IN_PROGRESS" ? 1 : 0.3}
         />
       </div>
+
 
       {/* STATE 4: INCOMING REQUEST ALERT MODAL */}
       {dashboardState === "INCOMING_REQUEST" && (
