@@ -3,12 +3,13 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useSession, signOut } from "next-auth/react";
 import { 
   Droplet, Flashlight, Hammer, Wind, Image as ImageIcon, 
   MapPin, Clock, Calendar, ShieldCheck, Star, Phone, 
   MessageSquare, AlertCircle, X, Search, LogOut, CheckCircle, Navigation, Crosshair,
   Paintbrush, Grid, Tv, Flame, Layers, Radio, Sparkles, User,
-  Zap, Snowflake, LayoutGrid, WashingMachine, Anvil, Satellite, Truck, AppWindow, Bug, Cctv
+  Zap, Snowflake, LayoutGrid, WashingMachine, Anvil, Satellite, Truck, AppWindow, Bug, Cctv, Loader2
 } from "lucide-react";
 import dynamic from "next/dynamic";
 import { toast } from "sonner";
@@ -27,11 +28,13 @@ type BookingStep = "SELECT_SERVICE" | "BOOKING_FORM" | "WAITING_FOR_BIDS" | "SEA
 
 export default function ClientDashboard() {
   const router = useRouter();
+  const { data: session, status } = useSession();
   const { language } = useLanguageStore();
   const t = dictionary[language].clientDashboard;
 
   const [step, setStep] = useState<BookingStep>("SELECT_SERVICE");
   const [selectedService, setSelectedService] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   // Backend Integration State
   const [bookingId, setBookingId] = useState<string | null>(null);
@@ -55,13 +58,7 @@ export default function ClientDashboard() {
   // Chat State
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [newMessage, setNewMessage] = useState("");
-  const [chatMessages, setChatMessages] = useState([
-    {
-      sender: "provider",
-      text: "مرحباً، لقد اطلعت على المشكلة. هل يمكنك توضيح مساحة المكان تقريباً؟",
-      time: "01:30 AM"
-    }
-  ]);
+  const [chatMessages, setChatMessages] = useState<{ sender: string; text: string; time: string }[]>([]);
 
   // Localization and Autocomplete states
   const [conversionRate, setConversionRate] = useState(1.0);
@@ -136,19 +133,11 @@ export default function ClientDashboard() {
     return `${rateInfo.min} - ${rateInfo.max} EGP / Visit`;
   };
   
-  // Dynamic Provider Info from Active Quote
-  const getProviderPhoto = (photoUrl?: string) => photoUrl || "https://images.unsplash.com/photo-1628157582853-a796fa650a6a?w=100&h=100&fit=crop&crop=faces";
+  // Dynamic Provider Info from Active Quote — NO fallback mock data
+  const getProviderPhoto = (photoUrl?: string) => photoUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(activeQuote?.provider?.name || 'P')}&background=1e40af&color=fff&size=100`;
   
-  const provider = activeQuote?.provider || {
-    name: "Provider",
-    rating: 4.9,
-    reviews: 0,
-    vehicle: "Standard Vehicle",
-    phone: "",
-    photoUrl: getProviderPhoto(),
-    priceRange: getLocalizedPriceRange(selectedService)
-  };
-  const proposedPrice = activeQuote?.price || 0;
+  const provider = activeQuote?.provider || null;
+  const proposedPrice = activeQuote?.price ?? null;
 
   const services = [
     { id: "Plumbing", name: "Plumbing", icon: Droplet, color: "text-blue-500", bg: "bg-blue-500/10", border: "border-blue-500/20" },
@@ -330,9 +319,19 @@ export default function ClientDashboard() {
       toast.error("Please describe the issue before posting.");
       return;
     }
-    
+    if (status !== "authenticated") {
+      toast.error("You must be logged in to request a service.");
+      router.push("/login");
+      return;
+    }
+
+    setIsSubmitting(true);
+    // Clear any stale quote state from a previous request
+    setQuotes([]);
+    setActiveQuote(null);
+    setBookingId(null);
+
     try {
-      setStep("WAITING_FOR_BIDS");
       const res = await api.post("/bookings", {
         serviceType: selectedService,
         locationLat: lat,
@@ -344,15 +343,21 @@ export default function ClientDashboard() {
         scheduleTime: isEmergency ? undefined : scheduleTime,
       });
       
-      if (res.data?.bookingId) {
-        setBookingId(res.data.bookingId);
-      } else if (res.data?.id) {
-        setBookingId(res.data.id);
+      const newBookingId = res.data?.bookingId || res.data?.id;
+      if (!newBookingId) {
+        throw new Error("No booking ID returned from server");
       }
-    } catch (error) {
+
+      // Only advance the step AFTER a successful API response
+      setBookingId(newBookingId);
+      setStep("WAITING_FOR_BIDS");
+      toast.success("Request posted! Waiting for provider quotes...");
+    } catch (error: any) {
       console.error("Booking error:", error);
-      toast.error("Failed to post request. Please try again.");
-      setStep("BOOKING_FORM");
+      const msg = error?.response?.data?.error || "Failed to post request. Please try again.";
+      toast.error(msg);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -431,9 +436,28 @@ export default function ClientDashboard() {
     }
   };
 
-  const handleLogout = () => {
-    router.push("/login");
+  const handleLogout = async () => {
+    await signOut({ callbackUrl: "/login" });
   };
+
+  // Auth guard — redirect unauthenticated users
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.push("/login");
+    }
+  }, [status, router]);
+
+  // Show loading while session is resolving
+  if (status === "loading") {
+    return (
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-10 h-10 border-2 border-brand-blue-500/30 border-t-brand-blue-500 rounded-full animate-spin" />
+          <p className="text-slate-400 text-sm">Loading your portal...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col md:flex-row">
@@ -734,9 +758,14 @@ export default function ClientDashboard() {
               {/* Submit Action Button */}
               <button
                 onClick={handleRequestNow}
-                className="w-full py-3 rounded-xl font-bold text-sm text-white transition-all shadow-lg bg-gradient-to-r from-brand-blue-600 to-brand-blue-500 hover:from-brand-blue-500 hover:to-brand-blue-400 shadow-brand-blue-500/20"
+                disabled={isSubmitting}
+                className="w-full py-3 rounded-xl font-bold text-sm text-white transition-all shadow-lg bg-gradient-to-r from-brand-blue-600 to-brand-blue-500 hover:from-brand-blue-500 hover:to-brand-blue-400 shadow-brand-blue-500/20 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
-                {isEmergency ? "Post Request & Receive Custom Quotes" : "Schedule Request & Receive Custom Quotes"}
+                {isSubmitting ? (
+                  <><Loader2 className="w-4 h-4 animate-spin" /> Posting Request...</>
+                ) : (
+                  isEmergency ? "Post Request & Receive Custom Quotes" : "Schedule Request & Receive Custom Quotes"
+                )}
               </button>
             </div>
           )}
@@ -794,34 +823,38 @@ export default function ClientDashboard() {
               </div>
 
               {/* Provider Info Card */}
+              {provider ? (
               <div className="p-4 rounded-xl bg-slate-950 border border-slate-850 space-y-4 shadow-xl">
                 <div className="flex items-center gap-3">
                   <img
-                    src={provider.photoUrl}
-                    alt={provider.name}
+                    src={getProviderPhoto(provider.photoUrl)}
+                    alt={provider.name || "Provider"}
                     className="w-12 h-12 rounded-full object-cover border border-brand-orange-500/30"
                   />
                   <div className="flex-1">
-                    <h4 dir="auto" className="text-sm font-bold text-white">{provider.name}</h4>
+                    <h4 dir="auto" className="text-sm font-bold text-white">{provider.name || "Provider"}</h4>
                     <span className="text-xs text-brand-orange-400 font-semibold uppercase tracking-wider block mt-0.5">
                       Certified {selectedService}
                     </span>
                     <div className="flex items-center gap-1 mt-1">
                       <Star className="w-3.5 h-3.5 fill-brand-gold-500 text-brand-gold-500" />
-                      <span className="text-xs font-bold text-slate-200">{provider.rating}</span>
-                      <span className="text-[10px] text-slate-500">({provider.reviews} reviews)</span>
+                      <span className="text-xs font-bold text-slate-200">{provider.rating ?? "N/A"}</span>
+                      <span className="text-[10px] text-slate-500">({provider.reviews ?? 0} reviews)</span>
                     </div>
                   </div>
                 </div>
 
+                {provider.vehicle && (
                 <div className="text-xs bg-slate-900 p-2.5 rounded-lg text-slate-300 border border-slate-800 flex justify-between items-center">
                   <div>
                     <span className="text-slate-400 block text-[9px] uppercase tracking-wider mb-0.5">Vehicle</span>
                     <span className="font-medium text-slate-200">{provider.vehicle}</span>
                   </div>
                 </div>
+                )}
 
                 {/* Proposed Price Highlight Block */}
+                {proposedPrice !== null && (
                 <div className="p-3.5 rounded-xl bg-gradient-to-r from-brand-orange-950/20 to-slate-900 border border-brand-orange-500/25 flex justify-between items-center">
                   <div>
                     <span className="text-[9px] text-slate-400 uppercase tracking-wider block">Proposed Quote</span>
@@ -832,6 +865,7 @@ export default function ClientDashboard() {
                     <span className="text-[8px] text-slate-500">Subject to agreement</span>
                   </div>
                 </div>
+                )}
 
                 {/* Chat (Live) Button */}
                 <button
@@ -842,8 +876,14 @@ export default function ClientDashboard() {
                   <span>Chat & Negotiate (Live)</span>
                 </button>
               </div>
+              ) : (
+                <div className="p-4 rounded-xl bg-slate-950 border border-slate-850 text-center text-slate-400 text-sm">
+                  Loading provider details...
+                </div>
+              )}
 
               {/* Action Buttons */}
+
               <div className="space-y-2.5">
                 <button
                   onClick={handleAcceptQuote}
@@ -863,6 +903,7 @@ export default function ClientDashboard() {
               </div>
             </div>
           )}
+
 
           {/* STEP 4: Real-time Tracking Panel */}
           {step === "TRACKING" && (

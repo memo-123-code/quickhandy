@@ -1,37 +1,42 @@
 import { NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(req: Request) {
   try {
-    // Mock user for now since we don't have session configured
-    const userId = "provider-1";
+    const session = await getServerSession();
 
-    let wallet = await prisma.wallet.findUnique({
-      where: { userId }
-    });
-
-    if (!wallet) {
-      // Find or create dummy user
-      let existingUser = await prisma.user.findUnique({ where: { id: userId } });
-      if (!existingUser) {
-        existingUser = await prisma.user.create({
-          data: { id: userId, name: "Test Provider", role: "PROVIDER" }
-        });
-      }
-
-      wallet = await prisma.wallet.create({
-        data: {
-          userId,
-          balance: 100.0 // Starting balance for testing
-        }
-      });
+    if (!session?.user?.email) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    return NextResponse.json({ balance: wallet.balance });
+    const user = await prisma.user.findUnique({
+      where: { email: session.user.email },
+      include: { wallet: true },
+    });
+
+    if (!user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
+    // Create wallet if it doesn't exist
+    if (!user.wallet) {
+      const newWallet = await prisma.wallet.create({
+        data: { userId: user.id, balance: 0.0, currency: 'EGP' },
+      });
+      return NextResponse.json({ balance: newWallet.balance, currency: 'EGP' });
+    }
+
+    return NextResponse.json({
+      balance: user.wallet.balance,
+      currency: user.wallet.currency,
+    });
   } catch (error) {
-    console.error("Failed to fetch wallet balance:", error);
-    return NextResponse.json({ error: "Failed to fetch balance" }, { status: 500 });
+    console.error('Failed to fetch wallet balance:', error);
+    return NextResponse.json({ error: 'Failed to fetch balance' }, { status: 500 });
   }
 }

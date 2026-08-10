@@ -7,7 +7,7 @@ import { ArrowRight, Mail, Lock, User, Shield, Wrench, Loader2 } from "lucide-re
 import Cookies from "js-cookie";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
-import { signIn } from "next-auth/react";
+import { signIn, getSession } from "next-auth/react";
 
 type Role = "CLIENT" | "PROVIDER" | "ADMIN";
 
@@ -28,13 +28,13 @@ export default function LoginPage() {
     setRole(selectedRole);
     if (selectedRole === "CLIENT") {
       setEmail("client@quickhandy.com");
-      setPassword("password123");
+      setPassword("Test@1234");
     } else if (selectedRole === "PROVIDER") {
-      setEmail("mechanic.john@quickhandy.com");
-      setPassword("password123");
+      setEmail("provider@quickhandy.com");
+      setPassword("Test@1234");
     } else {
       setEmail("admin@quickhandy.com");
-      setPassword("password123");
+      setPassword("Test@1234");
     }
   };
 
@@ -54,18 +54,24 @@ export default function LoginPage() {
       });
 
       if (response?.error) {
-        throw new Error(response.error);
+        throw new Error("Invalid email or password. Please check your credentials.");
       }
       
-      toast.success(`Successfully logged in`);
+      // Get real session to route based on actual role from DB
+      const session = await getSession();
+      const actualRole = (session?.user as any)?.role || role;
+      
+      toast.success(`Welcome back! Signed in as ${actualRole.charAt(0) + actualRole.slice(1).toLowerCase()}`);
 
-      // Route to respective dashboard
-      if (role === "CLIENT") {
+      // Route based on actual DB role
+      if (actualRole === "CLIENT") {
         router.push("/dashboard/client");
-      } else if (role === "PROVIDER") {
+      } else if (actualRole === "PROVIDER") {
         router.push("/dashboard/provider");
-      } else {
+      } else if (actualRole === "ADMIN") {
         router.push("/dashboard/admin");
+      } else {
+        router.push("/dashboard/client");
       }
     } catch (error: any) {
       toast.error(error.message || "Failed to authenticate");
