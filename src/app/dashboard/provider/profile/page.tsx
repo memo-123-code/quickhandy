@@ -33,9 +33,9 @@ export default function ProviderProfile() {
   };
 
   // Payout Methods State
-  const [vodafoneNumber, setVodafoneNumber] = useState("01094827361");
-  const [instapayAddress, setInstapayAddress] = useState("romy@instapay");
-  const [iban, setIban] = useState("EG12000300050000094827361001");
+  const [vodafoneNumber, setVodafoneNumber] = useState("");
+  const [instapayAddress, setInstapayAddress] = useState("");
+  const [iban, setIban] = useState("");
   
   // Document Verification State
   const [docsStatus, setDocsStatus] = useState({
@@ -205,13 +205,7 @@ export default function ProviderProfile() {
               <div className="space-y-3">
                 <h3 dir="auto" className="text-sm font-bold text-white">Recent Activity Ledger</h3>
                 <div className="space-y-2 max-h-64 overflow-y-auto pe-1">
-                  {[
-                    { id: "1", task: "Living Room Rewiring", date: "June 29, 2026", client: "Ahmed M.", earning: 400 },
-                    { id: "2", task: "Kitchen Sink Leaking", date: "June 29, 2026", client: "Eleanor V.", earning: 250 },
-                    { id: "3", task: "AC Maintenance", date: "June 28, 2026", client: "Khaled K.", earning: 600 },
-                    { id: "4", task: "Gypsum Board Repair", date: "June 26, 2026", client: "Sara A.", earning: 350 },
-                    { id: "5", task: "Water Heater Fixing", date: "June 25, 2026", client: "Mustafa H.", earning: 300 },
-                  ].map((job) => (
+                  {([].map((job: any) => (
                     <div key={job.id} className="p-3.5 rounded-xl bg-slate-900/50 border border-slate-850 flex justify-between items-center hover:bg-slate-900 transition-all">
                       <div>
                         <span className="text-xs font-bold text-slate-200 block">{job.task}</span>
@@ -219,7 +213,8 @@ export default function ProviderProfile() {
                       </div>
                       <span className="text-xs font-bold text-green-400">+{job.earning} EGP</span>
                     </div>
-                  ))}
+                  )))}
+                  <p className="text-xs text-slate-500 text-center py-4">No recent completed jobs.</p>
                 </div>
               </div>
 

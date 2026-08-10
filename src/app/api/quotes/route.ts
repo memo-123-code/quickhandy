@@ -1,12 +1,29 @@
 import { NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
 export async function POST(req: Request) {
   try {
+    const session = await getServerSession();
+    let providerId = "provider-1";
+
+    if (session?.user?.email) {
+      const user = await prisma.user.findUnique({
+        where: { email: session.user.email }
+      });
+      if (user) {
+        providerId = user.id;
+      }
+    }
+
     const body = await req.json();
-    const { bookingId, price, providerId = "provider-1" } = body;
+    const { bookingId, price } = body;
+
+    if (!bookingId || !price) {
+      return NextResponse.json({ error: "Booking ID and price are required" }, { status: 400 });
+    }
 
     const quote = await prisma.quote.create({
       data: {

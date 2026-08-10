@@ -11,18 +11,27 @@ import AvatarUploader from "@/components/ui/AvatarUploader";
 import ClientWallet from "@/components/wallet/ClientWallet";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
+import { useSession } from "next-auth/react";
 
 type ActiveTab = "PROFILE" | "ORDERS" | "PLACES" | "WALLET" | "SAFETY";
 
 export default function ClientProfile() {
   const router = useRouter();
+  const { data: session } = useSession();
   const [activeTab, setActiveTab] = useState<ActiveTab>("PROFILE");
 
   // Client Info States
-  const [name, setName] = useState("Kareem Mansour");
-  const [email, setEmail] = useState("kareem.mansour@gmail.com");
-  const [phone, setPhone] = useState("+20 10 5831 8402");
+  const [name, setName] = useState(session?.user?.name || "");
+  const [email, setEmail] = useState(session?.user?.email || "");
+  const [phone, setPhone] = useState("");
   const [isSaved, setIsSaved] = useState(false);
+
+  React.useEffect(() => {
+    if (session?.user) {
+      if (session.user.name) setName(session.user.name);
+      if (session.user.email) setEmail(session.user.email);
+    }
+  }, [session]);
 
   // Saved Places State
   const [savedPlaces, setSavedPlaces] = useState<{ id: string; label: string; address: string }[]>([]);

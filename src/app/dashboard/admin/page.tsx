@@ -14,7 +14,6 @@ import InstallButton from "@/components/InstallButton";
 import AdminFinancials from "@/components/wallet/AdminFinancials";
 import { api } from "@/lib/api";
 import { AdminTab, PendingProvider, DisputeTicket, PlatformUser, NotificationItem } from "@/types/admin";
-import { initialNotifications, initialProviders, initialDisputes, initialPlatformUsers } from "@/lib/mockData";
 import { toast } from "sonner";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 
@@ -27,23 +26,56 @@ export default function AdminDashboard() {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [globalSearch, setGlobalSearch] = useState("");
-  const [notifications, setNotifications] = useState<NotificationItem[]>(initialNotifications);
+  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   // Financial Chart Timeframe Filter State
   const [timeframe, setTimeframe] = useState<"WEEKLY" | "MONTHLY" | "YEARLY">("MONTHLY");
 
   // KYC State
-  const [providers, setProviders] = useState<PendingProvider[]>(initialProviders);  const [kycSearch, setKycSearch] = useState("");
+  const [providers, setProviders] = useState<PendingProvider[]>([]);
+  const [kycSearch, setKycSearch] = useState("");
   const [kycStatusFilter, setKycStatusFilter] = useState<string>("ALL");
   const [kycPage, setKycPage] = useState(1);
   const itemsPerPage = 5;
 
   // Disputes State
-  const [disputes, setDisputes] = useState<DisputeTicket[]>(initialDisputes);  const [disputeSort, setDisputeSort] = useState<"NEWEST" | "OLDEST" | "PRIORITY">("NEWEST");
+  const [disputes, setDisputes] = useState<DisputeTicket[]>([]);
+  const [disputeSort, setDisputeSort] = useState<"NEWEST" | "OLDEST" | "PRIORITY">("NEWEST");
   const [disputeFilter, setDisputeFilter] = useState<"ALL" | "OPEN" | "RESOLVED">("ALL");
 
   // User Management State
-  const [usersList, setUsersList] = useState<PlatformUser[]>(initialPlatformUsers);  const [userRoleFilter, setUserRoleFilter] = useState<"ALL" | "CLIENT" | "PROVIDER">("ALL");
+  const [usersList, setUsersList] = useState<PlatformUser[]>([]);
+  const [userRoleFilter, setUserRoleFilter] = useState<"ALL" | "CLIENT" | "PROVIDER">("ALL");
   const [userSearch, setUserSearch] = useState("");
+
+  React.useEffect(() => {
+    api.get("/admin/users").then(res => {
+      if (Array.isArray(res.data)) {
+        setUsersList(res.data.map((u: any) => ({
+          id: u.id,
+          name: u.name || u.email?.split("@")[0] || "User",
+          email: u.email || "N/A",
+          role: u.role || "CLIENT",
+          status: "ACTIVE",
+          joinedDate: new Date(u.createdAt).toLocaleDateString(),
+          totalJobs: u.profile?.totalJobs || u._count?.clientBookings || 0,
+        })));
+      }
+    }).catch(console.error);
+
+    api.get("/admin/providers").then(res => {
+      if (Array.isArray(res.data)) {
+        setProviders(res.data.map((p: any) => ({
+          id: p.id,
+          name: p.name || p.email?.split("@")[0] || "Provider",
+          category: p.profile?.skills ? (JSON.parse(p.profile.skills)[0] || "Handyman") : "Handyman",
+          license: "LIC-" + p.id.slice(0, 6),
+          documentName: "National_ID_Verification.pdf",
+          status: p.profile?.isVerified ? "APPROVED" : "PENDING",
+          appliedDate: new Date(p.createdAt).toLocaleDateString(),
+        })));
+      }
+    }).catch(console.error);
+  }, []);
 
   // Platform Settings State
   const [platformConfig, setPlatformConfig] = useState({

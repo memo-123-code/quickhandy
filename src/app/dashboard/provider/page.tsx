@@ -112,9 +112,24 @@ export default function ProviderDashboard() {
     }
   };
 
-  const handleSimulateAccept = () => {
-    setDashboardState("EN_ROUTE");
-  };
+  // Polling for client quote acceptance
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (dashboardState === "WAITING_CLIENT_APPROVAL" && jobId) {
+      interval = setInterval(async () => {
+        try {
+          const res = await api.get(`/bookings/${jobId}`);
+          if (res.data && (res.data.status === "ACCEPTED" || res.data.status === "IN_PROGRESS")) {
+            setDashboardState("EN_ROUTE");
+            toast.success("Client accepted your quote! Dispatched.");
+          }
+        } catch (error) {
+          console.error("Booking approval check error", error);
+        }
+      }, 3000);
+    }
+    return () => clearInterval(interval);
+  }, [dashboardState, jobId]);
 
   const handleDeclineJob = () => {
     setDashboardState("IDLE");
@@ -277,14 +292,10 @@ export default function ProviderDashboard() {
                   <span className="w-2.5 h-2.5 rounded-full bg-brand-orange-500 animate-ping shrink-0" />
                   <div className="flex-1">
                     <h4 dir="auto" className="text-xs font-bold text-brand-orange-400">Waiting for Client Approval</h4>
-                    <p dir="auto" className="text-[9px] text-slate-400 mt-0.5">Your quote of {bidAmount} EGP has been sent to Ahmed Mohamed.</p>
+                    <p dir="auto" className="text-[9px] text-slate-400 mt-0.5">
+                      Your quote of {bidAmount} EGP has been submitted to {activeJob?.clientName || "the client"}. Waiting for response...
+                    </p>
                   </div>
-                  <button 
-                    onClick={handleSimulateAccept}
-                    className="px-2 py-1 bg-brand-orange-500 hover:bg-brand-orange-400 text-[10px] font-bold text-white rounded transition-colors animate-pulse"
-                  >
-                    Simulate Accept
-                  </button>
                 </div>
               ) : (
                 <div className="p-4 rounded-xl bg-green-950/10 border border-green-500/20 flex gap-3 items-center">

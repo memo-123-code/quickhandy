@@ -8,8 +8,8 @@ import { toast } from "sonner";
 export default function ProviderWallet() {
   const [balances, setBalances] = React.useState({
     available: 0.00,
-    pending: 1250.00,
-    lifetime: 12800.00
+    pending: 0.00,
+    lifetime: 0.00
   });
 
   React.useEffect(() => {
@@ -45,12 +45,7 @@ export default function ProviderWallet() {
     }
   };
 
-  const ledger = [
-    { id: "1", date: "Today, 2:30 PM", desc: "Living Room Rewiring", amount: 400.00, status: "AVAILABLE" },
-    { id: "2", date: "Yesterday, 10:15 AM", desc: "Plumbing Leak Fix", amount: 250.00, status: "PENDING" },
-    { id: "3", date: "June 25, 2026", desc: "Withdrawal to Vodafone Cash", amount: -800.00, status: "COMPLETED" },
-    { id: "4", date: "June 23, 2026", desc: "AC Maintenance", amount: 600.00, status: "AVAILABLE" },
-  ];
+  const ledger: any[] = [];
 
   return (
     <div className="space-y-6">
