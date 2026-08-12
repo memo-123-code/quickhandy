@@ -7,7 +7,7 @@ import {
   Wrench, Shield, Check, X, Bell, Award, 
   TrendingUp, MapPin, Play, CheckSquare, 
   LogOut, Phone, MessageSquare, ShieldAlert,
-  ArrowRight, Landmark, Camera, User, CreditCard
+  ArrowRight, Landmark, Camera, User, CreditCard, Crosshair
 } from "lucide-react";
 import dynamic from "next/dynamic";
 import { toast } from "sonner";
@@ -36,6 +36,7 @@ export default function ProviderDashboard() {
 
   // Real GPS Provider Location State
   const [providerCoords, setProviderCoords] = useState<{ lat: number; lng: number } | undefined>(undefined);
+  const [isLocating, setIsLocating] = useState(false);
 
   // Trigger and continuously watch real-time GPS location
   useEffect(() => {
@@ -67,6 +68,33 @@ export default function ProviderDashboard() {
       return () => navigator.geolocation.clearWatch(watchId);
     }
   }, []);
+
+  // Explicit Manual "Locate Me" Button Trigger
+  const handleLocateMe = () => {
+    if (typeof window === "undefined" || !navigator.geolocation) {
+      toast.error("Geolocation is not supported by your browser.");
+      return;
+    }
+
+    setIsLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const coords = {
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude,
+        };
+        setProviderCoords(coords);
+        setIsLocating(false);
+        toast.success("GPS location updated to your real position!");
+      },
+      (err) => {
+        console.error("GPS locate error:", err);
+        setIsLocating(false);
+        toast.error("Could not fetch GPS location. Please check location permissions.");
+      },
+      { enableHighAccuracy: true, timeout: 12000 }
+    );
+  };
 
   useEffect(() => {
     // Fetch actual wallet balance
@@ -624,6 +652,19 @@ export default function ProviderDashboard() {
 
       {/* MAP AREA: 100% width on mobile, fills remaining screen on desktop */}
       <div className="flex-1 h-[calc(100vh-280px)] md:h-screen relative z-10">
+        {/* Floating Provider GPS "Locate Me" Overlay Button */}
+        <div className="absolute top-4 end-4 z-[1000] flex items-center gap-2">
+          <button
+            onClick={handleLocateMe}
+            disabled={isLocating}
+            className="px-3.5 py-2.5 rounded-xl bg-slate-900/90 hover:bg-slate-850 border border-brand-orange-500/40 text-xs font-bold text-white shadow-xl backdrop-blur-md flex items-center gap-2 transition-all active:scale-95 disabled:opacity-60 cursor-pointer"
+            title="Recenter Map on Real GPS Location"
+          >
+            <Crosshair className={`w-4 h-4 text-brand-orange-500 ${isLocating ? "animate-spin" : ""}`} />
+            <span>{isLocating ? "Locating..." : "Locate Me (تحديد موقعي)"}</span>
+          </button>
+        </div>
+
         <Map
           providerLocation={providerCoords || activeJob?.providerCoords}
           clientLocation={activeJob?.clientCoords}
