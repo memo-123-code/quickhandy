@@ -538,7 +538,7 @@ export default function ProviderDashboard() {
                   </button>
                   {showActivePhoto && (
                     <div className="h-28 rounded-lg overflow-hidden border border-slate-850 mt-1.5 animate-fadeIn">
-                      {console.log("DEBUG activeJob attached photo:", activeJob)}
+                      {console.log("DEBUG activeJob attached photo:", activeJob) as any}
                       <img 
                         src={activeJob?.imageUrl || "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=400&fit=crop"} 
                         alt="Client problem attachment" 
@@ -725,7 +725,7 @@ export default function ProviderDashboard() {
               </p>
               {showPhotoPreview && (
                 <div className="mt-2 h-36 rounded-lg overflow-hidden border border-slate-850">
-                  {console.log("DEBUG activeJob alert modal:", activeJob)}
+                  {console.log("DEBUG activeJob alert modal:", activeJob) as any}
                   <img 
                     src={activeJob?.imageUrl || "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=400&fit=crop"} 
                     alt="Problem attachment" 
