@@ -64,6 +64,8 @@ export default function ProviderDashboard() {
         },
         (err) => {
           console.warn("Could not fetch provider GPS:", err);
+          // Fallback for desktop testing without GPS module
+          setProviderCoords({ lat: 30.3015, lng: 31.7406 });
         },
         { enableHighAccuracy: true, timeout: 10000 }
       );
@@ -104,7 +106,9 @@ export default function ProviderDashboard() {
       (err) => {
         console.error("GPS locate error:", err);
         setIsLocating(false);
-        toast.error("Could not fetch GPS location. Please check location permissions.");
+        // Fallback for desktop testing
+        setProviderCoords({ lat: 30.3015, lng: 31.7406 });
+        toast.warning("Real GPS failed. Using Mock Location for testing.");
       },
       { enableHighAccuracy: true, timeout: 12000 }
     );
