@@ -12,29 +12,11 @@ export default function manifest(): MetadataRoute.Manifest {
     theme_color: '#0f172a',
     icons: [
       {
-        src: '/icons/icon-192x192.png',
-        sizes: '192x192',
-        type: 'image/png',
-        purpose: 'any',
-      },
-      {
-        src: '/icons/icon-512x512.png',
-        sizes: '512x512',
-        type: 'image/png',
-        purpose: 'any',
-      },
-      {
-        src: '/icons/icon-maskable-512x512.png',
-        sizes: '512x512',
-        type: 'image/png',
-        purpose: 'maskable',
-      },
-      {
-        src: '/icons/apple-touch-icon.png',
-        sizes: '180x180',
-        type: 'image/png',
-        purpose: 'any',
-      },
+        src: '/icons/icon.svg',
+        sizes: '192x192 512x512',
+        type: 'image/svg+xml',
+        purpose: 'any maskable',
+      }
     ],
     categories: ['business', 'productivity', 'utilities'],
     shortcuts: [
@@ -43,14 +25,14 @@ export default function manifest(): MetadataRoute.Manifest {
         short_name: 'Dashboard',
         description: 'View KPIs, financial analytics, and operations',
         url: '/dashboard/admin',
-        icons: [{ src: '/icons/icon-192x192.png', sizes: '192x192' }]
+        icons: [{ src: '/icons/icon.svg', sizes: '192x192', type: 'image/svg+xml' }]
       },
       {
         name: 'KYC Approvals',
         short_name: 'KYC',
         description: 'Approve or reject provider licenses',
         url: '/dashboard/admin?tab=KYC',
-        icons: [{ src: '/icons/icon-192x192.png', sizes: '192x192' }]
+        icons: [{ src: '/icons/icon.svg', sizes: '192x192', type: 'image/svg+xml' }]
       }
     ]
   };
