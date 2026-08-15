@@ -171,6 +171,24 @@ export default function ProviderDashboard() {
     return () => clearInterval(interval);
   }, [isOnline, dashboardState]);
 
+  // Broadcaster: Push provider location to backend when tracking
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if ((dashboardState === "EN_ROUTE" || dashboardState === "ARRIVED" || dashboardState === "JOB_IN_PROGRESS") && jobId && providerCoords) {
+      interval = setInterval(async () => {
+        try {
+          await api.patch(`/bookings/${jobId}`, {
+            providerLat: providerCoords.lat,
+            providerLng: providerCoords.lng
+          });
+        } catch (error) {
+          console.error("Failed to broadcast location", error);
+        }
+      }, 5000);
+    }
+    return () => clearInterval(interval);
+  }, [dashboardState, jobId, providerCoords]);
+
   const handleSendQuote = async () => {
     if (!jobId) return;
     setIsProcessing(true);

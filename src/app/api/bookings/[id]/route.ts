@@ -66,15 +66,20 @@ export async function PATCH(
   try {
     const { id } = params;
     const body = await req.json();
-    const { status } = body;
+    const { status, providerLat, providerLng } = body;
 
-    if (!status) {
-      return NextResponse.json({ error: 'Status is required' }, { status: 400 });
+    const dataToUpdate: any = {};
+    if (status) dataToUpdate.status = status;
+    if (providerLat !== undefined) dataToUpdate.providerLat = providerLat;
+    if (providerLng !== undefined) dataToUpdate.providerLng = providerLng;
+
+    if (Object.keys(dataToUpdate).length === 0) {
+      return NextResponse.json({ error: 'No data to update' }, { status: 400 });
     }
 
     const updatedBooking = await prisma.booking.update({
       where: { id },
-      data: { status },
+      data: dataToUpdate,
       include: {
         client: {
           select: {

@@ -56,6 +56,7 @@ export default function ClientDashboard() {
   const [eta, setEta] = useState(6); // minutes
   const [routeProgress, setRouteProgress] = useState(0.3);
   const [liveBookingStatus, setLiveBookingStatus] = useState<string>("EN_ROUTE");
+  const [liveProviderCoords, setLiveProviderCoords] = useState<{ lat: number; lng: number } | undefined>(undefined);
 
   // Chat State
   const [isChatOpen, setIsChatOpen] = useState(false);
@@ -410,6 +411,13 @@ export default function ClientDashboard() {
           if (res.data && res.data.status) {
             const status = res.data.status;
             setLiveBookingStatus(status);
+
+            if (res.data.providerLat && res.data.providerLng) {
+              setLiveProviderCoords({
+                lat: res.data.providerLat,
+                lng: res.data.providerLng
+              });
+            }
 
             if (status === "EN_ROUTE") {
               setRouteProgress(0.35);
@@ -1097,7 +1105,7 @@ export default function ClientDashboard() {
         <InteractiveMap
           interactive={step === "BOOKING_FORM"}
           onLocationSelect={handleLocationSelect}
-          providerLocation={step === "TRACKING" ? { lat: lat - 0.0028, lng: lng - 0.009 } : undefined}
+          providerLocation={step === "TRACKING" ? (liveProviderCoords || { lat: lat - 0.0028, lng: lng - 0.009 }) : undefined}
           clientLocation={{ lat: lat, lng: lng }}
           showRoute={step === "TRACKING"}
           routeProgress={routeProgress}

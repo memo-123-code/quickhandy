@@ -109,6 +109,8 @@ model Booking {
   description     String
   imageUrl        String?
   address         String
+  providerLat     Float?
+  providerLng     Float?
   scheduledAt     DateTime
   estimatedCost   Float?
   finalCost       Float?
