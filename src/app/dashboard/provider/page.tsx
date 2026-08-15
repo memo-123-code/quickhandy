@@ -193,12 +193,28 @@ export default function ProviderDashboard() {
     return () => clearInterval(interval);
   }, [dashboardState, jobId]);
 
-  const handleDeclineJob = () => {
-    setDashboardState("IDLE");
-    if (isOnline) {
-      setTimeout(() => {
-        if (isOnline) setDashboardState("INCOMING_REQUEST");
-      }, 8000);
+  const handleDeclineJob = async () => {
+    if (!jobId) {
+      setDashboardState("IDLE");
+      return;
+    }
+    setIsProcessing(true);
+    try {
+      await api.patch(`/bookings/${jobId}`, { status: "CANCELLED" });
+      toast.success("Job declined and cancelled.");
+      setDashboardState("IDLE");
+      setActiveJob(null);
+      setJobId(null);
+      if (isOnline) {
+        setTimeout(() => {
+          if (isOnline) setDashboardState("INCOMING_REQUEST");
+        }, 8000);
+      }
+    } catch (err) {
+      console.error("Failed to cancel job", err);
+      toast.error("Failed to decline job.");
+    } finally {
+      setIsProcessing(false);
     }
   };
 
