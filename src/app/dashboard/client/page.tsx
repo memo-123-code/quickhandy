@@ -1171,17 +1171,7 @@ export default function ClientDashboard() {
                 const tempMsg = newMessage;
                 setNewMessage("");
 
-                // Mock auto-reply after 1.5 seconds
-                setTimeout(() => {
-                  setChatMessages((prev) => [
-                    ...prev,
-                    {
-                      sender: "provider",
-                      text: "تمام يا فندم، أنا جاهز للتحرك فور قبول العرض وتأكيد الطلب.",
-                      time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
-                    }
-                  ]);
-                }, 1500);
+
               }}
               className="p-3 bg-slate-900 border-t border-slate-800/80 flex gap-2"
             >

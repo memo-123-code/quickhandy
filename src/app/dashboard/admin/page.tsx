@@ -75,6 +75,12 @@ export default function AdminDashboard() {
         })));
       }
     }).catch(console.error);
+
+    api.get("/admin/disputes").then(res => {
+      if (Array.isArray(res.data)) {
+        setDisputes(res.data);
+      }
+    }).catch(console.error);
   }, []);
 
   // Platform Settings State
