@@ -340,6 +340,7 @@ export default function ClientDashboard() {
         locationLng: lng,
         address,
         problemDescription,
+        imageUrl: imagePreview,
         isEmergency,
         scheduleDate: isEmergency ? undefined : scheduleDate,
         scheduleTime: isEmergency ? undefined : scheduleTime,
