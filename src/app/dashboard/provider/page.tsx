@@ -21,6 +21,20 @@ const Map = dynamic(() => import("@/components/InteractiveMap"), {
 
 type ProviderState = "IDLE" | "INCOMING_REQUEST" | "WAITING_CLIENT_APPROVAL" | "EN_ROUTE" | "ARRIVED" | "JOB_IN_PROGRESS" | "JOB_COMPLETED";
 
+// Haversine formula to calculate distance between two coordinates in km
+function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
+  const R = 6371; // Radius of the earth in km
+  const dLat = (lat2 - lat1) * (Math.PI / 180);
+  const dLon = (lon2 - lon1) * (Math.PI / 180);
+  const a = 
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) * 
+    Math.sin(dLon / 2) * Math.sin(dLon / 2); 
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)); 
+  const d = R * c; 
+  return d;
+}
+
 export default function ProviderDashboard() {
   const router = useRouter();
   const { data: session, status } = useSession();
@@ -702,8 +716,15 @@ export default function ProviderDashboard() {
                   <h3 dir="auto" className="text-md font-bold text-white">{activeJob.category} Job</h3>
                 </div>
               </div>
-              <span className="px-2 py-0.5 rounded bg-slate-850 border border-slate-800 text-[10px] font-bold text-slate-355">
-                {activeJob.distance} away
+              <span className="px-2 py-0.5 rounded bg-slate-850 border border-slate-800 text-[10px] font-bold text-slate-300">
+                {providerCoords && activeJob.clientCoords
+                  ? `${calculateDistance(
+                      providerCoords.lat,
+                      providerCoords.lng,
+                      activeJob.clientCoords.lat,
+                      activeJob.clientCoords.lng
+                    ).toFixed(1)} km away`
+                  : `${activeJob.distance} away`}
               </span>
             </div>
 
