@@ -205,11 +205,6 @@ export default function ProviderDashboard() {
       setDashboardState("IDLE");
       setActiveJob(null);
       setJobId(null);
-      if (isOnline) {
-        setTimeout(() => {
-          if (isOnline) setDashboardState("INCOMING_REQUEST");
-        }, 8000);
-      }
     } catch (err) {
       console.error("Failed to cancel job", err);
       toast.error("Failed to decline job.");

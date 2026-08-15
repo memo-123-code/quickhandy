@@ -32,6 +32,14 @@ export async function GET(req: Request) {
       orderBy: { createdAt: 'desc' },
     });
 
+    console.log("DEBUG API /incoming - found booking ID:", incomingBooking?.id || null);
+
+    const headers = {
+      'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0',
+    };
+
     if (incomingBooking) {
       return NextResponse.json({
         id: incomingBooking.id,
@@ -45,12 +53,12 @@ export async function GET(req: Request) {
         distance: '< 5 km',
         clientCoords: { lat: 30.3071, lng: 31.7428 },
         providerCoords: { lat: 30.3015, lng: 31.7406 },
-      });
+      }, { headers });
     }
 
-    return NextResponse.json(null);
+    return NextResponse.json(null, { headers });
   } catch (error) {
     console.error('Failed to fetch incoming jobs:', error);
-    return NextResponse.json({ error: 'Failed to fetch incoming jobs' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to fetch incoming jobs' }, { status: 500, headers: { 'Cache-Control': 'no-store' } });
   }
 }
