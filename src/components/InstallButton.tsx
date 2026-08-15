@@ -15,7 +15,7 @@ export default function InstallButton() {
     }
 
     if (!deferredPrompt || typeof deferredPrompt.prompt !== "function") {
-      console.warn("[PWA] Install prompt is not ready or unavailable in this browser.");
+      alert("عذراً، المتصفح لم يقم بتجهيز التطبيق للتنزيل بعد، أو أنك تستخدم متصفحاً لا يدعم هذه الخاصية (مثل الوضع المتخفي).");
       return;
     }
 
@@ -39,10 +39,6 @@ export default function InstallButton() {
       setDeferredPrompt(null);
     }
   };
-
-  if (!isInstallable && !isInstalled) {
-    return null;
-  }
 
   if (isInstalled) {
     return (
