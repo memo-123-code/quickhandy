@@ -287,7 +287,7 @@ export default function ProviderDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col md:flex-row relative">
+    <div className="h-[100dvh] overflow-hidden bg-slate-950 text-slate-100 flex flex-col md:flex-row relative">
       
       {/* Commission Deduction Alert Toast */}
       {commissionNotification && (
@@ -307,7 +307,7 @@ export default function ProviderDashboard() {
       )}
 
       {/* SIDEBAR: Stats, Wallet & Active Jobs */}
-      <div className="w-full md:w-[420px] shrink-0 bg-slate-900 border-r border-slate-800 flex flex-col justify-between shadow-2xl z-20">
+      <div className="w-full h-[55vh] md:h-full md:w-[420px] shrink-0 bg-slate-900 border-r border-slate-800 flex flex-col justify-between shadow-2xl z-20">
         
         {/* Header */}
         <div className="p-5 border-b border-slate-800 flex items-center justify-between bg-slate-950/40">
@@ -650,8 +650,8 @@ export default function ProviderDashboard() {
 
       </div>
 
-      {/* MAP AREA: 100% width on mobile, fills remaining screen on desktop */}
-      <div className="flex-1 h-[calc(100vh-280px)] md:h-screen relative z-10">
+      {/* MAP AREA: 45vh on mobile, fills remaining screen on desktop */}
+      <div className="w-full h-[45vh] md:h-full flex-1 relative z-10">
         {/* Floating Provider GPS "Locate Me" Overlay Button */}
         <div className="absolute top-4 end-4 z-[1000] flex items-center gap-2">
           <button

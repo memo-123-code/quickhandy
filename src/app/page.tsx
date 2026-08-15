@@ -9,17 +9,14 @@ import {
   Phone, MessageSquare, Navigation
 } from "lucide-react";
 import { toast } from "sonner";
-import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { useLanguageStore } from "@/store/useLanguageStore";
 import { dictionary } from "@/locales/dictionary";
 import AnimatedCounter from "@/components/ui/AnimatedCounter";
-import { useSession, signOut } from "next-auth/react";
-import InstallButton from "@/components/InstallButton";
+import Navbar from "@/components/Navbar";
 
 export default function LandingPage() {
   const [mounted, setMounted] = useState(false);
   const { language } = useLanguageStore();
-  const { data: session, status } = useSession();
 
   useEffect(() => {
     setMounted(true);
@@ -57,61 +54,8 @@ export default function LandingPage() {
       <div className="absolute top-[-10%] right-[-10%] w-[60%] h-[60%] rounded-full bg-brand-blue-950/20 blur-[140px] pointer-events-none" />
       <div className="absolute bottom-[-10%] left-[-10%] w-[60%] h-[60%] rounded-full bg-brand-orange-950/10 blur-[140px] pointer-events-none" />
 
-      {/* Sticky Top Group */}
-      <div className="sticky top-0 z-50 flex flex-col w-full">
-        <header className="max-w-7xl w-full mx-auto px-4 sm:px-6 py-3 sm:py-5 flex flex-wrap items-center justify-between gap-y-3 bg-slate-950/80 backdrop-blur-md rounded-b-2xl border-b border-slate-800/50 shadow-sm">
-          <div className="flex items-center gap-2">
-            <div className="p-2 sm:p-2.5 bg-gradient-to-tr from-brand-blue-600 to-brand-orange-500 rounded-lg sm:rounded-xl shadow-lg">
-              <Wrench className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
-            </div>
-            <span className="text-lg sm:text-xl font-extrabold tracking-tight text-white">
-              Quick<span className="text-brand-orange-500">Handy</span>
-            </span>
-          </div>
-        
-        <div className="flex flex-wrap items-center gap-2 sm:gap-4 ms-auto">
-          <div className="block">
-            <InstallButton />
-          </div>
-          <LanguageSwitcher />
-          {status === "loading" ? (
-            <div className="w-24 h-8 bg-slate-800 animate-pulse rounded-lg"></div>
-          ) : session ? (
-            <>
-              <Link href={`/dashboard/${(session.user as any)?.role?.toLowerCase() || 'client'}`} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-                <div className="w-8 h-8 rounded-full bg-brand-blue-500 flex items-center justify-center text-xs font-bold text-white uppercase">
-                  {session.user?.name?.charAt(0) || "U"}
-                </div>
-                <span className="text-xs font-bold text-white hidden sm:inline-block">
-                  {session.user?.name?.split(' ')[0]}
-                </span>
-              </Link>
-              <button 
-                onClick={() => signOut()}
-                className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-xs font-bold rounded-lg text-slate-300 transition-all border border-slate-700"
-              >
-                Sign Out
-              </button>
-            </>
-          ) : (
-            <>
-              <Link 
-                href="/login" 
-                className="text-xs font-bold text-slate-300 hover:text-white transition-colors"
-              >
-                {t.nav.signIn}
-              </Link>
-              <Link 
-                href="/signup" 
-                className="px-3 py-1.5 sm:px-4 sm:py-2 bg-brand-blue-600 hover:bg-brand-blue-500 text-xs font-bold rounded-lg text-white shadow-md shadow-brand-blue-600/15 transition-all"
-              >
-                {t.nav.register}
-              </Link>
-            </>
-          )}
-        </div>
-      </header>
-      </div>
+      {/* Sticky Top Group extracted to Navbar */}
+      <Navbar />
 
       {/* Hero Section */}
       <main className="max-w-7xl w-full mx-auto px-4 sm:px-6 py-8 md:py-16 z-10 flex-1 flex flex-col justify-center space-y-10 sm:space-y-16">
@@ -266,7 +210,7 @@ export default function LandingPage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
             {(categories || []).map((cat, idx) => {
               const Icon = cat.icon;
               const catName = tServices[cat.name as keyof typeof tServices] || cat.name;

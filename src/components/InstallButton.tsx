@@ -1,43 +1,12 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Download, CheckCircle, Smartphone } from "lucide-react";
 import { usePwaStore } from "@/store/usePwaStore";
 
 export default function InstallButton() {
-  const deferredPrompt = usePwaStore((state) => state.deferredPrompt);
-  const setDeferredPrompt = usePwaStore((state) => state.setDeferredPrompt);
-  // @ts-ignore
-  const isInstallable = usePwaStore((state: any) => state.isInstallable);
-  // @ts-ignore
-  const setIsInstallable = usePwaStore((state: any) => state.setIsInstallable);
-
-  const [isInstalled, setIsInstalled] = useState(false);
-  const [isIOS, setIsIOS] = useState(false);
+  const { deferredPrompt, setDeferredPrompt, isInstallable, setIsInstallable, isInstalled, setIsInstalled, isIOS } = usePwaStore();
   const [showIosTooltip, setShowIosTooltip] = useState(false);
-
-  useEffect(() => {
-    // Check if app is already running in PWA standalone mode
-    if (typeof window !== "undefined") {
-      const isStandalone = 
-        window.matchMedia("(display-mode: standalone)").matches ||
-        (window.navigator as any).standalone === true;
-
-      if (isStandalone) {
-        setIsInstalled(true);
-        setIsInstallable(false);
-        return;
-      }
-
-      // Detect iOS
-      const userAgent = window.navigator.userAgent.toLowerCase();
-      const isIosDevice = /iphone|ipad|ipod/.test(userAgent);
-      if (isIosDevice && !isStandalone) {
-        setIsIOS(true);
-        setIsInstallable(true);
-      }
-    }
-  }, [setIsInstallable]);
 
   const handleInstallClick = async () => {
     if (isIOS) {
@@ -45,19 +14,17 @@ export default function InstallButton() {
       return;
     }
 
-    const promptEvent = deferredPrompt;
-
-    if (!promptEvent || typeof promptEvent.prompt !== "function") {
+    if (!deferredPrompt || typeof deferredPrompt.prompt !== "function") {
       console.warn("[PWA] Install prompt is not ready or unavailable in this browser.");
       return;
     }
 
     try {
       // Trigger prompt directly from user interaction
-      await promptEvent.prompt();
+      await deferredPrompt.prompt();
 
-      if (promptEvent.userChoice) {
-        const choiceResult = await promptEvent.userChoice;
+      if (deferredPrompt.userChoice) {
+        const choiceResult = await deferredPrompt.userChoice;
         if (choiceResult && choiceResult.outcome === "accepted") {
           console.log("[PWA] User accepted installation.");
           setIsInstalled(true);
@@ -85,15 +52,14 @@ export default function InstallButton() {
     );
   }
 
-  // Always visible or visible when installable
   return (
     <div className="relative inline-block">
       <button
         onClick={handleInstallClick}
-        className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-brand-blue-600 to-brand-blue-500 hover:from-brand-blue-500 hover:to-brand-blue-400 text-white font-bold rounded-lg text-xs shadow-md shadow-brand-blue-600/20 transition-all hover:scale-105 active:scale-95"
+        className="flex items-center gap-1.5 px-4 py-2.5 sm:px-3 sm:py-1.5 bg-gradient-to-r from-brand-blue-600 to-brand-blue-500 hover:from-brand-blue-500 hover:to-brand-blue-400 text-white font-bold rounded-lg text-sm sm:text-xs shadow-md shadow-brand-blue-600/20 transition-all hover:scale-105 active:scale-95"
         title="Install QuickHandy Admin PWA"
       >
-        <Download className="w-3.5 h-3.5 animate-bounce" />
+        <Download className="w-4 h-4 sm:w-3.5 sm:h-3.5 animate-bounce" />
         <span>Install App</span>
       </button>
 
@@ -108,7 +74,7 @@ export default function InstallButton() {
           </p>
           <button
             onClick={() => setShowIosTooltip(false)}
-            className="w-full py-1 bg-slate-800 hover:bg-slate-750 text-slate-300 rounded font-semibold text-[10px]"
+            className="w-full py-2 bg-slate-800 hover:bg-slate-750 text-slate-300 rounded font-semibold text-[11px]"
           >
             Got it
           </button>

@@ -40,6 +40,7 @@ export default function ClientDashboard() {
   const [bookingId, setBookingId] = useState<string | null>(null);
   const [quotes, setQuotes] = useState<any[]>([]);
   const [activeQuote, setActiveQuote] = useState<any>(null);
+  const [elapsedTime, setElapsedTime] = useState(0);
   
   // Booking Form State (Defaulting to Cairo/Zagazig coordinates)
   const [address, setAddress] = useState("Detecting your location...");
@@ -352,6 +353,7 @@ export default function ClientDashboard() {
       // Only advance the step AFTER a successful API response
       setBookingId(newBookingId);
       setStep("WAITING_FOR_BIDS");
+      setElapsedTime(0);
       toast.success("Request posted! Waiting for provider quotes...");
     } catch (error: any) {
       console.error("Booking error:", error);
@@ -362,11 +364,13 @@ export default function ClientDashboard() {
     }
   };
 
-  // Polling for real quotes
+  // Polling for real quotes & elapsed timer
   useEffect(() => {
     let intervalId: NodeJS.Timeout;
+    let timerId: NodeJS.Timeout;
 
     if (step === "WAITING_FOR_BIDS" && bookingId) {
+      // Polling quotes every 4s
       intervalId = setInterval(async () => {
         try {
           const res = await api.get(`/bookings/${bookingId}/quotes`);
@@ -375,15 +379,22 @@ export default function ClientDashboard() {
             setActiveQuote(res.data[0]);
             setStep("QUOTE_RECEIVED");
             clearInterval(intervalId);
+            clearInterval(timerId);
           }
         } catch (error) {
           console.error("Failed to fetch quotes", error);
         }
       }, 4000);
+
+      // Increment elapsed time every 1s
+      timerId = setInterval(() => {
+        setElapsedTime((prev) => prev + 1);
+      }, 1000);
     }
 
     return () => {
       if (intervalId) clearInterval(intervalId);
+      if (timerId) clearInterval(timerId);
     };
   }, [step, bookingId]);
 
@@ -477,10 +488,10 @@ export default function ClientDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col md:flex-row">
+    <div className="h-[100dvh] overflow-hidden bg-slate-950 text-slate-100 flex flex-col md:flex-row">
       
       {/* SIDEBAR: Booking panel & states */}
-      <div className="w-full md:w-[420px] shrink-0 bg-slate-900 border-r border-slate-800 flex flex-col justify-between shadow-2xl z-20">
+      <div className="w-full h-[55vh] md:h-full md:w-[420px] shrink-0 bg-slate-900 border-r border-slate-800 flex flex-col justify-between shadow-2xl z-20">
         
         {/* Header */}
         <div className="p-5 border-b border-slate-800 flex items-center justify-between bg-slate-950/40">
@@ -800,11 +811,20 @@ export default function ClientDashboard() {
               </div>
               <div className="text-center space-y-2 px-4">
                 <h3 dir="auto" className="text-base font-bold text-white">Waiting for Quotes</h3>
+                
+                {/* Elapsed Timer Display */}
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-brand-blue-900/30 border border-brand-blue-500/20 rounded-full my-2">
+                  <div className="w-2 h-2 rounded-full bg-brand-blue-400 animate-pulse" />
+                  <span className="text-sm font-mono font-bold text-brand-blue-300">
+                    {Math.floor(elapsedTime / 60).toString().padStart(2, '0')}:{(elapsedTime % 60).toString().padStart(2, '0')}
+                  </span>
+                </div>
+
                 <p className="text-xs text-brand-blue-300 font-medium" dir="rtl">
                   جاري إرسال تفاصيل مشكلتك للفنيين... يرجى الانتظار لتلقي عروض الأسعار.
                 </p>
                 <p dir="auto" className="text-[10px] text-slate-500 max-w-[280px] mx-auto">
-                  Handymen in 10th of Ramadan City are reviewing your issue details and photos.
+                  Handymen in your area are reviewing your issue details and photos.
                 </p>
               </div>
 
@@ -1071,8 +1091,8 @@ export default function ClientDashboard() {
 
       </div>
 
-      {/* MAP AREA: 100% width on mobile, fills remaining screen on desktop */}
-      <div className="flex-1 h-[calc(100vh-280px)] md:h-screen relative z-10">
+      {/* MAP AREA: 45vh on mobile, fills remaining screen on desktop */}
+      <div className="w-full h-[45vh] md:h-full flex-1 relative z-10">
         <InteractiveMap
           interactive={step === "BOOKING_FORM"}
           onLocationSelect={handleLocationSelect}
