@@ -40,6 +40,7 @@ export async function GET(req: Request) {
         clientPhone: incomingBooking.client?.profile?.phone || 'N/A',
         category: incomingBooking.category?.name || 'Service',
         description: incomingBooking.description,
+        imageUrl: incomingBooking.imageUrl,
         address: incomingBooking.address,
         distance: '< 5 km',
         clientCoords: { lat: 30.3071, lng: 31.7428 },

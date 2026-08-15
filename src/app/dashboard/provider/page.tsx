@@ -539,7 +539,7 @@ export default function ProviderDashboard() {
                   {showActivePhoto && (
                     <div className="h-28 rounded-lg overflow-hidden border border-slate-850 mt-1.5 animate-fadeIn">
                       <img 
-                        src="https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=400&fit=crop" 
+                        src={activeJob?.imageUrl || "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=400&fit=crop"} 
                         alt="Client problem attachment" 
                         onClick={() => setIsImageFullscreen(true)}
                         className="w-full h-full object-cover cursor-zoom-in hover:opacity-90 transition-opacity"
@@ -725,7 +725,7 @@ export default function ProviderDashboard() {
               {showPhotoPreview && (
                 <div className="mt-2 h-36 rounded-lg overflow-hidden border border-slate-850">
                   <img 
-                    src="https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=400&fit=crop" 
+                    src={activeJob?.imageUrl || "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=400&fit=crop"} 
                     alt="Problem attachment" 
                     onClick={() => setIsImageFullscreen(true)}
                     className="w-full h-full object-cover cursor-zoom-in hover:opacity-90 transition-opacity"

@@ -107,6 +107,7 @@ model Booking {
   categoryId      String
   status          String          @default("PENDING") // PENDING, ACCEPTED, IN_PROGRESS, COMPLETED, CANCELLED, DISPUTED
   description     String
+  imageUrl        String?
   address         String
   scheduledAt     DateTime
   estimatedCost   Float?
