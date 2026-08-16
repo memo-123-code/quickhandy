@@ -31,3 +31,6 @@ dev.db-journal
 
 # vercel
 .vercel
+
+.vercel
+.env*
