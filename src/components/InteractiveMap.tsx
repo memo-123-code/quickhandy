@@ -68,15 +68,13 @@ export default function InteractiveMap({
     activeProviderLoc = { lat: interpolatedLat, lng: interpolatedLng };
   }
 
-  const handleMapClick = useCallback(
-    (e: google.maps.MapMouseEvent) => {
-      if (!interactive || !onLocationSelect || !e.latLng) return;
-      const clickedLat = e.latLng.lat();
-      const clickedLng = e.latLng.lng();
+  const processLocationChange = useCallback(
+    (lat: number, lng: number) => {
+      if (!interactive || !onLocationSelect) return;
 
       // Fetch real-world address from Nominatim reverse geocoding
       fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${clickedLat}&lon=${clickedLng}&zoom=18`,
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18`,
         {
           headers: {
             "Accept-Language": "en,ar",
@@ -86,31 +84,36 @@ export default function InteractiveMap({
       )
         .then((res) => res.json())
         .then((data) => {
-          const neighborhood =
-            data.address?.neighbourhood ||
-            data.address?.suburb ||
-            data.address?.quarter ||
-            data.address?.city_district;
-          const city =
-            data.address?.city ||
-            data.address?.town ||
-            data.address?.village;
-          const locationName = neighborhood
-            ? `${neighborhood}, ${city || ""}`.replace(/,\s*$/, "")
-            : city || `${clickedLat.toFixed(4)}, ${clickedLng.toFixed(4)}`;
-          const addressName = `Pinned Location (${locationName})`;
-          onLocationSelect(clickedLat, clickedLng, addressName);
+          const detailedAddress = data.display_name || data.address?.village || data.address?.town || data.address?.city || `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+          const addressName = `Pinned Location (${detailedAddress})`;
+          onLocationSelect(lat, lng, addressName);
         })
         .catch((err) => {
           console.error("Reverse geocoding error:", err);
           onLocationSelect(
-            clickedLat,
-            clickedLng,
-            `Pinned Location (${clickedLat.toFixed(4)}, ${clickedLng.toFixed(4)})`
+            lat,
+            lng,
+            `Pinned Location (${lat.toFixed(6)}, ${lng.toFixed(6)})`
           );
         });
     },
     [interactive, onLocationSelect]
+  );
+
+  const handleMapClick = useCallback(
+    (e: google.maps.MapMouseEvent) => {
+      if (!e.latLng) return;
+      processLocationChange(e.latLng.lat(), e.latLng.lng());
+    },
+    [processLocationChange]
+  );
+
+  const handleMarkerDragEnd = useCallback(
+    (e: google.maps.MapMouseEvent) => {
+      if (!e.latLng) return;
+      processLocationChange(e.latLng.lat(), e.latLng.lng());
+    },
+    [processLocationChange]
   );
 
   if (loadError) {
@@ -151,6 +154,8 @@ export default function InteractiveMap({
         <Marker
           position={clientLocation}
           title="Service Location"
+          draggable={interactive}
+          onDragEnd={handleMarkerDragEnd}
         />
 
         {/* Provider Marker */}

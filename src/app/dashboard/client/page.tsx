@@ -82,7 +82,7 @@ export default function ClientDashboard() {
           
           try {
             const res = await fetch(
-              `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=16`,
+              `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18`,
               {
                 headers: {
                   "Accept-Language": "en,ar",
@@ -91,15 +91,13 @@ export default function ClientDashboard() {
               }
             );
             const data = await res.json();
-            const neighborhood = data.address?.neighbourhood || data.address?.suburb || data.address?.quarter || data.address?.city_district;
-            const city = data.address?.city || data.address?.town || data.address?.village;
-            const locationName = neighborhood ? `${neighborhood}, ${city || ''}`.replace(/,\s*$/, '') : (city || "Current Location");
-            const addr = `Current Location (${locationName})`;
+            const detailedAddress = data.display_name || data.address?.village || data.address?.town || data.address?.city || "Current Location";
+            const addr = `Current Location (${detailedAddress})`;
             setAddress(addr);
             setLastSelectedAddress(addr);
           } catch (err) {
             console.error("Reverse geocoding error:", err);
-            const fallbackAddr = `Current Location (${latitude.toFixed(4)}, ${longitude.toFixed(4)})`;
+            const fallbackAddr = `Current Location (${latitude.toFixed(6)}, ${longitude.toFixed(6)})`;
             setAddress(fallbackAddr);
             setLastSelectedAddress(fallbackAddr);
           } finally {
@@ -107,10 +105,10 @@ export default function ClientDashboard() {
           }
         },
         (error) => {
-          console.warn("Geolocation failed, using Cairo/Zagazig fallback:", error);
+          console.warn("Geolocation failed, using fallback:", error);
           setIsDetectingLocation(false);
         },
-        { enableHighAccuracy: true, timeout: 7000 }
+        { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
       );
     } else {
       setIsDetectingLocation(false);
@@ -219,7 +217,7 @@ export default function ClientDashboard() {
           
           try {
             const res = await fetch(
-              `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=16`,
+              `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18`,
               {
                 headers: {
                   "Accept-Language": "en,ar",
@@ -229,17 +227,14 @@ export default function ClientDashboard() {
             );
             const data = await res.json();
             
-            // Extract neighborhood or city for a clean, user-friendly address
-            const neighborhood = data.address?.neighbourhood || data.address?.suburb || data.address?.quarter || data.address?.city_district;
-            const city = data.address?.city || data.address?.town || data.address?.village;
-            const locationName = neighborhood ? `${neighborhood}, ${city || ''}`.replace(/,\s*$/, '') : (city || "Current Location");
-            const addr = `Current Location (${locationName})`;
+            const detailedAddress = data.display_name || data.address?.village || data.address?.town || data.address?.city || "Current Location";
+            const addr = `Current Location (${detailedAddress})`;
             
             setAddress(addr);
             setLastSelectedAddress(addr);
           } catch (err) {
             console.error("Reverse geocoding error:", err);
-            const fallbackAddr = `Current Location (${latitude.toFixed(4)}, ${longitude.toFixed(4)})`;
+            const fallbackAddr = `Current Location (${latitude.toFixed(6)}, ${longitude.toFixed(6)})`;
             setAddress(fallbackAddr);
             setLastSelectedAddress(fallbackAddr);
           } finally {
@@ -247,10 +242,10 @@ export default function ClientDashboard() {
           }
         },
         (error) => {
-          console.warn("Geolocation permission denied or failed, using Cairo/Zagazig fallback:", error);
+          console.warn("Geolocation permission denied or failed, using fallback:", error);
           fallbackLocation();
         },
-        { enableHighAccuracy: true, timeout: 7000 }
+        { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
       );
     } else {
       fallbackLocation();
