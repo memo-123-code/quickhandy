@@ -72,19 +72,14 @@ export default function InteractiveMap({
     (lat: number, lng: number) => {
       if (!interactive || !onLocationSelect) return;
 
-      // Fetch real-world address from Nominatim reverse geocoding
+      // Fetch real-world address from Google Maps Geocoding API
+      const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY;
       fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18`,
-        {
-          headers: {
-            "Accept-Language": "en,ar",
-            "User-Agent": "QuickHandyClientDashboard/1.0",
-          },
-        }
+        `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${apiKey}&language=ar`
       )
         .then((res) => res.json())
         .then((data) => {
-          const detailedAddress = data.display_name || data.address?.village || data.address?.town || data.address?.city || `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+          const detailedAddress = data.results?.[0]?.formatted_address || `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
           const addressName = `Pinned Location (${detailedAddress})`;
           onLocationSelect(lat, lng, addressName);
         })

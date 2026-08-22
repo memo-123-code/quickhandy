@@ -81,17 +81,10 @@ export default function ClientDashboard() {
           setLng(longitude);
           
           try {
-            const res = await fetch(
-              `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18`,
-              {
-                headers: {
-                  "Accept-Language": "en,ar",
-                  "User-Agent": "QuickHandyClientDashboard/1.0"
-                }
-              }
-            );
+            const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY;
+            const res = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${apiKey}&language=ar`);
             const data = await res.json();
-            const detailedAddress = data.display_name || data.address?.village || data.address?.town || data.address?.city || "Current Location";
+            const detailedAddress = data.results?.[0]?.formatted_address || "Current Location";
             const addr = `Current Location (${detailedAddress})`;
             setAddress(addr);
             setLastSelectedAddress(addr);
@@ -216,18 +209,11 @@ export default function ClientDashboard() {
           setLng(longitude);
           
           try {
-            const res = await fetch(
-              `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18`,
-              {
-                headers: {
-                  "Accept-Language": "en,ar",
-                  "User-Agent": "QuickHandyClientDashboard/1.0"
-                }
-              }
-            );
+            const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY;
+            const res = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${apiKey}&language=ar`);
             const data = await res.json();
             
-            const detailedAddress = data.display_name || data.address?.village || data.address?.town || data.address?.city || "Current Location";
+            const detailedAddress = data.results?.[0]?.formatted_address || "Current Location";
             const addr = `Current Location (${detailedAddress})`;
             
             setAddress(addr);
