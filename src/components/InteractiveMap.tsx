@@ -29,9 +29,11 @@ export default function InteractiveMap({
   showRoute = false,
   routeProgress = 0,
 }: InteractiveMapProps) {
+  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "";
+
   const { isLoaded, loadError } = useJsApiLoader({
     id: "google-map-script",
-    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY || "",
+    googleMapsApiKey: apiKey,
     libraries,
   });
 
@@ -73,9 +75,9 @@ export default function InteractiveMap({
       if (!interactive || !onLocationSelect) return;
 
       // Fetch real-world address from Google Maps Geocoding API
-      const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY;
+      const geocodeApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
       fetch(
-        `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${apiKey}&language=ar`
+        `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${geocodeApiKey}&language=ar`
       )
         .then((res) => res.json())
         .then((data) => {
@@ -110,6 +112,16 @@ export default function InteractiveMap({
     },
     [processLocationChange]
   );
+
+  if (!apiKey) {
+    return (
+      <div className="w-full h-full bg-slate-950 flex flex-col items-center justify-center text-slate-400 p-6 text-center border border-slate-800 rounded-2xl">
+        <MapPin className="w-8 h-8 text-brand-orange-500 mb-2" />
+        <p dir="auto" className="text-sm font-semibold text-white">Map Configuration Error</p>
+        <p dir="auto" className="text-xs text-slate-500 mt-1">NEXT_PUBLIC_GOOGLE_MAPS_API_KEY is missing. Please set it in your environment variables.</p>
+      </div>
+    );
+  }
 
   if (loadError) {
     return (
