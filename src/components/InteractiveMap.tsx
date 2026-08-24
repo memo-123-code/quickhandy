@@ -59,7 +59,7 @@ function MapClickHandler({ interactive, onLocationSelect }: { interactive: boole
   useMapEvents({
     click(e) {
       if (interactive && onLocationSelect) {
-        onLocationSelect(e.latlng.lat, e.latlng.lng, \`Selected Location (\${e.latlng.lat.toFixed(4)}, \${e.latlng.lng.toFixed(4)})\`);
+        onLocationSelect(e.latlng.lat, e.latlng.lng, `Selected Location (${e.latlng.lat.toFixed(4)}, ${e.latlng.lng.toFixed(4)})`);
       }
     },
   });
@@ -113,7 +113,7 @@ export default function InteractiveMap({
               if (interactive && onLocationSelect) {
                 const marker = e.target;
                 const pos = marker.getLatLng();
-                onLocationSelect(pos.lat, pos.lng, \`Pinned Location (\${pos.lat.toFixed(4)}, \${pos.lng.toFixed(4)})\`);
+                onLocationSelect(pos.lat, pos.lng, `Pinned Location (${pos.lat.toFixed(4)}, ${pos.lng.toFixed(4)})`);
               }
             }
           }}
@@ -153,7 +153,7 @@ export default function InteractiveMap({
             <span className="font-semibold text-white">Live Provider Tracking</span>
           </div>
           <div className="mt-2 w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
-            <div className="bg-brand-blue-500 h-full transition-all duration-300" style={{ width: \`\${routeProgress * 100}%\` }}></div>
+            <div className="bg-brand-blue-500 h-full transition-all duration-300" style={{ width: `${routeProgress * 100}%` }}></div>
           </div>
         </div>
       )}
