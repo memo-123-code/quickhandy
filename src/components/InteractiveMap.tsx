@@ -101,7 +101,7 @@ export default function InteractiveMap({
   const currentRouteProgress = isTrackingDemo ? simulatedProgress : routeProgress;
 
   if (typeof window === 'undefined') {
-    return <div className="w-full h-full bg-slate-900 rounded-2xl animate-pulse"></div>;
+    return <div className="w-full h-full bg-slate-900 rounded-2xl animate-pulse" />;
   }
 
   return (
@@ -115,7 +115,7 @@ export default function InteractiveMap({
       >
         <TileLayer
           url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+          attribution='&copy; OpenStreetMap'
         />
         
         <MapClickHandler interactive={interactive} onLocationSelect={onLocationSelect} />
@@ -154,25 +154,25 @@ export default function InteractiveMap({
               dashArray: '10, 15', 
               opacity: 0.8,
               lineCap: 'round',
-              className: 'animate-[dash_1s_linear_infinite]'
+              className: 'custom-animate-dash'
             }}
           />
         )}
       </MapContainer>
 
-      {/* Global CSS for Polyline animation */}
-      <style dangerouslySetInnerHTML={{__html: `
+      {/* Global CSS for Polyline animation without Next.js parsing issues */}
+      <style>{`
         @keyframes dash {
           to { stroke-dashoffset: -25; }
         }
-        .animate-\\[dash_1s_linear_infinite\\] {
+        .custom-animate-dash {
           animation: dash 1s linear infinite;
         }
-      `}} />
+      `}</style>
 
       {/* Smart UI Overlay (Glassmorphism Tracking Card) */}
       {isTrackingDemo && (
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-[1000] w-[90%] max-w-sm">
+        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-[1000] w-[90%] max-w-sm pointer-events-auto">
           <div className="bg-slate-950/80 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-4 shadow-2xl">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
@@ -192,7 +192,7 @@ export default function InteractiveMap({
             <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
               <div 
                 className="bg-gradient-to-r from-brand-orange-500 to-brand-blue-500 h-full transition-all duration-300" 
-                style={{ width: \`\${currentRouteProgress * 100}%\` }}
+                style={{ width: `${currentRouteProgress * 100}%` }}
               ></div>
             </div>
           </div>
@@ -201,7 +201,7 @@ export default function InteractiveMap({
 
       {/* Interactive HUD instructions */}
       {interactive && (
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-[1000] bg-slate-950/80 backdrop-blur-xl border border-brand-blue-500/30 rounded-full px-5 py-3 text-sm font-semibold text-white shadow-2xl flex items-center gap-3 transition-transform hover:scale-105">
+        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-[1000] bg-slate-950/80 backdrop-blur-xl border border-brand-blue-500/30 rounded-full px-5 py-3 text-sm font-semibold text-white shadow-2xl flex items-center gap-3 transition-transform hover:scale-105 pointer-events-none">
           <MapPin className="w-4 h-4 text-brand-orange-500 animate-bounce" />
           <span dir="auto">Click anywhere to select location</span>
         </div>
