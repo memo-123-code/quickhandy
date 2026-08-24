@@ -2,46 +2,8 @@
 
 import React, { useEffect, useState } from "react";
 import { MapPin, Phone, CheckCircle } from "lucide-react";
-import { MapContainer, TileLayer, Marker, useMapEvents, Polyline } from "react-leaflet";
-import L from "leaflet";
+import { MapContainer, TileLayer, CircleMarker, useMapEvents, Polyline } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
-
-// Fix default Leaflet icon paths in Next.js
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
-  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-});
-
-const createCustomIcon = (iconHtml: string) => {
-  return L.divIcon({
-    html: iconHtml,
-    className: 'bg-transparent border-none',
-    iconSize: [48, 48],
-    iconAnchor: [24, 48],
-  });
-};
-
-const clientIcon = createCustomIcon(`
-  <div class="relative flex items-center justify-center w-12 h-12 group">
-    <div class="absolute inset-0 bg-brand-blue-500 rounded-full animate-ping opacity-30"></div>
-    <div class="relative z-10 w-8 h-8 bg-brand-blue-600 rounded-full border-[3px] border-white flex items-center justify-center shadow-[0_0_15px_rgba(37,99,235,0.6)]">
-      <div class="w-2.5 h-2.5 bg-white rounded-full"></div>
-    </div>
-    <div class="absolute -bottom-2 w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[8px] border-t-white drop-shadow-md"></div>
-  </div>
-`);
-
-const providerIcon = createCustomIcon(`
-  <div class="relative flex items-center justify-center w-12 h-12">
-    <div class="absolute inset-0 bg-brand-orange-500 rounded-full animate-ping opacity-40" style="animation-duration: 2s;"></div>
-    <div class="relative z-10 w-10 h-10 bg-gradient-to-br from-brand-orange-400 to-brand-orange-600 rounded-full border-[3px] border-white flex items-center justify-center shadow-[0_0_20px_rgba(249,115,22,0.7)]">
-      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
-    </div>
-    <div class="absolute -bottom-2 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-t-[10px] border-t-white drop-shadow-lg"></div>
-  </div>
-`);
 
 interface InteractiveMapProps {
   interactive?: boolean;
@@ -67,13 +29,21 @@ export default function InteractiveMap({
   interactive = false,
   onLocationSelect,
   providerLocation,
-  clientLocation = { lat: 30.3015, lng: 31.7406 }, // Default 10th of Ramadan City
+  clientLocation, 
   showRoute = false,
   routeProgress = 0,
 }: InteractiveMapProps) {
 
   // Force tracking demo UI if not in interactive mode
   const isTrackingDemo = !interactive; 
+
+  // Hardcode coordinates to guarantee visibility exactly within 10th of Ramadan City
+  const defaultCenter = { lat: 30.3000, lng: 31.7400 };
+  const fallbackClientLoc = { lat: 30.2950, lng: 31.7450 };
+  const fallbackDemoStart = { lat: 30.3050, lng: 31.7350 };
+  
+  const activeClientLoc = clientLocation || fallbackClientLoc;
+  const demoStart = providerLocation || fallbackDemoStart;
 
   const [simulatedProgress, setSimulatedProgress] = useState(0);
 
@@ -88,15 +58,12 @@ export default function InteractiveMap({
     return () => clearInterval(interval);
   }, [isTrackingDemo]);
 
-  // Demo Provider starts slightly Southwest of the Client
-  const demoStart = { lat: clientLocation.lat - 0.015, lng: clientLocation.lng - 0.015 };
-  
   const currentProviderLoc = isTrackingDemo 
     ? {
-        lat: demoStart.lat + (clientLocation.lat - demoStart.lat) * simulatedProgress,
-        lng: demoStart.lng + (clientLocation.lng - demoStart.lng) * simulatedProgress,
+        lat: demoStart.lat + (activeClientLoc.lat - demoStart.lat) * simulatedProgress,
+        lng: demoStart.lng + (activeClientLoc.lng - demoStart.lng) * simulatedProgress,
       }
-    : providerLocation;
+    : providerLocation || demoStart;
 
   const currentRouteProgress = isTrackingDemo ? simulatedProgress : routeProgress;
 
@@ -107,7 +74,7 @@ export default function InteractiveMap({
   return (
     <div className="w-full h-full relative rounded-2xl overflow-hidden border border-slate-800 shadow-2xl bg-slate-900 z-0 font-sans">
       <MapContainer 
-        center={[clientLocation.lat, clientLocation.lng]} 
+        center={[defaultCenter.lat, defaultCenter.lng]} 
         zoom={14} 
         style={{ width: '100%', height: '100%', zIndex: 0 }}
         zoomControl={false}
@@ -120,39 +87,51 @@ export default function InteractiveMap({
         
         <MapClickHandler interactive={interactive} onLocationSelect={onLocationSelect} />
         
-        <Marker 
-          position={[clientLocation.lat, clientLocation.lng]} 
-          icon={clientIcon}
-          draggable={interactive}
-          eventHandlers={{
-            dragend: (e) => {
-              if (interactive && onLocationSelect) {
-                const marker = e.target;
-                const pos = marker.getLatLng();
-                onLocationSelect(pos.lat, pos.lng, `Pinned Location (${pos.lat.toFixed(4)}, ${pos.lng.toFixed(4)})`);
-              }
-            }
-          }}
+        {/* Client Marker (Blue Circle) */}
+        <CircleMarker 
+          center={[activeClientLoc.lat, activeClientLoc.lng]}
+          pathOptions={{ color: '#ffffff', fillColor: '#3b82f6', fillOpacity: 1, weight: 3 }}
+          radius={12}
+        />
+        
+        {/* Outer glowing pulse for Client */}
+        <CircleMarker 
+          center={[activeClientLoc.lat, activeClientLoc.lng]}
+          pathOptions={{ color: 'transparent', fillColor: '#3b82f6', fillOpacity: 0.3 }}
+          radius={24}
+          className="animate-ping"
         />
 
+        {/* Handyman Marker (Orange Circle) */}
         {currentProviderLoc && (
-          <Marker 
-            position={[currentProviderLoc.lat, currentProviderLoc.lng]} 
-            icon={providerIcon}
+          <CircleMarker 
+            center={[currentProviderLoc.lat, currentProviderLoc.lng]} 
+            pathOptions={{ color: '#ffffff', fillColor: '#f97316', fillOpacity: 1, weight: 3 }}
+            radius={14}
+          />
+        )}
+        
+        {/* Outer glowing pulse for Handyman */}
+        {currentProviderLoc && (
+          <CircleMarker 
+            center={[currentProviderLoc.lat, currentProviderLoc.lng]} 
+            pathOptions={{ color: 'transparent', fillColor: '#f97316', fillOpacity: 0.4 }}
+            radius={28}
           />
         )}
 
+        {/* Animated Polyline Route */}
         {currentProviderLoc && (
           <Polyline 
             positions={[
               [currentProviderLoc.lat, currentProviderLoc.lng],
-              [clientLocation.lat, clientLocation.lng]
+              [activeClientLoc.lat, activeClientLoc.lng]
             ]}
             pathOptions={{ 
               color: '#f97316', 
-              weight: 5, 
-              dashArray: '10, 15', 
-              opacity: 0.8,
+              weight: 4, 
+              dashArray: '5, 10', 
+              opacity: 0.9,
               lineCap: 'round',
               className: 'custom-animate-dash'
             }}
@@ -163,7 +142,7 @@ export default function InteractiveMap({
       {/* Global CSS for Polyline animation without Next.js parsing issues */}
       <style>{`
         @keyframes dash {
-          to { stroke-dashoffset: -25; }
+          to { stroke-dashoffset: -30; }
         }
         .custom-animate-dash {
           animation: dash 1s linear infinite;
