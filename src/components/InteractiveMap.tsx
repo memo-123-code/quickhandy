@@ -1,9 +1,7 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { MapPin, Phone, CheckCircle } from "lucide-react";
-import { MapContainer, TileLayer, CircleMarker, useMapEvents, Polyline } from "react-leaflet";
-import "leaflet/dist/leaflet.css";
 
 interface InteractiveMapProps {
   interactive?: boolean;
@@ -12,17 +10,6 @@ interface InteractiveMapProps {
   clientLocation?: { lat: number; lng: number };
   showRoute?: boolean;
   routeProgress?: number;
-}
-
-function MapClickHandler({ interactive, onLocationSelect }: { interactive: boolean; onLocationSelect?: (lat: number, lng: number, address: string) => void }) {
-  useMapEvents({
-    click(e) {
-      if (interactive && onLocationSelect) {
-        onLocationSelect(e.latlng.lat, e.latlng.lng, `Selected Location (${e.latlng.lat.toFixed(4)}, ${e.latlng.lng.toFixed(4)})`);
-      }
-    },
-  });
-  return null;
 }
 
 export default function InteractiveMap({
@@ -46,7 +33,12 @@ export default function InteractiveMap({
   const demoStart = providerLocation || fallbackDemoStart;
 
   const [simulatedProgress, setSimulatedProgress] = useState(0);
+  const mapRef = useRef<any>(null);
+  const mapContainerRef = useRef<HTMLDivElement>(null);
+  const providerMarkerRef = useRef<any>(null);
+  const routeLineRef = useRef<any>(null);
 
+  // Animation Loop
   useEffect(() => {
     if (!isTrackingDemo) return;
     const interval = setInterval(() => {
@@ -67,79 +59,114 @@ export default function InteractiveMap({
 
   const currentRouteProgress = isTrackingDemo ? simulatedProgress : routeProgress;
 
+  // Pure Vanilla Leaflet Initialization (100% Client-Side)
+  useEffect(() => {
+    if (typeof window === 'undefined' || !mapContainerRef.current) return;
+
+    // Dynamically require Leaflet to bypass all SSR issues
+    const L = require('leaflet');
+    require('leaflet/dist/leaflet.css');
+
+    // Only initialize the map once
+    if (!mapRef.current) {
+      const map = L.map(mapContainerRef.current, {
+        zoomControl: false,
+        attributionControl: false
+      }).setView([defaultCenter.lat, defaultCenter.lng], 14);
+      
+      mapRef.current = map;
+
+      // CartoDB Dark Matter
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; OpenStreetMap'
+      }).addTo(map);
+
+      // Client Marker (Blue Circle)
+      L.circleMarker([activeClientLoc.lat, activeClientLoc.lng], {
+        color: '#ffffff',
+        fillColor: '#3b82f6',
+        fillOpacity: 1,
+        weight: 3,
+        radius: 12
+      }).addTo(map);
+      
+      // Client Outer Pulse
+      L.circleMarker([activeClientLoc.lat, activeClientLoc.lng], {
+        color: 'transparent',
+        fillColor: '#3b82f6',
+        fillOpacity: 0.3,
+        radius: 24,
+        className: 'animate-ping'
+      }).addTo(map);
+
+      // Provider Marker (Orange Circle)
+      providerMarkerRef.current = L.circleMarker([currentProviderLoc.lat, currentProviderLoc.lng], {
+        color: '#ffffff',
+        fillColor: '#f97316',
+        fillOpacity: 1,
+        weight: 3,
+        radius: 14
+      }).addTo(map);
+
+      // Provider Outer Pulse
+      L.circleMarker([currentProviderLoc.lat, currentProviderLoc.lng], {
+        color: 'transparent',
+        fillColor: '#f97316',
+        fillOpacity: 0.4,
+        radius: 28
+      }).addTo(map);
+
+      // Animated Route Polyline
+      routeLineRef.current = L.polyline([
+        [currentProviderLoc.lat, currentProviderLoc.lng],
+        [activeClientLoc.lat, activeClientLoc.lng]
+      ], {
+        color: '#f97316',
+        weight: 4,
+        dashArray: '5, 10',
+        opacity: 0.9,
+        lineCap: 'round',
+        className: 'custom-animate-dash'
+      }).addTo(map);
+
+      if (interactive && onLocationSelect) {
+        map.on('click', (e: any) => {
+          onLocationSelect(e.latlng.lat, e.latlng.lng, `Selected Location (${e.latlng.lat.toFixed(4)}, ${e.latlng.lng.toFixed(4)})`);
+        });
+      }
+    }
+
+    return () => {
+      // Complete cleanup on unmount
+      if (mapRef.current) {
+        mapRef.current.remove();
+        mapRef.current = null;
+      }
+    };
+  }, []); // Run strictly once on mount
+
+  // Update Provider Route Dynamically
+  useEffect(() => {
+    if (providerMarkerRef.current && routeLineRef.current) {
+      providerMarkerRef.current.setLatLng([currentProviderLoc.lat, currentProviderLoc.lng]);
+      routeLineRef.current.setLatLngs([
+        [currentProviderLoc.lat, currentProviderLoc.lng],
+        [activeClientLoc.lat, activeClientLoc.lng]
+      ]);
+    }
+  }, [currentProviderLoc, activeClientLoc]);
+
   if (typeof window === 'undefined') {
     return <div className="w-full h-full bg-slate-900 rounded-2xl animate-pulse" />;
   }
 
   return (
     <div className="w-full h-full relative rounded-2xl overflow-hidden border border-slate-800 shadow-2xl bg-slate-900 z-0 font-sans">
-      <MapContainer 
-        center={[defaultCenter.lat, defaultCenter.lng]} 
-        zoom={14} 
-        style={{ width: '100%', height: '100%', zIndex: 0 }}
-        zoomControl={false}
-        scrollWheelZoom={true}
-      >
-        <TileLayer
-          url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-          attribution='&copy; OpenStreetMap'
-        />
-        
-        <MapClickHandler interactive={interactive} onLocationSelect={onLocationSelect} />
-        
-        {/* Client Marker (Blue Circle) */}
-        <CircleMarker 
-          center={[activeClientLoc.lat, activeClientLoc.lng]}
-          pathOptions={{ color: '#ffffff', fillColor: '#3b82f6', fillOpacity: 1, weight: 3 }}
-          radius={12}
-        />
-        
-        {/* Outer glowing pulse for Client */}
-        <CircleMarker 
-          center={[activeClientLoc.lat, activeClientLoc.lng]}
-          pathOptions={{ color: 'transparent', fillColor: '#3b82f6', fillOpacity: 0.3 }}
-          radius={24}
-          className="animate-ping"
-        />
+      
+      {/* Pure HTML Map Container */}
+      <div ref={mapContainerRef} className="w-full h-full z-0 absolute inset-0"></div>
 
-        {/* Handyman Marker (Orange Circle) */}
-        {currentProviderLoc && (
-          <CircleMarker 
-            center={[currentProviderLoc.lat, currentProviderLoc.lng]} 
-            pathOptions={{ color: '#ffffff', fillColor: '#f97316', fillOpacity: 1, weight: 3 }}
-            radius={14}
-          />
-        )}
-        
-        {/* Outer glowing pulse for Handyman */}
-        {currentProviderLoc && (
-          <CircleMarker 
-            center={[currentProviderLoc.lat, currentProviderLoc.lng]} 
-            pathOptions={{ color: 'transparent', fillColor: '#f97316', fillOpacity: 0.4 }}
-            radius={28}
-          />
-        )}
-
-        {/* Animated Polyline Route */}
-        {currentProviderLoc && (
-          <Polyline 
-            positions={[
-              [currentProviderLoc.lat, currentProviderLoc.lng],
-              [activeClientLoc.lat, activeClientLoc.lng]
-            ]}
-            pathOptions={{ 
-              color: '#f97316', 
-              weight: 4, 
-              dashArray: '5, 10', 
-              opacity: 0.9,
-              lineCap: 'round',
-              className: 'custom-animate-dash'
-            }}
-          />
-        )}
-      </MapContainer>
-
-      {/* Global CSS for Polyline animation without Next.js parsing issues */}
+      {/* Global CSS for Polyline animation */}
       <style>{`
         @keyframes dash {
           to { stroke-dashoffset: -30; }
@@ -149,9 +176,9 @@ export default function InteractiveMap({
         }
       `}</style>
 
-      {/* Smart UI Overlay (Glassmorphism Tracking Card) */}
+      {/* Smart UI Overlay (Glassmorphism Tracking Card) - Elevated Z-Index */}
       {isTrackingDemo && (
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-[1000] w-[90%] max-w-sm pointer-events-auto">
+        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-[50] w-[90%] max-w-sm pointer-events-auto">
           <div className="bg-slate-950/80 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-4 shadow-2xl">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
@@ -180,7 +207,7 @@ export default function InteractiveMap({
 
       {/* Interactive HUD instructions */}
       {interactive && (
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-[1000] bg-slate-950/80 backdrop-blur-xl border border-brand-blue-500/30 rounded-full px-5 py-3 text-sm font-semibold text-white shadow-2xl flex items-center gap-3 transition-transform hover:scale-105 pointer-events-none">
+        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-[50] bg-slate-950/80 backdrop-blur-xl border border-brand-blue-500/30 rounded-full px-5 py-3 text-sm font-semibold text-white shadow-2xl flex items-center gap-3 transition-transform hover:scale-105 pointer-events-none">
           <MapPin className="w-4 h-4 text-brand-orange-500 animate-bounce" />
           <span dir="auto">Click anywhere to select location</span>
         </div>
