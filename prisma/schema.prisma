@@ -109,8 +109,10 @@ model Booking {
   description     String
   imageUrl        String?
   address         String
-  providerLat     Float?
-  providerLng     Float?
+  clientLat       Float?
+  clientLng       Float?
+  handymanLat     Float?
+  handymanLng     Float?
   scheduledAt     DateTime
   estimatedCost   Float?
   finalCost       Float?

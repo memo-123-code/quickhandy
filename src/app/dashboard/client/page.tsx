@@ -24,6 +24,11 @@ const InteractiveMap = dynamic(() => import("@/components/InteractiveMap"), {
   loading: () => <SkeletonCard className="w-full h-full min-h-[300px]" />
 });
 
+const LiveTrackingMap = dynamic(() => import("@/components/LiveTrackingMap"), {
+  ssr: false,
+  loading: () => <SkeletonCard className="w-full h-full min-h-[300px]" />
+});
+
 type BookingStep = "SELECT_SERVICE" | "BOOKING_FORM" | "WAITING_FOR_BIDS" | "SEARCHING" | "QUOTE_RECEIVED" | "TRACKING" | "COMPLETED";
 
 export default function ClientDashboard() {
@@ -1083,14 +1088,20 @@ export default function ClientDashboard() {
 
       {/* MAP AREA: 45vh on mobile, fills remaining screen on desktop */}
       <div className="w-full h-[45vh] md:h-full flex-1 relative z-10">
-        <InteractiveMap
-          interactive={step === "BOOKING_FORM"}
-          onLocationSelect={handleLocationSelect}
-          providerLocation={step === "TRACKING" ? (liveProviderCoords || { lat: lat - 0.0028, lng: lng - 0.009 }) : undefined}
-          clientLocation={{ lat: lat, lng: lng }}
-          showRoute={step === "TRACKING"}
-          routeProgress={routeProgress}
-        />
+        {step === "TRACKING" && bookingId ? (
+          <LiveTrackingMap
+            bookingId={bookingId}
+            clientLocation={{ lat: lat, lng: lng }}
+            initialHandymanLocation={liveProviderCoords}
+          />
+        ) : (
+          <InteractiveMap
+            interactive={step === "BOOKING_FORM"}
+            onLocationSelect={handleLocationSelect}
+            clientLocation={{ lat: lat, lng: lng }}
+            showRoute={false}
+          />
+        )}
       </div>
 
       {/* Chat Modal Overlay */}

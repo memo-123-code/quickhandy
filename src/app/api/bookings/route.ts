@@ -59,6 +59,8 @@ export async function POST(req: Request) {
         description: problemDescription,
         imageUrl: imageUrl || null,
         address: address || 'Not specified',
+        clientLat: parseFloat(locationLat) || null,
+        clientLng: parseFloat(locationLng) || null,
         scheduledAt,
         status: 'PENDING',
       },

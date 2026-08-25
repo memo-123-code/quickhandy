@@ -182,8 +182,8 @@ export default function ProviderDashboard() {
       interval = setInterval(async () => {
         try {
           await api.patch(`/bookings/${jobId}`, {
-            providerLat: providerCoords.lat,
-            providerLng: providerCoords.lng
+            handymanLat: providerCoords.lat,
+            handymanLng: providerCoords.lng
           });
         } catch (error) {
           console.error("Failed to broadcast location", error);

@@ -66,12 +66,12 @@ export async function PATCH(
   try {
     const { id } = params;
     const body = await req.json();
-    const { status, providerLat, providerLng } = body;
+    const { status, handymanLat, handymanLng } = body;
 
     const dataToUpdate: any = {};
     if (status) dataToUpdate.status = status;
-    if (providerLat !== undefined) dataToUpdate.providerLat = providerLat;
-    if (providerLng !== undefined) dataToUpdate.providerLng = providerLng;
+    if (handymanLat !== undefined) dataToUpdate.handymanLat = handymanLat;
+    if (handymanLng !== undefined) dataToUpdate.handymanLng = handymanLng;
 
     if (Object.keys(dataToUpdate).length === 0) {
       return NextResponse.json({ error: 'No data to update' }, { status: 400 });
