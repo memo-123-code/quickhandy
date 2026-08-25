@@ -36,6 +36,8 @@ export default function InteractiveMap({
   const demoStart = providerLocation || fallbackDemoStart;
 
   const [simulatedProgress, setSimulatedProgress] = useState(0);
+  const [routeCoords, setRouteCoords] = useState<[number, number][] | null>(null);
+  
   const mapRef = useRef<any>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
   
@@ -45,24 +47,62 @@ export default function InteractiveMap({
   const clientMarkerRef = useRef<any>(null);
   const clientPulseRef = useRef<any>(null);
 
-  // Animation Loop
+  // Fetch Real Road Geometry from OSRM
+  useEffect(() => {
+    if (!isTrackingDemo) return;
+
+    const fetchRoute = async () => {
+      try {
+        const res = await fetch(`https://router.project-osrm.org/route/v1/driving/${demoStart.lng},${demoStart.lat};${activeClientLoc.lng},${activeClientLoc.lat}?geometries=geojson`);
+        const data = await res.json();
+        if (data.routes && data.routes[0]) {
+          // GeoJSON is [lng, lat], Leaflet needs [lat, lng]
+          const coords = data.routes[0].geometry.coordinates.map((c: number[]) => [c[1], c[0]]);
+          setRouteCoords(coords);
+        }
+      } catch (e) {
+        console.error("OSRM Error:", e);
+      }
+    };
+    fetchRoute();
+  }, [demoStart.lat, demoStart.lng, activeClientLoc.lat, activeClientLoc.lng, isTrackingDemo]);
+
+  // Animation Loop for live movement
   useEffect(() => {
     if (!isTrackingDemo) return;
     const interval = setInterval(() => {
       setSimulatedProgress((prev) => {
         if (prev >= 1) return 0; // loop back
-        return prev + 0.002; // Smooth movement
+        return prev + 0.001; // Slower, smoother movement
       });
     }, 50);
     return () => clearInterval(interval);
   }, [isTrackingDemo]);
 
-  const currentProviderLoc = isTrackingDemo 
-    ? {
+  // Calculate Provider Position along the real route
+  const currentProviderLoc = (() => {
+    if (isTrackingDemo) {
+      if (routeCoords && routeCoords.length > 0) {
+        const totalPoints = routeCoords.length;
+        const exactIndex = simulatedProgress * (totalPoints - 1);
+        const lowerIndex = Math.floor(exactIndex);
+        const upperIndex = Math.ceil(exactIndex);
+        const fraction = exactIndex - lowerIndex;
+
+        const p1 = routeCoords[lowerIndex];
+        const p2 = routeCoords[upperIndex];
+        return {
+          lat: p1[0] + (p2[0] - p1[0]) * fraction,
+          lng: p1[1] + (p2[1] - p1[1]) * fraction,
+        };
+      }
+      return {
         lat: demoStart.lat + (activeClientLoc.lat - demoStart.lat) * simulatedProgress,
         lng: demoStart.lng + (activeClientLoc.lng - demoStart.lng) * simulatedProgress,
-      }
-    : providerLocation || demoStart;
+      };
+    }
+    return providerLocation || demoStart;
+  })();
 
   const currentRouteProgress = isTrackingDemo ? simulatedProgress : routeProgress;
 
@@ -70,11 +110,9 @@ export default function InteractiveMap({
   useEffect(() => {
     if (typeof window === 'undefined' || !mapContainerRef.current) return;
 
-    // Dynamically require Leaflet to bypass all SSR issues
     const L = require('leaflet');
     require('leaflet/dist/leaflet.css');
 
-    // Only initialize the map once
     if (!mapRef.current) {
       const map = L.map(mapContainerRef.current, {
         zoomControl: false,
@@ -98,7 +136,6 @@ export default function InteractiveMap({
         radius: 12
       }).addTo(map);
       
-      // Client Outer Pulse
       clientPulseRef.current = L.circleMarker([activeClientLoc.lat, activeClientLoc.lng], {
         color: 'transparent',
         fillColor: '#3b82f6',
@@ -116,7 +153,6 @@ export default function InteractiveMap({
         radius: 14
       }).addTo(map);
 
-      // Provider Outer Pulse
       L.circleMarker([currentProviderLoc.lat, currentProviderLoc.lng], {
         color: 'transparent',
         fillColor: '#f97316',
@@ -145,13 +181,19 @@ export default function InteractiveMap({
     }
 
     return () => {
-      // Complete cleanup on unmount
       if (mapRef.current) {
         mapRef.current.remove();
         mapRef.current = null;
       }
     };
-  }, []); // Run strictly once on mount
+  }, []);
+
+  // Pan to active client location dynamically
+  useEffect(() => {
+    if (mapRef.current) {
+      mapRef.current.flyTo([activeClientLoc.lat, activeClientLoc.lng], 15, { animate: true, duration: 1.5 });
+    }
+  }, [activeClientLoc.lat, activeClientLoc.lng]);
 
   // Update Dynamic Map Elements (Positions)
   useEffect(() => {
@@ -159,12 +201,17 @@ export default function InteractiveMap({
       providerMarkerRef.current.setLatLng([currentProviderLoc.lat, currentProviderLoc.lng]);
       clientMarkerRef.current.setLatLng([activeClientLoc.lat, activeClientLoc.lng]);
       clientPulseRef.current.setLatLng([activeClientLoc.lat, activeClientLoc.lng]);
-      routeLineRef.current.setLatLngs([
-        [currentProviderLoc.lat, currentProviderLoc.lng],
-        [activeClientLoc.lat, activeClientLoc.lng]
-      ]);
+      
+      if (routeCoords && routeCoords.length > 0) {
+        routeLineRef.current.setLatLngs(routeCoords);
+      } else {
+        routeLineRef.current.setLatLngs([
+          [currentProviderLoc.lat, currentProviderLoc.lng],
+          [activeClientLoc.lat, activeClientLoc.lng]
+        ]);
+      }
     }
-  }, [currentProviderLoc, activeClientLoc]);
+  }, [currentProviderLoc, activeClientLoc, routeCoords]);
 
   const handleLocateMe = () => {
     if (!navigator.geolocation) {
@@ -177,12 +224,6 @@ export default function InteractiveMap({
         const { latitude, longitude } = position.coords;
         setRealLocation({ lat: latitude, lng: longitude });
         setIsLocating(false);
-        if (mapRef.current) {
-          mapRef.current.flyTo([latitude, longitude], 15, {
-            animate: true,
-            duration: 1.5
-          });
-        }
       },
       (error) => {
         console.error("Error locating:", error);
@@ -199,10 +240,8 @@ export default function InteractiveMap({
   return (
     <div className="w-full h-full relative rounded-2xl overflow-hidden border border-slate-800 shadow-2xl bg-slate-900 z-0 font-sans">
       
-      {/* Pure HTML Map Container */}
       <div ref={mapContainerRef} className="w-full h-full z-0 absolute inset-0 bg-slate-100"></div>
 
-      {/* Floating GPS "Locate Me" Button */}
       <button 
         onClick={handleLocateMe}
         disabled={isLocating}
@@ -216,7 +255,6 @@ export default function InteractiveMap({
         )}
       </button>
 
-      {/* Global CSS for Polyline animation */}
       <style>{`
         @keyframes dash {
           to { stroke-dashoffset: -30; }
@@ -226,7 +264,6 @@ export default function InteractiveMap({
         }
       `}</style>
 
-      {/* Smart UI Overlay (Glassmorphism Tracking Card) - Elevated Z-Index */}
       {isTrackingDemo && (
         <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-[50] w-[90%] max-w-sm pointer-events-auto">
           <div className="bg-slate-950/80 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-4 shadow-2xl">
@@ -255,7 +292,6 @@ export default function InteractiveMap({
         </div>
       )}
 
-      {/* Interactive HUD instructions */}
       {interactive && (
         <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-[50] bg-slate-950/80 backdrop-blur-xl border border-brand-blue-500/30 rounded-full px-5 py-3 text-sm font-semibold text-white shadow-2xl flex items-center gap-3 transition-transform hover:scale-105 pointer-events-none">
           <MapPin className="w-4 h-4 text-brand-orange-500 animate-bounce" />
