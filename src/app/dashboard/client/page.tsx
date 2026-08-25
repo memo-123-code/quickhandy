@@ -86,7 +86,7 @@ export default function ClientDashboard() {
           setLng(longitude);
           
           try {
-            const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY;
+            const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
             const res = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${apiKey}&language=ar`);
             const data = await res.json();
             const detailedAddress = data.results?.[0]?.formatted_address || "Current Location";
@@ -214,7 +214,7 @@ export default function ClientDashboard() {
           setLng(longitude);
           
           try {
-            const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY;
+            const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
             const res = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${apiKey}&language=ar`);
             const data = await res.json();
             
