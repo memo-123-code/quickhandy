@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useRef } from "react";
-import { MapPin, Phone, CheckCircle } from "lucide-react";
+import { MapPin, Phone, CheckCircle, Crosshair, Loader2 } from "lucide-react";
 
 interface InteractiveMapProps {
   interactive?: boolean;
@@ -29,14 +29,21 @@ export default function InteractiveMap({
   const fallbackClientLoc = { lat: 30.2950, lng: 31.7450 };
   const fallbackDemoStart = { lat: 30.3050, lng: 31.7350 };
   
-  const activeClientLoc = clientLocation || fallbackClientLoc;
+  const [realLocation, setRealLocation] = useState<{lat: number; lng: number} | null>(null);
+  const [isLocating, setIsLocating] = useState(false);
+
+  const activeClientLoc = realLocation || clientLocation || fallbackClientLoc;
   const demoStart = providerLocation || fallbackDemoStart;
 
   const [simulatedProgress, setSimulatedProgress] = useState(0);
   const mapRef = useRef<any>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
+  
+  // Marker Refs for dynamic updates
   const providerMarkerRef = useRef<any>(null);
   const routeLineRef = useRef<any>(null);
+  const clientMarkerRef = useRef<any>(null);
+  const clientPulseRef = useRef<any>(null);
 
   // Animation Loop
   useEffect(() => {
@@ -76,13 +83,14 @@ export default function InteractiveMap({
       
       mapRef.current = map;
 
-      // CartoDB Dark Matter
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      // Colorful OpenStreetMap Standard Tiles
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
         attribution: '&copy; OpenStreetMap'
       }).addTo(map);
 
       // Client Marker (Blue Circle)
-      L.circleMarker([activeClientLoc.lat, activeClientLoc.lng], {
+      clientMarkerRef.current = L.circleMarker([activeClientLoc.lat, activeClientLoc.lng], {
         color: '#ffffff',
         fillColor: '#3b82f6',
         fillOpacity: 1,
@@ -91,7 +99,7 @@ export default function InteractiveMap({
       }).addTo(map);
       
       // Client Outer Pulse
-      L.circleMarker([activeClientLoc.lat, activeClientLoc.lng], {
+      clientPulseRef.current = L.circleMarker([activeClientLoc.lat, activeClientLoc.lng], {
         color: 'transparent',
         fillColor: '#3b82f6',
         fillOpacity: 0.3,
@@ -145,16 +153,44 @@ export default function InteractiveMap({
     };
   }, []); // Run strictly once on mount
 
-  // Update Provider Route Dynamically
+  // Update Dynamic Map Elements (Positions)
   useEffect(() => {
-    if (providerMarkerRef.current && routeLineRef.current) {
+    if (providerMarkerRef.current && routeLineRef.current && clientMarkerRef.current && clientPulseRef.current) {
       providerMarkerRef.current.setLatLng([currentProviderLoc.lat, currentProviderLoc.lng]);
+      clientMarkerRef.current.setLatLng([activeClientLoc.lat, activeClientLoc.lng]);
+      clientPulseRef.current.setLatLng([activeClientLoc.lat, activeClientLoc.lng]);
       routeLineRef.current.setLatLngs([
         [currentProviderLoc.lat, currentProviderLoc.lng],
         [activeClientLoc.lat, activeClientLoc.lng]
       ]);
     }
   }, [currentProviderLoc, activeClientLoc]);
+
+  const handleLocateMe = () => {
+    if (!navigator.geolocation) {
+      alert("Geolocation is not supported by your browser");
+      return;
+    }
+    setIsLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        setRealLocation({ lat: latitude, lng: longitude });
+        setIsLocating(false);
+        if (mapRef.current) {
+          mapRef.current.flyTo([latitude, longitude], 15, {
+            animate: true,
+            duration: 1.5
+          });
+        }
+      },
+      (error) => {
+        console.error("Error locating:", error);
+        alert("Unable to retrieve your location. Please check your permissions.");
+        setIsLocating(false);
+      }
+    );
+  };
 
   if (typeof window === 'undefined') {
     return <div className="w-full h-full bg-slate-900 rounded-2xl animate-pulse" />;
@@ -164,7 +200,21 @@ export default function InteractiveMap({
     <div className="w-full h-full relative rounded-2xl overflow-hidden border border-slate-800 shadow-2xl bg-slate-900 z-0 font-sans">
       
       {/* Pure HTML Map Container */}
-      <div ref={mapContainerRef} className="w-full h-full z-0 absolute inset-0"></div>
+      <div ref={mapContainerRef} className="w-full h-full z-0 absolute inset-0 bg-slate-100"></div>
+
+      {/* Floating GPS "Locate Me" Button */}
+      <button 
+        onClick={handleLocateMe}
+        disabled={isLocating}
+        className="absolute top-4 right-4 z-[50] w-12 h-12 bg-white/90 backdrop-blur-md border border-slate-200 rounded-full flex items-center justify-center shadow-lg hover:bg-white hover:scale-105 transition-all text-slate-700 disabled:opacity-70 disabled:scale-100"
+        title="Find My Location"
+      >
+        {isLocating ? (
+          <Loader2 className="w-6 h-6 animate-spin text-brand-blue-500" />
+        ) : (
+          <Crosshair className="w-6 h-6 text-brand-blue-600" />
+        )}
+      </button>
 
       {/* Global CSS for Polyline animation */}
       <style>{`
