@@ -24,11 +24,6 @@ const InteractiveMap = dynamic(() => import("@/components/InteractiveMap"), {
   loading: () => <SkeletonCard className="w-full h-full min-h-[300px]" />
 });
 
-const LiveTrackingMap = dynamic(() => import("@/components/LiveTrackingMap"), {
-  ssr: false,
-  loading: () => <SkeletonCard className="w-full h-full min-h-[300px]" />
-});
-
 type BookingStep = "SELECT_SERVICE" | "BOOKING_FORM" | "WAITING_FOR_BIDS" | "SEARCHING" | "QUOTE_RECEIVED" | "TRACKING" | "COMPLETED";
 
 export default function ClientDashboard() {
@@ -86,16 +81,25 @@ export default function ClientDashboard() {
           setLng(longitude);
           
           try {
-            const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
-            const res = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${apiKey}&language=ar`);
+            const res = await fetch(
+              `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=16`,
+              {
+                headers: {
+                  "Accept-Language": "en,ar",
+                  "User-Agent": "QuickHandyClientDashboard/1.0"
+                }
+              }
+            );
             const data = await res.json();
-            const detailedAddress = data.results?.[0]?.formatted_address || "Current Location";
-            const addr = `Current Location (${detailedAddress})`;
+            const neighborhood = data.address?.neighbourhood || data.address?.suburb || data.address?.quarter || data.address?.city_district;
+            const city = data.address?.city || data.address?.town || data.address?.village;
+            const locationName = neighborhood ? `${neighborhood}, ${city || ''}`.replace(/,\s*$/, '') : (city || "Current Location");
+            const addr = `Current Location (${locationName})`;
             setAddress(addr);
             setLastSelectedAddress(addr);
           } catch (err) {
             console.error("Reverse geocoding error:", err);
-            const fallbackAddr = `Current Location (${latitude.toFixed(6)}, ${longitude.toFixed(6)})`;
+            const fallbackAddr = `Current Location (${latitude.toFixed(4)}, ${longitude.toFixed(4)})`;
             setAddress(fallbackAddr);
             setLastSelectedAddress(fallbackAddr);
           } finally {
@@ -103,10 +107,10 @@ export default function ClientDashboard() {
           }
         },
         (error) => {
-          console.warn("Geolocation failed, using fallback:", error);
+          console.warn("Geolocation failed, using Cairo/Zagazig fallback:", error);
           setIsDetectingLocation(false);
         },
-        { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+        { enableHighAccuracy: true, timeout: 7000 }
       );
     } else {
       setIsDetectingLocation(false);
@@ -214,7 +218,7 @@ export default function ClientDashboard() {
           setLng(longitude);
           
           try {
-            const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+            const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY;
             const res = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${apiKey}&language=ar`);
             const data = await res.json();
             
@@ -225,7 +229,7 @@ export default function ClientDashboard() {
             setLastSelectedAddress(addr);
           } catch (err) {
             console.error("Reverse geocoding error:", err);
-            const fallbackAddr = `Current Location (${latitude.toFixed(6)}, ${longitude.toFixed(6)})`;
+            const fallbackAddr = `Current Location (${latitude.toFixed(4)}, ${longitude.toFixed(4)})`;
             setAddress(fallbackAddr);
             setLastSelectedAddress(fallbackAddr);
           } finally {
@@ -233,10 +237,10 @@ export default function ClientDashboard() {
           }
         },
         (error) => {
-          console.warn("Geolocation permission denied or failed, using fallback:", error);
+          console.warn("Geolocation permission denied or failed, using Cairo/Zagazig fallback:", error);
           fallbackLocation();
         },
-        { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+        { enableHighAccuracy: true, timeout: 7000 }
       );
     } else {
       fallbackLocation();
@@ -260,18 +264,16 @@ export default function ClientDashboard() {
     const delayDebounce = setTimeout(async () => {
       setIsSearchingLoc(true);
       try {
-        const res = await fetch(
-          `https://nominatim.openstreetmap.org/search?format=json&countrycodes=eg&q=${encodeURIComponent(address)}&limit=5`,
-          {
-            headers: {
-              "Accept-Language": "en,ar",
-              "User-Agent": "QuickHandyClientDashboard/1.0"
-            }
-          }
-        );
+        const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY;
+        const res = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${apiKey}&language=ar`);
         const data = await res.json();
-        if (Array.isArray(data)) {
-          setSuggestions(data);
+        if (data.results) {
+          const formattedSuggestions = data.results.slice(0, 5).map((item: any) => ({
+            display_name: item.formatted_address,
+            lat: item.geometry.location.lat.toString(),
+            lon: item.geometry.location.lng.toString()
+          }));
+          setSuggestions(formattedSuggestions);
         }
       } catch (err) {
         console.error("Error fetching geocoding suggestions:", err);
@@ -1088,20 +1090,14 @@ export default function ClientDashboard() {
 
       {/* MAP AREA: 45vh on mobile, fills remaining screen on desktop */}
       <div className="w-full h-[45vh] md:h-full flex-1 relative z-10">
-        {step === "TRACKING" && bookingId ? (
-          <LiveTrackingMap
-            bookingId={bookingId}
-            clientLocation={{ lat: lat, lng: lng }}
-            initialHandymanLocation={liveProviderCoords}
-          />
-        ) : (
-          <InteractiveMap
-            interactive={step === "BOOKING_FORM"}
-            onLocationSelect={handleLocationSelect}
-            clientLocation={{ lat: lat, lng: lng }}
-            showRoute={false}
-          />
-        )}
+        <InteractiveMap
+          interactive={step === "BOOKING_FORM"}
+          onLocationSelect={handleLocationSelect}
+          providerLocation={step === "TRACKING" ? (liveProviderCoords || { lat: lat - 0.0028, lng: lng - 0.009 }) : undefined}
+          clientLocation={{ lat: lat, lng: lng }}
+          showRoute={step === "TRACKING"}
+          routeProgress={routeProgress}
+        />
       </div>
 
       {/* Chat Modal Overlay */}
