@@ -214,7 +214,7 @@ export default function ProviderProfile() {
                       <span className="text-xs font-bold text-green-400">+{job.earning} EGP</span>
                     </div>
                   )))}
-                  <p className="text-xs text-slate-500 text-center py-4">No recent completed jobs.</p>
+                  <p dir="auto" className="text-xs text-slate-500 text-center py-4">No recent completed jobs.</p>
                 </div>
               </div>
 

@@ -82,7 +82,7 @@ export default function Navbar() {
 
         {/* Mobile Menu Overlay */}
         {isMobileMenuOpen && (
-          <div className="absolute top-full left-0 right-0 mt-2 p-4 bg-slate-900/95 backdrop-blur-xl border border-slate-800 rounded-2xl shadow-2xl flex flex-col gap-4 animate-fadeIn md:hidden">
+          <div className="absolute top-full start-0 end-0 mt-2 p-4 bg-slate-900/95 backdrop-blur-xl border border-slate-800 rounded-2xl shadow-2xl flex flex-col gap-4 animate-fadeIn md:hidden">
             <div className="flex flex-col gap-4 pb-4 border-b border-slate-800">
               <InstallButton />
               <div className="flex justify-start">

@@ -82,19 +82,34 @@ export default function ClientDashboard() {
           
           try {
             const res = await fetch(
-              `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=16`,
+              `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`,
               {
                 headers: {
-                  "Accept-Language": "en,ar",
-                  "User-Agent": "QuickHandyClientDashboard/1.0"
+                  "Accept-Language": "ar,en",
+                  "User-Agent": "QuickHandyClientDashboard/2.0"
                 }
               }
             );
             const data = await res.json();
-            const neighborhood = data.address?.neighbourhood || data.address?.suburb || data.address?.quarter || data.address?.city_district;
-            const city = data.address?.city || data.address?.town || data.address?.village;
-            const locationName = neighborhood ? `${neighborhood}, ${city || ''}`.replace(/,\s*$/, '') : (city || "Current Location");
-            const addr = `Current Location (${locationName})`;
+            
+            // Smart Parsing for house-level accuracy
+            const addressDetails = data.address || {};
+            const house = addressDetails.house_number || addressDetails.building;
+            const road = addressDetails.road || addressDetails.pedestrian;
+            const neighbourhood = addressDetails.neighbourhood || addressDetails.suburb || addressDetails.quarter;
+            const city = addressDetails.city || addressDetails.town || addressDetails.village;
+            
+            let smartAddress = [];
+            if (house) smartAddress.push(`مبنى/رقم ${house}`);
+            if (road) smartAddress.push(road);
+            if (neighbourhood) smartAddress.push(neighbourhood);
+            if (city) smartAddress.push(city);
+            
+            const fallbackName = data.display_name?.split(',').slice(0, 3).join('، ');
+            const locationName = smartAddress.length > 0 ? smartAddress.join("، ") : fallbackName;
+            
+            // Smart Prompt: Encourage user to type the plot number since free APIs don't have it
+            const addr = `موقعك الحالي: ${locationName} - قطعة/مبنى رقم: `;
             setAddress(addr);
             setLastSelectedAddress(addr);
           } catch (err) {
@@ -110,7 +125,7 @@ export default function ClientDashboard() {
           console.warn("Geolocation failed, using Cairo/Zagazig fallback:", error);
           setIsDetectingLocation(false);
         },
-        { enableHighAccuracy: true, timeout: 7000 }
+        { enableHighAccuracy: true, timeout: 5000, maximumAge: 60000 } // Optimized: Faster timeout, allows 1min cache to prevent repeated hanging
       );
     } else {
       setIsDetectingLocation(false);
@@ -218,12 +233,29 @@ export default function ClientDashboard() {
           setLng(longitude);
           
           try {
-            const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY;
-            const res = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${apiKey}&language=ar`);
+            const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`, {
+              headers: { "Accept-Language": "ar,en", "User-Agent": "QuickHandyClientDashboard/2.0" }
+            });
             const data = await res.json();
             
-            const detailedAddress = data.results?.[0]?.formatted_address || "Current Location";
-            const addr = `Current Location (${detailedAddress})`;
+            // Smart Parsing for house-level accuracy
+            const addressDetails = data.address || {};
+            const house = addressDetails.house_number || addressDetails.building;
+            const road = addressDetails.road || addressDetails.pedestrian;
+            const neighbourhood = addressDetails.neighbourhood || addressDetails.suburb || addressDetails.quarter;
+            const city = addressDetails.city || addressDetails.town || addressDetails.village;
+            
+            let smartAddress = [];
+            if (house) smartAddress.push(`مبنى/رقم ${house}`);
+            if (road) smartAddress.push(road);
+            if (neighbourhood) smartAddress.push(neighbourhood);
+            if (city) smartAddress.push(city);
+            
+            const fallbackName = data.display_name?.split(',').slice(0, 3).join('، ');
+            const detailedAddress = smartAddress.length > 0 ? smartAddress.join("، ") : fallbackName;
+            
+            // Smart Prompt: Encourage user to type the plot number since free APIs don't have it
+            const addr = `موقعك الحالي: ${detailedAddress} - قطعة/مبنى رقم: `;
             
             setAddress(addr);
             setLastSelectedAddress(addr);
@@ -240,7 +272,9 @@ export default function ClientDashboard() {
           console.warn("Geolocation permission denied or failed, using Cairo/Zagazig fallback:", error);
           fallbackLocation();
         },
-        { enableHighAccuracy: true, timeout: 7000 }
+        // Optimized for INITIAL MOUNT: Low accuracy for instant load, infinite cache allowed. 
+        // We only need a rough area on mount. High accuracy is reserved for manual button clicks.
+        { enableHighAccuracy: false, timeout: 3000, maximumAge: Infinity }
       );
     } else {
       fallbackLocation();
@@ -264,14 +298,15 @@ export default function ClientDashboard() {
     const delayDebounce = setTimeout(async () => {
       setIsSearchingLoc(true);
       try {
-        const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY;
-        const res = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${apiKey}&language=ar`);
+        const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=5&countrycodes=eg&accept-language=ar`, {
+          headers: { "User-Agent": "QuickHandyClientDashboard/1.0" }
+        });
         const data = await res.json();
-        if (data.results) {
-          const formattedSuggestions = data.results.slice(0, 5).map((item: any) => ({
-            display_name: item.formatted_address,
-            lat: item.geometry.location.lat.toString(),
-            lon: item.geometry.location.lng.toString()
+        if (data && data.length > 0) {
+          const formattedSuggestions = data.map((item: any) => ({
+            display_name: item.display_name,
+            lat: item.lat.toString(),
+            lon: item.lon.toString()
           }));
           setSuggestions(formattedSuggestions);
         }
@@ -478,7 +513,7 @@ export default function ClientDashboard() {
       <div className="min-h-screen bg-slate-950 flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <div className="w-10 h-10 border-2 border-brand-blue-500/30 border-t-brand-blue-500 rounded-full animate-spin" />
-          <p className="text-slate-400 text-sm">Loading your portal...</p>
+          <p dir="auto" className="text-slate-400 text-sm">Loading your portal...</p>
         </div>
       </div>
     );
@@ -593,7 +628,7 @@ export default function ClientDashboard() {
                 <div>
                   <h4 className="text-xs font-bold text-brand-blue-300 mb-1 text-start" dir="rtl">نظام عروض الأسعار</h4>
                   <p className="text-[11px] text-slate-300 leading-relaxed text-start" dir="rtl">
-                    نظام عروض الأسعار: سيتم إرسال تفاصيل مشكلتك للفنيين المتاحين حولك. سيقومون بتقديم عروض أسعار بناءً على الوصف والصور. لك كامل الحق في قبول العرض المناسب لك أو رفضه.
+                    عظام عروض الأسعار: نظام عروض الأسعار: سيتم إرسال تفاصيل مشكلتك للفنيين المتاحين؛ هؤلاء سيقومون بتقديم عروض أسعار بناءً على التفاصيل والصور.. كامل الحق في قبول العرض المناسب لك أو رفضه.
                   </p>
                 </div>
               </div>
@@ -664,7 +699,7 @@ export default function ClientDashboard() {
                 )}
 
                 <span className="text-[9px] text-slate-500 mt-1 block">
-                  Tip: Search for any place in Egypt, tap Locate for GPS, or click directly on the map.
+                  For search for a place in Egypt, use use GPS, or point manually on the map.
                 </span>
               </div>
 
@@ -693,7 +728,7 @@ export default function ClientDashboard() {
                       <ImageIcon className="w-5 h-5 text-slate-400 group-hover:text-brand-blue-400 transition-colors" />
                       <span className="text-xs text-slate-300 font-medium group-hover:text-white">Upload a photo</span>
                       <span className="text-[9px] text-slate-500 text-center max-w-[240px] mt-0.5" dir="rtl">
-                        (إرفاق صورة للمشكلة يزيد من سرعة استجابة الفنيين)
+                        (يمكنكم رفع صوره من المشكلة حيث أن عروض الأسعار تكون دقيقة)
                       </span>
                     </div>
                     <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} />
@@ -714,10 +749,10 @@ export default function ClientDashboard() {
                   onChange={(e) => setProblemDescription(e.target.value)}
                   required
                   className="w-full p-3 rounded-lg glass-input text-xs h-24 resize-none border-slate-800 focus:border-brand-blue-500 focus:ring-1 focus:ring-brand-blue-500/30"
-                  placeholder="E.g., Kitchen sink is leaking rapidly from the main pipe. Need immediate repair."
+                  placeholder="E.g., Kitchen skin is leaking rapidly from the main pipe. Need immediate repair."
                 />
                 <span className="text-[9px] text-slate-500 mt-1 block text-end font-medium" dir="rtl">
-                  (شرح المشكلة بوضوح يساعد الفنيين على تقديم عروض أسعار دقيقة)
+                  برجاء كتابة مشكلتك لتسهيل وتوضيح المشكلة للفنيي على العروض المناسبة
                 </span>
               </div>
 
