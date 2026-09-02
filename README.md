@@ -16,4 +16,4 @@ QuickHandy is a modern, enterprise-ready Progressive Web Application (PWA) desig
 
 ## 🔗 Live Demo
 Experience the fully functional production build here: 
-**[QuickHandy Live Platform](https://quickhandy.vercel.app)**
+**[QuickHandy Live Platform](https://quickhandy-quickhandy.vercel.app)**
