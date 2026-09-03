@@ -22,9 +22,13 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    // Poll for bookings that are PENDING and not yet accepted
+    // Poll for bookings that are PENDING and created within the last 30 minutes
+    const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
     const incomingBooking = await prisma.booking.findFirst({
-      where: { status: 'PENDING' },
+      where: { 
+        status: 'PENDING',
+        createdAt: { gte: thirtyMinutesAgo }
+      },
       include: {
         client: { include: { profile: true } },
         category: true,

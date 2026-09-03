@@ -122,17 +122,11 @@ export default function MapComponent({
     activeProviderLoc = { lat: interpolatedLat, lng: interpolatedLng };
   }
 
-  // Direct Google Maps Tiles (100% Free, NO API Key needed, Full POIs/Shops in Arabic)
-  const tileUrl = "https://mt1.google.com/vt/lyrs=m&hl=ar&x={x}&y={y}&z={z}";
+  // OpenStreetMap Tiles (100% Free, NO API Key needed)
+  const tileUrl = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
 
   return (
     <>
-      {/* Vibrant Dark Mode Filter: Inverts colors but restores original hues (blue water, green parks) so it looks alive! */}
-      <style dangerouslySetInnerHTML={{ __html: `
-        .leaflet-tile-pane {
-          filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%);
-        }
-      ` }} />
       <MapContainer
       center={[clientLocation.lat, clientLocation.lng]}
       zoom={15}
@@ -141,7 +135,7 @@ export default function MapComponent({
     >
       <TileLayer
         url={tileUrl}
-        attribution='&copy; Google Maps'
+        attribution='&copy; OpenStreetMap'
       />
       
       {interactive && onLocationSelect && (

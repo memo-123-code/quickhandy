@@ -70,8 +70,11 @@ export async function POST(req: Request) {
       { success: true, bookingId: booking.id, id: booking.id },
       { status: 201 }
     );
-  } catch (error) {
+  } catch (error: any) {
     console.error('Failed to create booking:', error);
-    return NextResponse.json({ error: 'Failed to create booking' }, { status: 500 });
+    return NextResponse.json({ 
+      error: error?.message || 'Failed to create booking',
+      details: String(error)
+    }, { status: 500 });
   }
 }
