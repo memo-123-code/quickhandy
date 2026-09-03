@@ -14,15 +14,24 @@ import { dictionary } from "@/locales/dictionary";
 import AnimatedCounter from "@/components/ui/AnimatedCounter";
 import Navbar from "@/components/Navbar";
 
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+
 export default function LandingPage() {
   const [mounted, setMounted] = useState(false);
   const { language } = useLanguageStore();
+  const { data: session, status } = useSession();
+  const router = useRouter();
 
   useEffect(() => {
     setMounted(true);
-  }, []);
+    if (status === "authenticated" && session?.user) {
+      const role = (session.user as any).role?.toLowerCase() || 'client';
+      router.push(`/dashboard/${role}`);
+    }
+  }, [status, session, router]);
 
-  if (!mounted) {
+  if (!mounted || status === "loading") {
     return (
       <div className="min-h-screen bg-slate-950 flex items-center justify-center">
         <div className="w-10 h-10 border-4 border-brand-blue-500 border-t-transparent rounded-full animate-spin"></div>
