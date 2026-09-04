@@ -103,6 +103,37 @@ export async function PATCH(
       }
     });
 
+    // --- Escrow Fund Release Logic ---
+    if (status === "COMPLETED" && updatedBooking.providerId && updatedBooking.estimatedCost) {
+      const providerId = updatedBooking.providerId;
+      const amount = updatedBooking.estimatedCost;
+      const commissionRate = 0.10; // 10% commission
+      const providerPayout = amount * (1 - commissionRate);
+
+      await prisma.$transaction(async (tx) => {
+        // Ensure provider wallet exists
+        const providerWallet = await tx.wallet.upsert({
+          where: { userId: providerId },
+          update: { balance: { increment: providerPayout } },
+          create: { userId: providerId, balance: providerPayout, currency: "EGP" }
+        });
+
+        // Record Payout Transaction
+        await tx.transaction.create({
+          data: {
+            walletId: providerWallet.id,
+            bookingId: updatedBooking.id,
+            type: "PAYMENT", // Payout to provider
+            amount: providerPayout,
+            status: "COMPLETED"
+          }
+        });
+        
+        // Optionally, we could record the COMMISSION transaction if we have an Admin wallet, 
+        // but for now, we just deduct the 10% from what the provider receives.
+      });
+    }
+
     return NextResponse.json(updatedBooking);
   } catch (error) {
     console.error('Failed to update booking status:', error);

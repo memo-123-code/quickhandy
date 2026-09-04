@@ -251,6 +251,26 @@ export default function ProviderDashboard() {
 
   const handleArrivedAtLocation = async () => {
     if (!jobId) return;
+
+    // --- Anti-Leakage: GPS Verification ---
+    if (providerCoords && activeJob?.clientCoords) {
+      const distance = calculateDistance(
+        providerCoords.lat,
+        providerCoords.lng,
+        activeJob.clientCoords.lat,
+        activeJob.clientCoords.lng
+      );
+      
+      // Block arrival if provider is more than 0.5 km (500 meters) away
+      if (distance > 0.5) {
+        toast.error(`أنت تبعد ${distance.toFixed(1)} كم. يجب أن تصل لموقع العميل أولاً لتأكيد الوصول!`, {
+          duration: 6000,
+          icon: "📍"
+        });
+        return;
+      }
+    }
+
     setIsProcessing(true);
     try {
       await api.patch(`/bookings/${jobId}`, { status: "ARRIVED" });
@@ -961,10 +981,27 @@ export default function ProviderDashboard() {
               onSubmit={(e) => {
                 e.preventDefault();
                 if (!newMessage.trim()) return;
+                
+                // --- Smart AI Filter for Platform Leakage ---
+                let maskedText = newMessage;
+                const phoneRegex = /(?:01\d{9}|\+201\d{9}|\b\d{8,14}\b)/g;
+                const keywordRegex = /(كاش|واتس|تليفون|رقمي|whatsapp|cash|number|فون|موبايل)/gi;
+                
+                const hasViolation = phoneRegex.test(maskedText) || keywordRegex.test(maskedText);
+                
+                if (hasViolation) {
+                  maskedText = maskedText.replace(phoneRegex, '[ممنوع مشاركة الأرقام]');
+                  maskedText = maskedText.replace(keywordRegex, '[كلمة محظورة]');
+                  toast.error("تحذير: مشاركة الأرقام أو طلب التعامل خارج التطبيق يعرض حسابك للإيقاف!", {
+                    duration: 5000,
+                    icon: "🚨"
+                  });
+                }
+
                 const time = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
                 setChatMessages((prev) => [
                   ...prev,
-                  { sender: "provider", text: newMessage, time }
+                  { sender: "provider", text: maskedText, time }
                 ]);
                 setNewMessage("");
               }}

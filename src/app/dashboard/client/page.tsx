@@ -1195,12 +1195,28 @@ export default function ClientDashboard() {
               onSubmit={(e) => {
                 e.preventDefault();
                 if (!newMessage.trim()) return;
+                
+                // --- Smart AI Filter for Platform Leakage ---
+                let maskedText = newMessage;
+                const phoneRegex = /(?:01\d{9}|\+201\d{9}|\b\d{8,14}\b)/g;
+                const keywordRegex = /(كاش|واتس|تليفون|رقمي|whatsapp|cash|number|فون|موبايل)/gi;
+                
+                const hasViolation = phoneRegex.test(maskedText) || keywordRegex.test(maskedText);
+                
+                if (hasViolation) {
+                  maskedText = maskedText.replace(phoneRegex, '[ممنوع مشاركة الأرقام]');
+                  maskedText = maskedText.replace(keywordRegex, '[كلمة محظورة]');
+                  toast.error("تحذير: مشاركة الأرقام أو طلب التعامل خارج التطبيق يعرض حسابك للإيقاف!", {
+                    duration: 5000,
+                    icon: "🚨"
+                  });
+                }
+                
                 const time = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
                 setChatMessages((prev) => [
                   ...prev,
-                  { sender: "client", text: newMessage, time }
+                  { sender: "client", text: maskedText, time }
                 ]);
-                const tempMsg = newMessage;
                 setNewMessage("");
 
 
