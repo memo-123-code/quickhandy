@@ -125,6 +125,7 @@ model Booking {
   review          Review?
   transactions    Transaction[]
   quotes          Quote[]
+  chatMessages    ChatMessage[]
 }
 
 model Quote {
@@ -182,4 +183,15 @@ model Transaction {
 
   wallet      Wallet          @relation(fields: [walletId], references: [id], onDelete: Cascade)
   booking     Booking?        @relation(fields: [bookingId], references: [id])
+}
+
+model ChatMessage {
+  id        String   @id @default(cuid())
+  bookingId String
+  booking   Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  senderId  String   // USER ID or 'SYSTEM'
+  senderRole String  // 'CLIENT', 'PROVIDER', 'SYSTEM'
+  text      String
+  isViolation Boolean @default(false)
+  createdAt DateTime @default(now())
 }

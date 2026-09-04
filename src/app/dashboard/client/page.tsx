@@ -1201,42 +1201,26 @@ export default function ClientDashboard() {
 
             {/* Message Input Form */}
             <form
-              onSubmit={(e) => {
+              onSubmit={async (e) => {
                 e.preventDefault();
-                if (!newMessage.trim()) return;
+                if (!newMessage.trim() || !bookingId) return;
                 
-                // --- Smart AI Filter for Platform Leakage ---
-                let maskedText = newMessage;
-                const phoneRegex = /(?:01\d{9}|\+201\d{9}|\b\d{8,14}\b)/g;
-                const keywordRegex = /(كاش|واتس|تليفون|رقمي|whatsapp|cash|number|فون|موبايل)/gi;
-                
-                const hasViolation = phoneRegex.test(maskedText) || keywordRegex.test(maskedText);
-                
-                if (hasViolation) {
-                  maskedText = maskedText.replace(phoneRegex, '[ممنوع مشاركة الأرقام]');
-                  maskedText = maskedText.replace(keywordRegex, '[كلمة محظورة]');
-                  toast.error("تحذير: مشاركة الأرقام أو طلب التعامل خارج التطبيق يعرض حسابك للإيقاف!", {
-                    duration: 5000,
-                    icon: "🚨"
-                  });
-                }
+                const textToSend = newMessage;
+                setNewMessage(""); 
                 
                 const time = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-                
-                setChatMessages((prev) => {
-                  const newMsgs = [...prev, { sender: "client", text: maskedText, time }];
-                  if (hasViolation) {
-                    newMsgs.push({
-                      sender: "system",
-                      text: "🚨 روبوت الحماية: يرجى عدم مشاركة بيانات التواصل لضمان حقوقك وتجنب إيقاف الحساب.",
-                      time
-                    });
-                  }
-                  return newMsgs;
-                });
-                setNewMessage("");
+                setChatMessages((prev) => [...prev, { sender: "client", text: textToSend, time }]);
 
-
+                try {
+                  await api.post(`/bookings/${bookingId}/chat`, {
+                    senderId: session?.user?.id || 'CLIENT',
+                    senderRole: 'CLIENT',
+                    text: textToSend
+                  });
+                } catch (err) {
+                  console.error("Failed to send message", err);
+                  toast.error("Failed to send message.");
+                }
               }}
               className="p-3 bg-slate-900 border-t border-slate-800/80 flex gap-2"
             >
