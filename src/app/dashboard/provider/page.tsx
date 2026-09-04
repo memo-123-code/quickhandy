@@ -126,6 +126,13 @@ export default function ProviderDashboard() {
   const [completedJobsCount, setCompletedJobsCount] = useState(3);
   const [commissionNotification, setCommissionNotification] = useState<string | null>(null);
   
+  // Gamification & Rewards Calculations
+  const tier = completedJobsCount >= 100 ? "Platinum" : completedJobsCount >= 50 ? "Gold" : completedJobsCount >= 10 ? "Silver" : "Bronze";
+  const commissionRate = completedJobsCount >= 100 ? "5%" : completedJobsCount >= 50 ? "7%" : completedJobsCount >= 10 ? "9%" : "10%";
+  const tierColor = tier === "Platinum" ? "text-slate-300" : tier === "Gold" ? "text-yellow-400" : tier === "Silver" ? "text-slate-400" : "text-amber-700";
+  const nextTierTarget = tier === "Platinum" ? null : tier === "Gold" ? 100 : tier === "Silver" ? 50 : 10;
+  const progressPercent = nextTierTarget ? Math.min(100, (completedJobsCount / nextTierTarget) * 100) : 100;
+  
   // Top-Up Modal State
   const [isTopUpOpen, setIsTopUpOpen] = useState(false);
   const [topUpAmount, setTopUpAmount] = useState("100");
@@ -487,13 +494,45 @@ export default function ProviderDashboard() {
                   </button>
                 </div>
 
-                <div className="p-4 rounded-xl bg-slate-950 border border-slate-850 space-y-1.5 flex flex-col justify-between">
-                  <div className="flex justify-between items-center text-slate-500">
+                <div className="p-4 rounded-xl bg-slate-950 border border-slate-850 flex flex-col justify-between">
+                  <div className="flex justify-between items-center text-slate-500 mb-2">
                     <span className="text-[9px] uppercase font-bold tracking-wider">Completed Jobs</span>
-                    <Award className="w-3.5 h-3.5 text-brand-gold-500" />
+                    <Award className={`w-4 h-4 ${tierColor}`} />
                   </div>
-                  <span className="text-xl font-extrabold text-white">{completedJobsCount}</span>
-                  <span className="text-[9px] text-slate-400 block font-medium">Rating: 4.95⭐</span>
+                  
+                  <div className="flex justify-between items-end mb-3">
+                    <div>
+                      <span className="text-xl font-extrabold text-white block">{completedJobsCount}</span>
+                      <span className={`text-[10px] font-bold uppercase tracking-wider ${tierColor}`}>{tier} Tier</span>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-[10px] font-bold text-green-400 block">{commissionRate} Fee</span>
+                      <span className="text-[8px] text-slate-500 uppercase tracking-wider">Commission</span>
+                    </div>
+                  </div>
+
+                  {/* Tier Progress Bar */}
+                  {nextTierTarget && (
+                    <div className="space-y-1 mt-auto">
+                      <div className="flex justify-between text-[8px] font-bold text-slate-400">
+                        <span>Progress to Next Tier</span>
+                        <span>{completedJobsCount} / {nextTierTarget}</span>
+                      </div>
+                      <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                        <div 
+                          className="bg-gradient-to-r from-brand-orange-500 to-brand-gold-500 h-1.5 rounded-full transition-all duration-1000"
+                          style={{ width: `${progressPercent}%` }}
+                        />
+                      </div>
+                    </div>
+                  )}
+                  {!nextTierTarget && (
+                    <div className="mt-auto pt-2">
+                      <span className="text-[9px] font-bold text-brand-gold-500 bg-brand-gold-500/10 px-2 py-1 rounded w-full block text-center uppercase tracking-widest">
+                        Max Tier Reached
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -952,6 +991,15 @@ export default function ProviderDashboard() {
             {/* Message History */}
             <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-slate-950/25 flex flex-col">
               {(chatMessages || []).map((msg, idx) => {
+                if (msg.sender === "system") {
+                  return (
+                    <div key={idx} className="flex justify-center my-2">
+                      <div className="bg-red-500/10 border border-red-500/20 text-red-400 text-[10px] px-3 py-1.5 rounded-lg text-center max-w-[90%]">
+                        <span dir="auto">{msg.text}</span>
+                      </div>
+                    </div>
+                  );
+                }
                 const isMe = msg.sender === "provider";
                 return (
                   <div
@@ -999,10 +1047,18 @@ export default function ProviderDashboard() {
                 }
 
                 const time = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-                setChatMessages((prev) => [
-                  ...prev,
-                  { sender: "provider", text: maskedText, time }
-                ]);
+                
+                setChatMessages((prev) => {
+                  const newMsgs = [...prev, { sender: "provider", text: maskedText, time }];
+                  if (hasViolation) {
+                    newMsgs.push({
+                      sender: "system",
+                      text: "🚨 روبوت الحماية: يرجى عدم مشاركة بيانات التواصل لتجنب إيقاف الحساب وفقاً لسياسة التطبيق.",
+                      time
+                    });
+                  }
+                  return newMsgs;
+                });
                 setNewMessage("");
               }}
               className="p-3 bg-slate-900 border-t border-slate-800/80 flex gap-2"

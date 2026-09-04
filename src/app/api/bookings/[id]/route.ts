@@ -107,7 +107,20 @@ export async function PATCH(
     if (status === "COMPLETED" && updatedBooking.providerId && updatedBooking.estimatedCost) {
       const providerId = updatedBooking.providerId;
       const amount = updatedBooking.estimatedCost;
-      const commissionRate = 0.10; // 10% commission
+      
+      // Dynamic Commission (Gamification Rewards)
+      let commissionRate = 0.10; // Default Bronze
+      const providerProfile = await prisma.profile.findUnique({
+        where: { userId: providerId }
+      });
+      
+      if (providerProfile) {
+        const jobs = providerProfile.totalJobs;
+        if (jobs >= 100) commissionRate = 0.05; // Platinum (5%)
+        else if (jobs >= 50) commissionRate = 0.07; // Gold (7%)
+        else if (jobs >= 10) commissionRate = 0.09; // Silver (9%)
+      }
+
       const providerPayout = amount * (1 - commissionRate);
 
       await prisma.$transaction(async (tx) => {
@@ -129,8 +142,11 @@ export async function PATCH(
           }
         });
         
-        // Optionally, we could record the COMMISSION transaction if we have an Admin wallet, 
-        // but for now, we just deduct the 10% from what the provider receives.
+        // Increment provider's totalJobs
+        await tx.profile.update({
+          where: { userId: providerId },
+          data: { totalJobs: { increment: 1 } }
+        });
       });
     }
 

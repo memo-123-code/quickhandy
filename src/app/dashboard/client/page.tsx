@@ -1166,6 +1166,15 @@ export default function ClientDashboard() {
             {/* Message History */}
             <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-slate-950/25 flex flex-col">
               {(chatMessages || []).map((msg, idx) => {
+                if (msg.sender === "system") {
+                  return (
+                    <div key={idx} className="flex justify-center my-2">
+                      <div className="bg-red-500/10 border border-red-500/20 text-red-400 text-[10px] px-3 py-1.5 rounded-lg text-center max-w-[90%]">
+                        <span dir="auto">{msg.text}</span>
+                      </div>
+                    </div>
+                  );
+                }
                 const isMe = msg.sender === "client";
                 return (
                   <div
@@ -1213,10 +1222,18 @@ export default function ClientDashboard() {
                 }
                 
                 const time = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-                setChatMessages((prev) => [
-                  ...prev,
-                  { sender: "client", text: maskedText, time }
-                ]);
+                
+                setChatMessages((prev) => {
+                  const newMsgs = [...prev, { sender: "client", text: maskedText, time }];
+                  if (hasViolation) {
+                    newMsgs.push({
+                      sender: "system",
+                      text: "🚨 روبوت الحماية: يرجى عدم مشاركة بيانات التواصل لضمان حقوقك وتجنب إيقاف الحساب.",
+                      time
+                    });
+                  }
+                  return newMsgs;
+                });
                 setNewMessage("");
 
 
