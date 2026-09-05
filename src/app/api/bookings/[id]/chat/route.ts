@@ -8,13 +8,13 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const messages = await prisma.chatMessage.findMany({
+    const messages = await (prisma as any).chatMessage.findMany({
       where: { bookingId: params.id },
       orderBy: { createdAt: 'asc' }
     });
     
     // Map to frontend expected format
-    const formattedMessages = messages.map(msg => {
+    const formattedMessages = messages.map((msg: any) => {
       // Map role to lower case sender expected by frontend: 'client', 'provider', 'system'
       const sender = msg.senderRole === 'CLIENT' ? 'client' : 
                      msg.senderRole === 'PROVIDER' ? 'provider' : 'system';
@@ -58,7 +58,7 @@ export async function POST(
     }
 
     // Save the user's message (masked if needed)
-    await prisma.chatMessage.create({
+    await (prisma as any).chatMessage.create({
       data: {
         bookingId: params.id,
         senderId,
@@ -70,7 +70,7 @@ export async function POST(
 
     // If violation, auto-inject a System Bot message immediately
     if (hasViolation) {
-      await prisma.chatMessage.create({
+      await (prisma as any).chatMessage.create({
         data: {
           bookingId: params.id,
           senderId: 'SYSTEM',

@@ -1059,7 +1059,7 @@ export default function ProviderDashboard() {
 
                 try {
                   await api.post(`/bookings/${activeJob.id}/chat`, {
-                    senderId: session?.user?.id || 'PROVIDER',
+                    senderId: (session?.user as any)?.id || 'PROVIDER',
                     senderRole: 'PROVIDER',
                     text: textToSend
                   });

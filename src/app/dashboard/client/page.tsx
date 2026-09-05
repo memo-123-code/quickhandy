@@ -1213,7 +1213,7 @@ export default function ClientDashboard() {
 
                 try {
                   await api.post(`/bookings/${bookingId}/chat`, {
-                    senderId: session?.user?.id || 'CLIENT',
+                    senderId: (session?.user as any)?.id || 'CLIENT',
                     senderRole: 'CLIENT',
                     text: textToSend
                   });

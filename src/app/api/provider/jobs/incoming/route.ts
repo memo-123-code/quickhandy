@@ -27,7 +27,10 @@ export async function GET(req: Request) {
     const incomingBooking = await prisma.booking.findFirst({
       where: { 
         status: 'PENDING',
-        createdAt: { gte: thirtyMinutesAgo }
+        createdAt: { gte: thirtyMinutesAgo },
+        quotes: {
+          none: { providerId: user.id }
+        }
       },
       include: {
         client: { include: { profile: true } },
