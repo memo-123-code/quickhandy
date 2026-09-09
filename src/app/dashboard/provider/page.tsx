@@ -56,6 +56,9 @@ export default function ProviderDashboard() {
   const [providerCoords, setProviderCoords] = useState<{ lat: number; lng: number } | undefined>(undefined);
   const [isLocating, setIsLocating] = useState(false);
 
+  // Mock Global Verification State
+  const verificationStatus = "REJECTED"; // ENUM: 'INCOMPLETE' | 'PENDING_REVIEW' | 'APPROVED' | 'REJECTED'
+
   // Trigger and continuously watch real-time GPS location
   useEffect(() => {
     if (typeof window !== "undefined" && navigator.geolocation) {
@@ -463,14 +466,19 @@ export default function ProviderDashboard() {
 
             <button
               onClick={() => {
+                if (verificationStatus !== 'APPROVED') return;
                 if (prepaidBalance <= 0) return;
                 setIsOnline(!isOnline);
               }}
-              disabled={prepaidBalance <= 0}
+              disabled={verificationStatus !== 'APPROVED' || prepaidBalance <= 0}
               className={`flex items-center gap-2 px-3 py-1.5 rounded-full border border-slate-800/80 bg-slate-900 hover:bg-slate-850 transition-all shadow-sm ${
-                prepaidBalance <= 0 ? "opacity-40 cursor-not-allowed" : "cursor-pointer"
+                (verificationStatus !== 'APPROVED' || prepaidBalance <= 0) ? "opacity-40 cursor-not-allowed" : "cursor-pointer"
               }`}
-              title={prepaidBalance <= 0 ? "Top-up required to go online" : "Toggle Online Status"}
+              title={
+                verificationStatus !== 'APPROVED' ? "Verification Required: Please complete your profile to go online."
+                : prepaidBalance <= 0 ? "Top-up required to go online." 
+                : "Toggle Online Status"
+              }
             >
               <span className={`text-[10px] font-bold uppercase tracking-wide transition-colors ${
                 isOnline ? "text-green-400" : "text-slate-400"

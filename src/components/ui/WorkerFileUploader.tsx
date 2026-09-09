@@ -4,19 +4,19 @@ import React, { useState, useRef } from "react";
 import { Upload, CheckCircle2, Camera, Image as ImageIcon, FileText, X } from "lucide-react";
 import { toast } from "sonner";
 
+export type UploadStatus = 'IDLE' | 'PENDING_REVIEW' | 'VERIFIED' | 'REJECTED';
+
 interface WorkerFileUploaderProps {
   label: string;
-  subLabelPending: string;
-  subLabelVerified: string;
-  isVerified: boolean;
-  onUploadSuccess: () => void;
+  status: UploadStatus;
+  fileName?: string;
+  onUploadSuccess: (fileName: string) => void;
 }
 
 export default function WorkerFileUploader({
   label,
-  subLabelPending,
-  subLabelVerified,
-  isVerified,
+  status,
+  fileName,
   onUploadSuccess,
 }: WorkerFileUploaderProps) {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
@@ -116,7 +116,7 @@ export default function WorkerFileUploader({
       await new Promise((resolve) => setTimeout(resolve, 2200));
 
       toast.success(`${label} uploaded successfully!`);
-      onUploadSuccess();
+      onUploadSuccess(file.name);
     } catch (error) {
       toast.error("Failed to process file. Please try again.");
     } finally {
@@ -133,12 +133,16 @@ export default function WorkerFileUploader({
       <button
         type="button"
         onClick={() => {
-          if (!isVerified && !isUploading) setIsSheetOpen(true);
+          if (status !== 'VERIFIED' && status !== 'PENDING_REVIEW' && !isUploading) setIsSheetOpen(true);
         }}
-        disabled={isVerified || isUploading}
+        disabled={status === 'VERIFIED' || status === 'PENDING_REVIEW' || isUploading}
         className={`relative p-3.5 rounded-lg border flex items-center gap-3 text-start transition-all overflow-hidden ${
-          isVerified
+          status === 'VERIFIED'
             ? "bg-[#0B1120] border-slate-800/50 cursor-default"
+            : status === 'PENDING_REVIEW'
+            ? "bg-amber-950/20 border-amber-500/30 cursor-default"
+            : status === 'REJECTED'
+            ? "bg-red-950/20 border-red-500/50 hover:bg-red-900/30 cursor-pointer"
             : isUploading
             ? "bg-slate-800/80 border-cyan-500/50 cursor-wait"
             : "bg-slate-800/50 border-slate-700/50 hover:bg-slate-700/50 cursor-pointer hover:border-slate-600/50"
@@ -154,20 +158,33 @@ export default function WorkerFileUploader({
 
         {isUploading ? (
           <div className="w-5 h-5 rounded-full border-2 border-cyan-500 border-t-transparent animate-spin shrink-0 z-10" />
-        ) : isVerified ? (
+        ) : status === 'VERIFIED' ? (
           <CheckCircle2 className="w-5 h-5 text-green-500 shrink-0 z-10" />
+        ) : status === 'PENDING_REVIEW' ? (
+          <div className="w-5 h-5 rounded-full border-2 border-amber-500 flex items-center justify-center shrink-0 z-10">
+            <div className="w-1 h-1 bg-amber-500 rounded-full" />
+          </div>
+        ) : status === 'REJECTED' ? (
+          <X className="w-5 h-5 text-red-500 shrink-0 z-10" />
         ) : (
           <Upload className="w-5 h-5 text-slate-400 shrink-0 z-10" />
         )}
         
-        <div className="z-10 flex-1">
+        <div className="z-10 flex-1 overflow-hidden">
           <span className="text-xs font-bold text-slate-200 block">{label}</span>
           <span
-            className={`text-[9px] font-bold uppercase transition-colors ${
-              isVerified ? "text-green-500" : isUploading ? "text-cyan-400" : "text-slate-400"
+            className={`text-[9px] font-bold uppercase transition-colors truncate block ${
+              status === 'VERIFIED' ? "text-green-500" 
+              : status === 'PENDING_REVIEW' ? "text-amber-500"
+              : status === 'REJECTED' ? "text-red-500"
+              : isUploading ? "text-cyan-400" : "text-slate-400"
             }`}
           >
-            {isUploading ? `Uploading... ${progress}%` : isVerified ? subLabelVerified : subLabelPending}
+            {isUploading ? `Uploading... ${progress}%` 
+              : status === 'VERIFIED' ? (fileName || "Verified")
+              : status === 'PENDING_REVIEW' ? (fileName || "Pending Review")
+              : status === 'REJECTED' ? "Rejected (Click to re-upload)"
+              : "Upload Pending (أضغط للرفع)"}
           </span>
         </div>
       </button>

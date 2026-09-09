@@ -7,7 +7,7 @@ import {
   Shield, CheckCircle2, AlertCircle, Phone, 
   MapPin, Check, Plus, CreditCard, ChevronRight, HelpCircle, X, MessageSquare, Upload
 } from "lucide-react";
-import WorkerFileUploader from "@/components/ui/WorkerFileUploader";
+import WorkerFileUploader, { UploadStatus } from "@/components/ui/WorkerFileUploader";
 import AvatarUploader from "@/components/ui/AvatarUploader";
 import ProviderWallet from "@/components/wallet/ProviderWallet";
 import { api } from "@/lib/api";
@@ -38,14 +38,38 @@ export default function ProviderProfile() {
   const [iban, setIban] = useState("");
   
   // Document Verification State
-  const [docsStatus, setDocsStatus] = useState({
-    nationalId: false,
-    criminalRecord: false,
-    certificates: false
+  type VerificationStatus = 'INCOMPLETE' | 'PENDING_REVIEW' | 'APPROVED' | 'REJECTED';
+  const [verificationStatus, setVerificationStatus] = useState<VerificationStatus>('REJECTED');
+  
+  const [docsStatus, setDocsStatus] = useState<{
+    nationalId: UploadStatus;
+    criminalRecord: UploadStatus;
+    certificates: UploadStatus;
+  }>({
+    nationalId: 'REJECTED',
+    criminalRecord: 'PENDING_REVIEW',
+    certificates: 'VERIFIED'
+  });
+  
+  const [docNames, setDocNames] = useState({
+    nationalId: '',
+    criminalRecord: 'record_2023.pdf',
+    certificates: 'diploma.pdf'
   });
   const [verificationError, setVerificationError] = useState<string | null>(null);
 
-  const isFullyVerified = docsStatus.nationalId && docsStatus.criminalRecord && docsStatus.certificates;
+  const isFullyVerified = verificationStatus === 'APPROVED';
+
+  // Profile Completeness
+  const totalFields = 4; // avatar, nationalId, criminalRecord, certificates
+  let filledFields = 1; // avatar is filled for mock
+  if (docsStatus.nationalId !== 'IDLE' && docsStatus.nationalId !== 'REJECTED') filledFields++;
+  if (docsStatus.criminalRecord !== 'IDLE' && docsStatus.criminalRecord !== 'REJECTED') filledFields++;
+  if (docsStatus.certificates !== 'IDLE' && docsStatus.certificates !== 'REJECTED') filledFields++;
+  const completeness = Math.round((filledFields / totalFields) * 100);
+
+  // Biography State
+  const [bio, setBio] = useState("I specialize in domestic and light industrial electrical work, mechatronics troubleshooting, and emergency home dispatches. Background-checked and certified technician servicing 10th of Ramadan and surrounding neighborhoods.");
 
   // Preferences State
   const [radius, setRadius] = useState(15);
@@ -82,13 +106,54 @@ export default function ProviderProfile() {
           <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Worker Profile</span>
         </div>
 
-        {/* Verification Warning Banner */}
-        {!isFullyVerified && (
-          <div className="p-4 rounded-xl bg-red-950/20 border border-red-500/20 flex gap-3 items-center animate-pulse">
+        {/* Profile Completeness Bar */}
+        <div className="space-y-1">
+          <div className="flex justify-between items-center text-xs font-bold">
+            <span className="text-slate-400">Profile Completeness</span>
+            <span className="text-brand-orange-400">{completeness}%</span>
+          </div>
+          <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+            <div className="bg-brand-orange-500 h-1.5 rounded-full transition-all duration-700" style={{ width: `${completeness}%` }} />
+          </div>
+        </div>
+
+        {/* Dynamic Verification Banner */}
+        {verificationStatus === 'REJECTED' && (
+          <div className="p-4 rounded-xl bg-red-950/20 border border-red-500/30 flex gap-3 items-center animate-pulse shadow-lg shadow-red-500/5">
             <AlertCircle className="w-5 h-5 text-red-500 shrink-0" />
             <div className="flex-1">
-              <p className="text-xs font-bold text-start text-red-400" dir="rtl">
-                حسابك غير مفعل. يرجى استكمال البيانات المهنية ورفع الأوراق المطلوبة للبدء في تلقي الطلبات.
+              <p className="text-xs font-bold text-start text-red-400">
+                Admin Feedback: National ID image is too blurry. Please re-upload a clear image.
+              </p>
+            </div>
+          </div>
+        )}
+        {verificationStatus === 'INCOMPLETE' && (
+          <div className="p-4 rounded-xl bg-amber-950/20 border border-amber-500/30 flex gap-3 items-center shadow-lg shadow-amber-500/5">
+            <AlertCircle className="w-5 h-5 text-amber-500 shrink-0" />
+            <div className="flex-1">
+              <p className="text-xs font-bold text-start text-amber-400">
+                Action Required: Please complete your profile and upload necessary documents.
+              </p>
+            </div>
+          </div>
+        )}
+        {verificationStatus === 'PENDING_REVIEW' && (
+          <div className="p-4 rounded-xl bg-blue-950/20 border border-blue-500/30 flex gap-3 items-center shadow-lg shadow-blue-500/5">
+            <Shield className="w-5 h-5 text-blue-500 shrink-0" />
+            <div className="flex-1">
+              <p className="text-xs font-bold text-start text-blue-400">
+                Under Review: Your documents are currently being reviewed by the admin team.
+              </p>
+            </div>
+          </div>
+        )}
+        {verificationStatus === 'APPROVED' && (
+          <div className="p-4 rounded-xl bg-green-950/20 border border-green-500/30 flex gap-3 items-center shadow-lg shadow-green-500/5">
+            <CheckCircle2 className="w-5 h-5 text-green-500 shrink-0" />
+            <div className="flex-1">
+              <p className="text-xs font-bold text-start text-green-400">
+                Profile Approved: You can now go online and receive jobs.
               </p>
             </div>
           </div>
@@ -258,9 +323,16 @@ export default function ProviderProfile() {
                   </div>
                   <div className="text-xs space-y-1">
                     <span className="text-slate-400 block">Biography:</span>
-                    <p dir="auto" className="text-slate-300 leading-relaxed bg-slate-950/40 p-3 rounded-lg border border-slate-850">
-                      I specialize in domestic and light industrial electrical work, mechatronics troubleshooting, and emergency home dispatches. Background-checked and certified technician servicing 10th of Ramadan and surrounding neighborhoods.
-                    </p>
+                    <textarea 
+                      value={bio}
+                      onChange={(e) => setBio(e.target.value)}
+                      maxLength={500}
+                      className="w-full text-slate-300 leading-relaxed bg-slate-950/40 p-3 rounded-lg border border-slate-850 resize-none h-24 focus:border-brand-orange-500/50 outline-none transition-colors"
+                      dir="auto"
+                    />
+                    <div className="text-gray-400 text-xs text-right mt-1">
+                      {bio.length} / 500
+                    </div>
                   </div>
                 </div>
               </div>
@@ -276,28 +348,35 @@ export default function ProviderProfile() {
                   {/* National ID Card */}
                   <WorkerFileUploader
                     label="National ID"
-                    subLabelPending="Upload Pending (أضغط للرفع)"
-                    subLabelVerified="Verified"
-                    isVerified={docsStatus.nationalId}
-                    onUploadSuccess={() => setDocsStatus((prev) => ({ ...prev, nationalId: true }))}
+                    status={docsStatus.nationalId}
+                    fileName={docNames.nationalId}
+                    onUploadSuccess={(name) => {
+                      setDocsStatus(prev => ({ ...prev, nationalId: 'PENDING_REVIEW' }));
+                      setDocNames(prev => ({ ...prev, nationalId: name }));
+                      setVerificationStatus('PENDING_REVIEW');
+                    }}
                   />
 
                   {/* Criminal Record Card */}
                   <WorkerFileUploader
                     label="Criminal Record"
-                    subLabelPending="Upload Pending (أضغط للرفع)"
-                    subLabelVerified="Verified (الفيش)"
-                    isVerified={docsStatus.criminalRecord}
-                    onUploadSuccess={() => setDocsStatus((prev) => ({ ...prev, criminalRecord: true }))}
+                    status={docsStatus.criminalRecord}
+                    fileName={docNames.criminalRecord}
+                    onUploadSuccess={(name) => {
+                      setDocsStatus(prev => ({ ...prev, criminalRecord: 'PENDING_REVIEW' }));
+                      setDocNames(prev => ({ ...prev, criminalRecord: name }));
+                    }}
                   />
 
                   {/* Certificates Card */}
                   <WorkerFileUploader
                     label="Certificates"
-                    subLabelPending="Upload Pending (أضغط للرفع)"
-                    subLabelVerified="Verified"
-                    isVerified={docsStatus.certificates}
-                    onUploadSuccess={() => setDocsStatus((prev) => ({ ...prev, certificates: true }))}
+                    status={docsStatus.certificates}
+                    fileName={docNames.certificates}
+                    onUploadSuccess={(name) => {
+                      setDocsStatus(prev => ({ ...prev, certificates: 'PENDING_REVIEW' }));
+                      setDocNames(prev => ({ ...prev, certificates: name }));
+                    }}
                   />
 
                 </div>
@@ -326,14 +405,14 @@ export default function ProviderProfile() {
                 <div className="space-y-2">
                   <input 
                     type="range" 
-                    min="5" 
+                    min="1" 
                     max="50" 
                     value={radius} 
                     onChange={(e) => setRadius(parseInt(e.target.value))}
-                    className="w-full accent-brand-orange-500 bg-slate-950 h-2 rounded-lg"
+                    className="w-full accent-brand-orange-500 bg-slate-950 h-2 rounded-lg cursor-pointer"
                   />
                   <div className="flex justify-between text-[10px] text-slate-500 font-bold">
-                    <span>5 km</span>
+                    <span>1 km</span>
                     <span>25 km</span>
                     <span>50 km</span>
                   </div>
