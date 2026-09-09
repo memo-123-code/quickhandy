@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Circle, useMapEvents, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
@@ -102,7 +102,8 @@ export default function MapComponent({
   interactive = false,
   onLocationSelect,
   providerLocation,
-  clientLocation = { lat: 30.3015, lng: 31.7406 },
+  clientLocation,
+  jobCategory = "General Maintenance",
   showRoute = false,
   routeProgress = 0,
 }: any) {
@@ -113,6 +114,9 @@ export default function MapComponent({
   }, []);
 
   if (!mounted) return null;
+
+  // Center on 10th of Ramadan City
+  const defaultCenter: [number, number] = [30.2982, 31.7418];
 
   // Calculate moving marker position if route is shown
   let activeProviderLoc = providerLocation;
@@ -125,34 +129,94 @@ export default function MapComponent({
   // OpenStreetMap Tiles (100% Free, NO API Key needed)
   const tileUrl = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
 
+  // --- Requirements Implementations ---
+  // 1. Pulsing Location Marker for Provider
+  const providerIcon = L.divIcon({
+    html: `<div class="relative w-6 h-6 -top-3 -left-3">
+             <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-500 opacity-75"></span>
+             <span class="relative inline-flex rounded-full h-6 w-6 bg-blue-600 border-2 border-white shadow-lg flex items-center justify-center">
+                <div class="w-2 h-2 bg-white rounded-full"></div>
+             </span>
+           </div>`,
+    className: "custom-provider-icon",
+    iconSize: [0, 0]
+  });
+
+  // 2. Categorized Service Pins
+  const getServiceIcon = (category: string) => {
+    let bgClass = "bg-green-500";
+    let svg = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>`; // Wrench
+    
+    if (category === "Plumbing") {
+      bgClass = "bg-cyan-500";
+      svg = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z"/></svg>`; // Water Drop
+    } else if (category === "Electrical") {
+      bgClass = "bg-amber-500";
+      svg = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>`; // Lightning Bolt
+    }
+    
+    const html = `<div class="w-8 h-8 ${bgClass} rounded-full border-2 border-white flex items-center justify-center shadow-lg relative -top-4 -left-4">${svg}</div>`;
+    
+    return L.divIcon({
+      html,
+      className: "custom-leaflet-icon",
+      iconSize: [0, 0],
+    });
+  };
+
+  // 3. High-Demand Zones
+  const highDemandZones = [
+    { center: [30.2982, 31.7418] as [number, number], radius: 600, options: { fillColor: '#f97316', fillOpacity: 0.25, stroke: false } },
+    { center: [30.3050, 31.7500] as [number, number], radius: 450, options: { fillColor: '#f97316', fillOpacity: 0.25, stroke: false } }, // Neighborhood 22/25 roughly
+    { center: [30.2900, 31.7350] as [number, number], radius: 500, options: { fillColor: '#f97316', fillOpacity: 0.25, stroke: false } }
+  ];
+
+  // Mock Nearby Jobs (For display if no active client)
+  const mockNearbyJobs = [
+    { lat: 30.2995, lng: 31.7430, category: "Plumbing" },
+    { lat: 30.2950, lng: 31.7400, category: "Electrical" },
+    { lat: 30.3010, lng: 31.7380, category: "General Maintenance" }
+  ];
+
   return (
     <>
       <MapContainer
-      center={[clientLocation.lat, clientLocation.lng]}
-      zoom={15}
-      style={{ width: "100%", height: "100%", zIndex: 1 }}
-      zoomControl={true}
-    >
-      <TileLayer
-        url={tileUrl}
-        attribution='&copy; OpenStreetMap'
-      />
-      
-      {interactive && onLocationSelect && (
-        <>
-          <LocationSelector interactive={interactive} onLocationSelect={onLocationSelect} />
-          <LocateControl interactive={interactive} onLocationSelect={onLocationSelect} />
-        </>
-      )}
+        center={defaultCenter}
+        zoom={14}
+        style={{ width: "100%", height: "100%", zIndex: 1 }}
+        zoomControl={true}
+      >
+        <TileLayer
+          url={tileUrl}
+          attribution='&copy; OpenStreetMap'
+        />
+        
+        {interactive && onLocationSelect && (
+          <>
+            <LocationSelector interactive={interactive} onLocationSelect={onLocationSelect} />
+            <LocateControl interactive={interactive} onLocationSelect={onLocationSelect} />
+          </>
+        )}
 
-      {clientLocation && (
-        <Marker position={[clientLocation.lat, clientLocation.lng]} />
-      )}
+        {/* High Demand Heatmap Overlays */}
+        {highDemandZones.map((zone, idx) => (
+          <Circle key={`zone-${idx}`} center={zone.center} radius={zone.radius} pathOptions={zone.options} />
+        ))}
 
-      {activeProviderLoc && (
-        <Marker position={[activeProviderLoc.lat, activeProviderLoc.lng]} />
-      )}
-    </MapContainer>
+        {/* Client Marker or Mock Nearby Jobs */}
+        {clientLocation ? (
+          <Marker position={[clientLocation.lat, clientLocation.lng]} icon={getServiceIcon(jobCategory)} />
+        ) : (
+          mockNearbyJobs.map((job, idx) => (
+            <Marker key={`mock-${idx}`} position={[job.lat, job.lng]} icon={getServiceIcon(job.category)} />
+          ))
+        )}
+
+        {/* Pulsing Provider Marker */}
+        {activeProviderLoc && (
+          <Marker position={[activeProviderLoc.lat, activeProviderLoc.lng]} icon={providerIcon} />
+        )}
+      </MapContainer>
     </>
   );
 }

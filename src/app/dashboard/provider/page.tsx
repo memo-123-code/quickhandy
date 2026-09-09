@@ -549,9 +549,12 @@ export default function ProviderDashboard() {
                     <span className="text-[9px] uppercase font-bold tracking-wider">Prepaid Wallet Balance</span>
                     <Landmark className="w-3.5 h-3.5 text-brand-orange-500" />
                   </div>
-                  <span className={`text-xl font-extrabold block ${prepaidBalance <= 0 ? "text-red-500" : "text-white"}`}>
-                    {prepaidBalance.toFixed(2)} EGP
-                  </span>
+                  <div>
+                    <span className={`text-xl font-extrabold block ${prepaidBalance <= 0 ? "text-red-500" : "text-white"}`}>
+                      {prepaidBalance.toFixed(2)} EGP
+                    </span>
+                    <div className="text-xs text-emerald-400 font-medium mt-1">Today: +650.00 EGP</div>
+                  </div>
                   <button
                     onClick={() => setIsTopUpOpen(true)}
                     className="w-full py-1 text-[10px] font-bold text-center bg-brand-orange-500/10 hover:bg-brand-orange-500/20 border border-brand-orange-500/30 text-brand-orange-400 rounded transition-all"
