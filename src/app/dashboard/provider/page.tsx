@@ -416,33 +416,40 @@ export default function ProviderDashboard() {
             </div>
           </div>
 
-          {/* ONLINE/OFFLINE TOGGLE */}
-          <button
-            onClick={() => {
-              if (prepaidBalance <= 0) return;
-              setIsOnline(!isOnline);
-            }}
-            disabled={prepaidBalance <= 0}
-            className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg border border-slate-800/50 bg-slate-900/40 hover:bg-slate-850/60 transition-all ${
-              prepaidBalance <= 0 ? "opacity-40 cursor-not-allowed" : "cursor-pointer"
-            }`}
-            title={prepaidBalance <= 0 ? "Top-up required to go online" : "Toggle Online Status"}
-          >
-            <span className={`text-[10px] font-bold uppercase transition-colors ${
-              isOnline ? "text-green-400" : "text-slate-400"
-            }`}>
-              {isOnline ? "Online" : "Offline"}
-            </span>
-            <div
-              className={`relative w-12 h-6.5 rounded-full p-1 transition-all ${
-                isOnline ? "bg-green-500" : "bg-slate-750"
+          {/* Notifications & Toggle */}
+          <div className="flex items-center gap-3">
+            <button className="relative p-2 text-slate-400 hover:text-white transition-colors rounded-full hover:bg-slate-800">
+              <Bell className="w-5 h-5" />
+              <span className="absolute top-1.5 end-1.5 w-2.5 h-2.5 bg-brand-orange-500 rounded-full border-2 border-slate-900"></span>
+            </button>
+
+            <button
+              onClick={() => {
+                if (prepaidBalance <= 0) return;
+                setIsOnline(!isOnline);
+              }}
+              disabled={prepaidBalance <= 0}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-full border border-slate-800/80 bg-slate-900 hover:bg-slate-850 transition-all shadow-sm ${
+                prepaidBalance <= 0 ? "opacity-40 cursor-not-allowed" : "cursor-pointer"
               }`}
+              title={prepaidBalance <= 0 ? "Top-up required to go online" : "Toggle Online Status"}
             >
-              <span className={`block w-4.5 h-4.5 rounded-full bg-white transition-transform ${
-                isOnline ? "translate-x-5.5" : "translate-x-0"
-              }`} />
-            </div>
-          </button>
+              <span className={`text-[10px] font-bold uppercase tracking-wide transition-colors ${
+                isOnline ? "text-green-400" : "text-slate-400"
+              }`}>
+                {isOnline ? "Online" : "Offline"}
+              </span>
+              <div
+                className={`relative w-11 h-6 rounded-full p-1 transition-colors duration-300 ${
+                  isOnline ? "bg-green-500" : "bg-slate-700"
+                }`}
+              >
+                <span className={`block w-4 h-4 rounded-full bg-white transition-transform duration-300 shadow-sm ${
+                  isOnline ? "translate-x-5" : "translate-x-0"
+                }`} />
+              </div>
+            </button>
+          </div>
         </div>
 
         {/* Dashboard Panels */}
@@ -566,6 +573,7 @@ export default function ProviderDashboard() {
                 {/* CSS Bar Chart */}
                 <div className="h-20 flex items-end justify-between pt-4 gap-2">
                   {[
+                    { day: "Sun", amt: 220, pct: "30%" },
                     { day: "Mon", amt: 350, pct: "45%" },
                     { day: "Tue", amt: 580, pct: "65%" },
                     { day: "Wed", amt: 300, pct: "35%" },
@@ -595,7 +603,7 @@ export default function ProviderDashboard() {
                   <div className="p-3 rounded-lg bg-slate-950/60 border border-slate-850 flex justify-between items-center">
                     <div>
                       <span className="text-xs font-bold text-slate-200 block">Leaking Kitchen Sink</span>
-                      <span className="text-[9px] text-slate-500 block">Plumbing • Completed 2h ago</span>
+                      <span className="text-[9px] text-slate-500 block">Plumbing • 10 Sept 2026, 14:00</span>
                     </div>
                     <span className="text-xs font-bold text-green-400">+250.00 EGP</span>
                   </div>
@@ -603,7 +611,7 @@ export default function ProviderDashboard() {
                   <div className="p-3 rounded-lg bg-slate-950/60 border border-slate-850 flex justify-between items-center">
                     <div>
                       <span className="text-xs font-bold text-slate-200 block">Living Room Rewiring</span>
-                      <span className="text-[9px] text-slate-500 block">Electrical • Completed Yesterday</span>
+                      <span className="text-[9px] text-slate-500 block">Electrical • 09 Sept 2026, 11:30</span>
                     </div>
                     <span className="text-xs font-bold text-green-400">+400.00 EGP</span>
                   </div>
@@ -757,29 +765,46 @@ export default function ProviderDashboard() {
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-slate-800 text-center flex items-center justify-between bg-slate-950/20">
-          <div className="flex items-center gap-3">
-            <button 
-              onClick={() => router.push("/dashboard/provider/profile")}
-              className="text-xs text-slate-400 hover:text-white flex items-center gap-1 font-bold transition-all"
-            >
-              <User className="w-3.5 h-3.5 text-brand-orange-400" /> Profile
-            </button>
-            <span className="text-slate-700">|</span>
-            <button 
-              onClick={handleLogout}
-              className="text-xs text-slate-400 hover:text-white flex items-center gap-1 transition-all"
-            >
-              <LogOut className="w-3.5 h-3.5" /> Sign Out
-            </button>
+        <div className="p-4 border-t border-slate-800/80 flex flex-col gap-1.5 bg-slate-900/40">
+          <button 
+            onClick={() => router.push("/dashboard/provider/profile")}
+            className="flex items-center justify-between w-full px-3 py-3 rounded-xl text-slate-400 hover:bg-slate-800/80 hover:text-white transition-all group"
+          >
+            <div className="flex items-center gap-3">
+              <User className="w-4 h-4 text-brand-orange-400 group-hover:text-brand-orange-300" />
+              <span className="text-xs font-bold tracking-wide">Profile <span className="font-normal opacity-70 ml-1 text-[10px]">(الملف الشخصي)</span></span>
+            </div>
+          </button>
+          <button 
+            onClick={handleLogout}
+            className="flex items-center justify-between w-full px-3 py-3 rounded-xl text-slate-400 hover:bg-red-500/10 hover:text-red-400 transition-all group"
+          >
+            <div className="flex items-center gap-3">
+              <LogOut className="w-4 h-4 text-slate-500 group-hover:text-red-400" />
+              <span className="text-xs font-bold tracking-wide">Sign Out <span className="font-normal opacity-70 ml-1 text-[10px]">(تسجيل الخروج)</span></span>
+            </div>
+          </button>
+          <div className="mt-2 text-center">
+            <span className="text-[9px] text-slate-600 font-semibold tracking-widest uppercase block">QuickHandy Provider v1.2</span>
           </div>
-          <span className="text-[10px] text-slate-500">QuickHandy Provider v1.2</span>
         </div>
 
       </div>
 
       {/* MAP AREA: 45vh on mobile, fills remaining screen on desktop */}
-      <div className="w-full h-[45vh] md:h-full flex-1 relative z-10">
+      <div className="w-full h-[45vh] md:h-full flex-1 relative z-10 bg-slate-950 overflow-hidden">
+        
+        {/* Map Offline State Overlay */}
+        {!isOnline && (
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm z-40 flex flex-col items-center justify-center p-6 animate-fadeIn">
+            <div className="bg-slate-900/95 border border-slate-700 p-8 rounded-2xl max-w-sm text-center shadow-2xl backdrop-blur-md">
+              <ShieldAlert className="w-12 h-12 text-slate-400 mx-auto mb-4" />
+              <h3 className="text-lg font-bold text-white mb-2">You are currently offline</h3>
+              <p className="text-xs text-slate-400 leading-relaxed">Toggle your status to Online to view map requests and receive new jobs.</p>
+            </div>
+          </div>
+        )}
+
         {/* Floating Provider GPS "Locate Me" Overlay Button */}
         <div className="absolute top-4 end-4 z-[1000] flex items-center gap-2">
           <button
@@ -793,12 +818,14 @@ export default function ProviderDashboard() {
           </button>
         </div>
 
-        <Map
-          providerLocation={providerCoords || activeJob?.providerCoords}
-          clientLocation={activeJob?.clientCoords}
-          showRoute={dashboardState === "EN_ROUTE" || dashboardState === "JOB_IN_PROGRESS"}
-          routeProgress={dashboardState === "JOB_IN_PROGRESS" ? 1 : 0.3}
-        />
+        <div className={`w-full h-full transition-all duration-700 ${!isOnline ? "grayscale opacity-50 pointer-events-none" : ""}`}>
+          <Map
+            providerLocation={providerCoords || activeJob?.providerCoords}
+            clientLocation={activeJob?.clientCoords}
+            showRoute={dashboardState === "EN_ROUTE" || dashboardState === "JOB_IN_PROGRESS"}
+            routeProgress={dashboardState === "JOB_IN_PROGRESS" ? 1 : 0.3}
+          />
+        </div>
       </div>
 
 
