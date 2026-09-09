@@ -42,6 +42,10 @@ export default function ProviderDashboard() {
   const [dashboardState, setDashboardState] = useState<ProviderState>("IDLE");
   const [isProcessing, setIsProcessing] = useState(false);
   
+  // Notification State
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [hasUnreadNotifications, setHasUnreadNotifications] = useState(true);
+
   // Wallet & Stats State (InDrive Prepaid Wallet model)
   const [prepaidBalance, setPrepaidBalance] = useState(0.00); // Default prepaid wallet balance
   
@@ -417,11 +421,45 @@ export default function ProviderDashboard() {
           </div>
 
           {/* Notifications & Toggle */}
-          <div className="flex items-center gap-3">
-            <button className="relative p-2 text-slate-400 hover:text-white transition-colors rounded-full hover:bg-slate-800">
+          <div className="flex items-center gap-3 relative">
+            <button 
+              onClick={() => {
+                setIsNotificationsOpen(!isNotificationsOpen);
+                if (hasUnreadNotifications) setHasUnreadNotifications(false);
+              }}
+              className="relative p-2 text-slate-400 hover:text-white transition-colors rounded-full hover:bg-slate-800 focus:outline-none"
+            >
               <Bell className="w-5 h-5" />
-              <span className="absolute top-1.5 end-1.5 w-2.5 h-2.5 bg-brand-orange-500 rounded-full border-2 border-slate-900"></span>
+              {hasUnreadNotifications && (
+                <span className="absolute top-1.5 end-1.5 flex h-2.5 w-2.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-orange-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-brand-orange-500 border-2 border-slate-900"></span>
+                </span>
+              )}
             </button>
+
+            {/* Notifications Dropdown */}
+            {isNotificationsOpen && (
+              <div className="absolute top-12 end-16 w-64 bg-slate-900 border border-slate-700 shadow-2xl rounded-xl overflow-hidden z-50 animate-fadeIn">
+                <div className="p-3 border-b border-slate-800 bg-slate-950/50">
+                  <span className="text-xs font-bold text-white">Notifications</span>
+                </div>
+                <div className="flex flex-col max-h-60 overflow-y-auto">
+                  <div className="p-3 border-b border-slate-800 hover:bg-slate-850 cursor-pointer transition-colors">
+                    <p className="text-[11px] text-slate-300">New custom quote request nearby</p>
+                    <span className="text-[9px] text-brand-orange-400 mt-1 block">Just now</span>
+                  </div>
+                  <div className="p-3 border-b border-slate-800 hover:bg-slate-850 cursor-pointer transition-colors">
+                    <p className="text-[11px] text-slate-300">Wallet topped up with 500 EGP</p>
+                    <span className="text-[9px] text-slate-500 mt-1 block">2 hours ago</span>
+                  </div>
+                  <div className="p-3 hover:bg-slate-850 cursor-pointer transition-colors">
+                    <p className="text-[11px] text-slate-300">Congratulations on reaching Bronze Tier!</p>
+                    <span className="text-[9px] text-slate-500 mt-1 block">1 day ago</span>
+                  </div>
+                </div>
+              </div>
+            )}
 
             <button
               onClick={() => {
@@ -765,27 +803,27 @@ export default function ProviderDashboard() {
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-slate-800/80 flex flex-col gap-1.5 bg-slate-900/40">
+        <div className="p-3 border-t border-slate-800/80 flex flex-col gap-1 bg-slate-900/40">
           <button 
             onClick={() => router.push("/dashboard/provider/profile")}
-            className="flex items-center justify-between w-full px-3 py-3 rounded-xl text-slate-400 hover:bg-slate-800/80 hover:text-white transition-all group"
+            className="flex items-center justify-between w-full px-2.5 py-1.5 rounded-lg text-slate-400 hover:bg-slate-800/80 hover:text-white transition-all group"
           >
-            <div className="flex items-center gap-3">
-              <User className="w-4 h-4 text-brand-orange-400 group-hover:text-brand-orange-300" />
-              <span className="text-xs font-bold tracking-wide">Profile <span className="font-normal opacity-70 ml-1 text-[10px]">(الملف الشخصي)</span></span>
+            <div className="flex items-center gap-2">
+              <User className="w-3.5 h-3.5 text-brand-orange-400 group-hover:text-brand-orange-300" />
+              <span className="text-[11px] font-bold tracking-wide">Profile <span className="font-normal opacity-70 ml-1 text-[9px]">(الملف الشخصي)</span></span>
             </div>
           </button>
           <button 
             onClick={handleLogout}
-            className="flex items-center justify-between w-full px-3 py-3 rounded-xl text-slate-400 hover:bg-red-500/10 hover:text-red-400 transition-all group"
+            className="flex items-center justify-between w-full px-2.5 py-1.5 rounded-lg text-slate-400 hover:bg-red-500/10 hover:text-red-400 transition-all group"
           >
-            <div className="flex items-center gap-3">
-              <LogOut className="w-4 h-4 text-slate-500 group-hover:text-red-400" />
-              <span className="text-xs font-bold tracking-wide">Sign Out <span className="font-normal opacity-70 ml-1 text-[10px]">(تسجيل الخروج)</span></span>
+            <div className="flex items-center gap-2">
+              <LogOut className="w-3.5 h-3.5 text-slate-500 group-hover:text-red-400" />
+              <span className="text-[11px] font-bold tracking-wide">Sign Out <span className="font-normal opacity-70 ml-1 text-[9px]">(تسجيل الخروج)</span></span>
             </div>
           </button>
-          <div className="mt-2 text-center">
-            <span className="text-[9px] text-slate-600 font-semibold tracking-widest uppercase block">QuickHandy Provider v1.2</span>
+          <div className="mt-1.5 text-center">
+            <span className="text-[8px] text-slate-600 font-semibold tracking-widest uppercase block">QuickHandy Provider v1.2</span>
           </div>
         </div>
 
