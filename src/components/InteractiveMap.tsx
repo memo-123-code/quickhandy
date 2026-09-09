@@ -15,6 +15,7 @@ interface InteractiveMapProps {
   interactive?: boolean;
   onLocationSelect?: (lat: number, lng: number, address: string) => void;
   providerLocation?: { lat: number; lng: number };
+  setProviderLocation?: (coords: {lat: number, lng: number}) => void;
   clientLocation?: { lat: number; lng: number };
   showRoute?: boolean;
   routeProgress?: number;

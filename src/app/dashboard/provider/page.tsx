@@ -846,22 +846,10 @@ export default function ProviderDashboard() {
           </div>
         )}
 
-        {/* Floating Provider GPS "Locate Me" Overlay Button */}
-        <div className="absolute top-4 end-4 z-[1000] flex items-center gap-2">
-          <button
-            onClick={handleLocateMe}
-            disabled={isLocating}
-            className="px-3.5 py-2.5 rounded-xl bg-slate-900/90 hover:bg-slate-850 border border-brand-orange-500/40 text-xs font-bold text-white shadow-xl backdrop-blur-md flex items-center gap-2 transition-all active:scale-95 disabled:opacity-60 cursor-pointer"
-            title="Recenter Map on Real GPS Location"
-          >
-            <Crosshair className={`w-4 h-4 text-brand-orange-500 ${isLocating ? "animate-spin" : ""}`} />
-            <span>{isLocating ? "Locating..." : "Locate Me (تحديد موقعي)"}</span>
-          </button>
-        </div>
-
         <div className={`w-full h-full transition-all duration-700 ${!isOnline ? "grayscale opacity-50 pointer-events-none" : ""}`}>
           <Map
             providerLocation={providerCoords || activeJob?.providerCoords}
+            setProviderLocation={setProviderCoords}
             clientLocation={activeJob?.clientCoords}
             showRoute={dashboardState === "EN_ROUTE" || dashboardState === "JOB_IN_PROGRESS"}
             routeProgress={dashboardState === "JOB_IN_PROGRESS" ? 1 : 0.3}
