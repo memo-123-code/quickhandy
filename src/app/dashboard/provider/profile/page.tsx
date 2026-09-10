@@ -5,9 +5,10 @@ import { useRouter } from "next/navigation";
 import { 
   ArrowLeft, Award, TrendingUp, Landmark, Star, 
   Shield, CheckCircle2, AlertCircle, Phone, 
-  MapPin, Check, Plus, CreditCard, ChevronRight, HelpCircle, X, MessageSquare, Upload
+  MapPin, Check, Plus, CreditCard, ChevronRight, HelpCircle, X, MessageSquare, Upload, Terminal, ScanLine
 } from "lucide-react";
 import WorkerFileUploader, { UploadStatus } from "@/components/ui/WorkerFileUploader";
+import SmartUploadCard, { SmartStatus, OcrData } from "@/components/ui/SmartUploadCard";
 import AvatarUploader from "@/components/ui/AvatarUploader";
 import ProviderWallet from "@/components/wallet/ProviderWallet";
 import { api } from "@/lib/api";
@@ -42,31 +43,29 @@ export default function ProviderProfile() {
   const [verificationStatus, setVerificationStatus] = useState<VerificationStatus>('REJECTED');
   
   const [docsStatus, setDocsStatus] = useState<{
-    nationalId: UploadStatus;
-    criminalRecord: UploadStatus;
-    certificates: UploadStatus;
+    nationalId: SmartStatus;
+    criminalRecord: SmartStatus;
+    certificates: SmartStatus;
   }>({
-    nationalId: 'REJECTED',
-    criminalRecord: 'PENDING_REVIEW',
-    certificates: 'VERIFIED'
+    nationalId: 'idle',
+    criminalRecord: 'idle',
+    certificates: 'idle'
   });
   
-  const [docNames, setDocNames] = useState({
-    nationalId: '',
-    criminalRecord: 'record_2023.pdf',
-    certificates: 'diploma.pdf'
-  });
+  const [aiLogs, setAiLogs] = useState<string[]>([]);
   const [verificationError, setVerificationError] = useState<string | null>(null);
 
   const isFullyVerified = verificationStatus === 'APPROVED';
 
   // Profile Completeness
-  const totalFields = 4; // avatar, nationalId, criminalRecord, certificates
-  let filledFields = 1; // avatar is filled for mock
-  if (docsStatus.nationalId !== 'IDLE' && docsStatus.nationalId !== 'REJECTED') filledFields++;
-  if (docsStatus.criminalRecord !== 'IDLE' && docsStatus.criminalRecord !== 'REJECTED') filledFields++;
-  if (docsStatus.certificates !== 'IDLE' && docsStatus.certificates !== 'REJECTED') filledFields++;
-  const completeness = Math.round((filledFields / totalFields) * 100);
+  const totalDocs = 3;
+  let filledDocs = 0;
+  if (docsStatus.nationalId === 'success') filledDocs++;
+  if (docsStatus.criminalRecord === 'success') filledDocs++;
+  if (docsStatus.certificates === 'success') filledDocs++;
+  
+  const ekycCompleteness = Math.round((filledDocs / totalDocs) * 100);
+  const isEkycComplete = ekycCompleteness === 100;
 
   // Biography State
   const [bio, setBio] = useState("I specialize in domestic and light industrial electrical work, mechatronics troubleshooting, and emergency home dispatches. Background-checked and certified technician servicing 10th of Ramadan and surrounding neighborhoods.");
@@ -109,11 +108,11 @@ export default function ProviderProfile() {
         {/* Profile Completeness Bar */}
         <div className="space-y-1">
           <div className="flex justify-between items-center text-xs font-bold">
-            <span className="text-slate-400">Profile Completeness</span>
-            <span className="text-brand-orange-400">{completeness}%</span>
+            <span className="text-slate-400">eKYC Completeness</span>
+            <span className="text-brand-orange-400">{ekycCompleteness}%</span>
           </div>
           <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
-            <div className="bg-brand-orange-500 h-1.5 rounded-full transition-all duration-700" style={{ width: `${completeness}%` }} />
+            <div className="bg-brand-orange-500 h-1.5 rounded-full transition-all duration-700" style={{ width: `${ekycCompleteness}%` }} />
           </div>
         </div>
 
@@ -337,60 +336,104 @@ export default function ProviderProfile() {
                 </div>
               </div>
 
-              {/* Documents Verification Status */}
-              <div className="p-5 rounded-xl bg-slate-900 border border-slate-800 space-y-3">
-                <div className="flex justify-between items-center">
-                  <h3 dir="auto" className="text-sm font-bold text-white">Verification & Credentials</h3>
-                  <span className="text-[10px] text-slate-500">Click a card to simulate upload</span>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {/* Documents Verification Status (eKYC / OCR) */}
+              <div className="space-y-4">
+                <div className="p-5 rounded-xl bg-slate-900 border border-slate-800 space-y-4">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <h3 dir="auto" className="text-sm font-bold text-white flex items-center gap-2">
+                        <ScanLine className="w-4 h-4 text-brand-orange-500" /> Verification & Credentials
+                      </h3>
+                      <p className="text-[10px] text-slate-400 mt-1">Smart eKYC Document Scanner</p>
+                    </div>
+                  </div>
                   
-                  {/* National ID Card */}
-                  <WorkerFileUploader
-                    label="National ID"
-                    status={docsStatus.nationalId}
-                    fileName={docNames.nationalId}
-                    onUploadSuccess={(name) => {
-                      // 1. Enter Scanning State
-                      setDocsStatus(prev => ({ ...prev, nationalId: 'AI_SCANNING' }));
-                      setDocNames(prev => ({ ...prev, nationalId: name }));
-                      
-                      // 2. Simulate AI Processing Delay (3s) -> Auto-Approve
-                      setTimeout(() => {
-                        setDocsStatus(prev => ({ ...prev, nationalId: 'AI_APPROVED' }));
-                        setVerificationStatus('APPROVED');
-                      }, 3000);
-                    }}
-                  />
+                  {isEkycComplete && (
+                    <div className="p-3 rounded-lg bg-brand-orange-500/10 border border-brand-orange-500/30 flex items-center gap-3 animate-fadeIn">
+                      <CheckCircle2 className="w-5 h-5 text-brand-orange-500 shrink-0" />
+                      <span className="text-xs font-bold text-brand-orange-400">
+                        Complete Verification - Account will go Online upon final AI approval
+                      </span>
+                    </div>
+                  )}
 
-                  {/* Criminal Record Card */}
-                  <WorkerFileUploader
-                    label="Criminal Record"
-                    status={docsStatus.criminalRecord}
-                    fileName={docNames.criminalRecord}
-                    onUploadSuccess={(name) => {
-                      // 1. Enter Scanning State
-                      setDocsStatus(prev => ({ ...prev, criminalRecord: 'AI_SCANNING' }));
-                      setDocNames(prev => ({ ...prev, criminalRecord: name }));
-                      
-                      // 2. Simulate AI Processing Delay (3s) -> Auto-Reject
-                      setTimeout(() => {
-                        setDocsStatus(prev => ({ ...prev, criminalRecord: 'AI_REJECTED' }));
-                      }, 3000);
-                    }}
-                  />
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    {/* National ID Card */}
+                    <SmartUploadCard
+                      label="National ID"
+                      status={docsStatus.nationalId}
+                      ocrData={{
+                        identified: "Egyptian National ID",
+                        confidence: "99.8%",
+                        statusText: "Cleared & Auto-Approved"
+                      }}
+                      onClick={() => {
+                        setDocsStatus(prev => ({ ...prev, nationalId: 'scanning' }));
+                        setTimeout(() => {
+                          setDocsStatus(prev => ({ ...prev, nationalId: 'success' }));
+                          setAiLogs(prev => [...prev, "[System] National ID OCR Scan: 99.8% Match", "[System] Face Matching: Confirmed - Auto Approved"]);
+                        }, 3500);
+                      }}
+                    />
 
-                  {/* Certificates Card */}
-                  <WorkerFileUploader
-                    label="Certificates"
-                    status={docsStatus.certificates}
-                    fileName={docNames.certificates}
-                    onUploadSuccess={(name) => {
-                      setDocsStatus(prev => ({ ...prev, certificates: 'PENDING_REVIEW' }));
-                      setDocNames(prev => ({ ...prev, certificates: name }));
-                    }}
-                  />
+                    {/* Criminal Record Card */}
+                    <SmartUploadCard
+                      label="Criminal Record"
+                      status={docsStatus.criminalRecord}
+                      ocrData={{
+                        errorText: "AI Rejected: Image too blurry or poorly lit. Please retake."
+                      }}
+                      onClick={() => {
+                        setDocsStatus(prev => ({ ...prev, criminalRecord: 'scanning' }));
+                        setTimeout(() => {
+                          setDocsStatus(prev => ({ ...prev, criminalRecord: 'error' }));
+                          setAiLogs(prev => [...prev, "[Error] Criminal Record Scan: Quality Too Low (Blurry)"]);
+                        }, 3000);
+                      }}
+                    />
 
+                    {/* Certificates Card */}
+                    <SmartUploadCard
+                      label="Certificates"
+                      status={docsStatus.certificates}
+                      ocrData={{
+                        identified: "Trade Certificate",
+                        confidence: "94.2%",
+                        statusText: "Verified"
+                      }}
+                      onClick={() => {
+                        setDocsStatus(prev => ({ ...prev, certificates: 'scanning' }));
+                        setTimeout(() => {
+                          setDocsStatus(prev => ({ ...prev, certificates: 'success' }));
+                          setAiLogs(prev => [...prev, "[System] Certificate Validation: Genuine Document Detected"]);
+                        }, 4000);
+                      }}
+                    />
+                  </div>
+                </div>
+
+                {/* AI VERIFICATION REPORT PANEL */}
+                <div className="w-full bg-[#0a0a0a] border border-slate-800 rounded-xl overflow-hidden shadow-2xl">
+                  <div className="bg-slate-900 border-b border-slate-800 px-4 py-2 flex items-center gap-2">
+                    <Terminal className="w-4 h-4 text-slate-500" />
+                    <span className="text-[10px] font-mono font-bold text-slate-400 tracking-widest uppercase">
+                      AI VERIFICATION REPORT (تقرير تحقق الذكاء الاصطناعي)
+                    </span>
+                  </div>
+                  <div className="p-4 h-40 overflow-y-auto font-mono text-[11px] space-y-1.5 flex flex-col justify-end bg-gradient-to-b from-transparent to-indigo-950/5">
+                    {aiLogs.length === 0 ? (
+                      <span className="text-slate-600">Awaiting document scans...</span>
+                    ) : (
+                      aiLogs.map((log, i) => (
+                        <div key={i} className="animate-slideUp flex items-start gap-2">
+                          <span className="text-indigo-500 shrink-0">{'>'}</span>
+                          <span className={log.includes("[Error]") ? "text-red-400" : "text-emerald-400"}>
+                            {log}
+                          </span>
+                        </div>
+                      ))
+                    )}
+                  </div>
                 </div>
               </div>
 
