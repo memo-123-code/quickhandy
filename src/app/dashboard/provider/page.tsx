@@ -57,7 +57,7 @@ export default function ProviderDashboard() {
   const [isLocating, setIsLocating] = useState(false);
 
   // Mock Global Verification State
-  const verificationStatus = "REJECTED"; // ENUM: 'INCOMPLETE' | 'PENDING_REVIEW' | 'APPROVED' | 'REJECTED'
+  const verificationStatus: string = "REJECTED"; // ENUM: 'INCOMPLETE' | 'PENDING_REVIEW' | 'APPROVED' | 'REJECTED'
 
   // Trigger and continuously watch real-time GPS location
   useEffect(() => {
