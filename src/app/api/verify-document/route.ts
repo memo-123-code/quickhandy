@@ -33,26 +33,47 @@ export async function POST(request: Request) {
     // Simulate AI Processing Delay (3 seconds)
     await new Promise((resolve) => setTimeout(resolve, 3000));
 
-    // Return dynamic mock OCR data based on document type
+    // Strict Validation Logic based on filename keywords
+    const lowerName = file.name.toLowerCase();
     let result = '';
     let logMsg = '';
 
     switch (docType) {
       case 'id':
+        if (!lowerName.includes('id') && !lowerName.includes('بطاقة') && !lowerName.includes('national')) {
+          return NextResponse.json(
+            { error: 'AI Rejected: Document does not appear to be a valid National ID. Text missing or blurred.' },
+            { status: 400 }
+          );
+        }
         result = 'AI Confidence: 99.8% | Type: ID Match';
         logMsg = 'Face matched.';
         break;
       case 'criminal':
+        if (!lowerName.includes('criminal') && !lowerName.includes('فيش') && !lowerName.includes('record') && !lowerName.includes('تشفيه')) {
+          return NextResponse.json(
+            { error: 'AI Rejected: Document does not appear to be a valid Criminal Record. Barcode missing.' },
+            { status: 400 }
+          );
+        }
         result = 'AI Confidence: 95.0% | Status: Cleared';
         logMsg = 'No infractions found.';
         break;
       case 'certs':
+        if (!lowerName.includes('cert') && !lowerName.includes('شهادة') && !lowerName.includes('degree') && !lowerName.includes('diploma')) {
+          return NextResponse.json(
+            { error: 'AI Rejected: Document does not appear to be a recognized certificate. Seals missing.' },
+            { status: 400 }
+          );
+        }
         result = 'AI Confidence: 94.2% | Verified';
         logMsg = 'Genuine Document Detected.';
         break;
       default:
-        result = 'AI Confidence: 85.0% | Status: Unknown';
-        logMsg = 'Document analyzed successfully.';
+        return NextResponse.json(
+          { error: 'AI Rejected: Unknown document type.' },
+          { status: 400 }
+        );
     }
 
     return NextResponse.json({

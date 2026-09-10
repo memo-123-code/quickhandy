@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef } from 'react';
-import { Upload, CheckCircle2, ScanLine, TerminalSquare, FileText } from 'lucide-react';
+import { Upload, CheckCircle2, ScanLine, TerminalSquare, FileText, AlertCircle } from 'lucide-react';
 
 type DocKey = 'id' | 'criminal' | 'certs';
 type ScanStatus = 'idle' | 'scanning' | 'verified' | 'error';
@@ -185,7 +185,9 @@ export default function VerificationSection() {
             <div className="flex items-center gap-3 text-red-500">
               {renderThumbnail(docs.id)}
               <div className="flex-1">
-                <p className="font-medium text-white">National ID</p>
+                <p className="font-medium text-white flex items-center justify-between">
+                  National ID <AlertCircle className="w-4 h-4 shrink-0" />
+                </p>
                 <p className="text-xs text-red-500 line-clamp-2">{docs.id.result}</p>
               </div>
             </div>
@@ -235,7 +237,9 @@ export default function VerificationSection() {
             <div className="flex items-center gap-3 text-red-500">
               {renderThumbnail(docs.criminal)}
               <div className="flex-1">
-                <p className="font-medium text-white">Criminal Record</p>
+                <p className="font-medium text-white flex items-center justify-between">
+                  Criminal Record <AlertCircle className="w-4 h-4 shrink-0" />
+                </p>
                 <p className="text-xs text-red-500 line-clamp-2">{docs.criminal.result}</p>
               </div>
             </div>
@@ -285,7 +289,9 @@ export default function VerificationSection() {
             <div className="flex items-center gap-3 text-red-500">
               {renderThumbnail(docs.certs)}
               <div className="flex-1">
-                <p className="font-medium text-white">Certificates</p>
+                <p className="font-medium text-white flex items-center justify-between">
+                  Certificates <AlertCircle className="w-4 h-4 shrink-0" />
+                </p>
                 <p className="text-xs text-red-500 line-clamp-2">{docs.certs.result}</p>
               </div>
             </div>
