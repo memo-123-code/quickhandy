@@ -4,7 +4,7 @@ import React, { useState, useRef } from "react";
 import { Upload, CheckCircle2, Camera, Image as ImageIcon, FileText, X } from "lucide-react";
 import { toast } from "sonner";
 
-export type UploadStatus = 'IDLE' | 'PENDING_REVIEW' | 'VERIFIED' | 'REJECTED';
+export type UploadStatus = 'IDLE' | 'PENDING_REVIEW' | 'VERIFIED' | 'REJECTED' | 'AI_SCANNING' | 'AI_APPROVED' | 'AI_REJECTED';
 
 interface WorkerFileUploaderProps {
   label: string;
@@ -22,6 +22,7 @@ export default function WorkerFileUploader({
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [thumbnail, setThumbnail] = useState<string | null>(null);
 
   const cameraRef = useRef<HTMLInputElement>(null);
   const galleryRef = useRef<HTMLInputElement>(null);
@@ -99,6 +100,7 @@ export default function WorkerFileUploader({
     try {
       // Simulate client-side compression (this takes a fraction of a second)
       const processedFile = await compressImage(file);
+      setThumbnail(URL.createObjectURL(processedFile));
       console.log(`Original Size: ${(file.size / 1024).toFixed(2)}KB, Compressed Size: ${(processedFile.size / 1024).toFixed(2)}KB`);
 
       // Simulate upload progress
@@ -128,21 +130,34 @@ export default function WorkerFileUploader({
   };
 
   return (
-    <>
+      <style>{`
+        @keyframes laserScan {
+          0% { top: -10%; opacity: 0; }
+          10% { opacity: 1; }
+          90% { opacity: 1; }
+          100% { top: 110%; opacity: 0; }
+        }
+        .animate-laserScan {
+          animation: laserScan 1.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+        }
+      `}</style>
+      
       {/* Main Trigger Card */}
       <button
         type="button"
         onClick={() => {
-          if (status !== 'VERIFIED' && status !== 'PENDING_REVIEW' && !isUploading) setIsSheetOpen(true);
+          if (status !== 'VERIFIED' && status !== 'PENDING_REVIEW' && status !== 'AI_APPROVED' && status !== 'AI_SCANNING' && !isUploading) setIsSheetOpen(true);
         }}
-        disabled={status === 'VERIFIED' || status === 'PENDING_REVIEW' || isUploading}
+        disabled={status === 'VERIFIED' || status === 'PENDING_REVIEW' || status === 'AI_APPROVED' || status === 'AI_SCANNING' || isUploading}
         className={`relative p-3.5 rounded-lg border flex items-center gap-3 text-start transition-all overflow-hidden ${
-          status === 'VERIFIED'
+          status === 'VERIFIED' || status === 'AI_APPROVED'
             ? "bg-[#0B1120] border-slate-800/50 cursor-default"
             : status === 'PENDING_REVIEW'
             ? "bg-amber-950/20 border-amber-500/30 cursor-default"
-            : status === 'REJECTED'
+            : status === 'REJECTED' || status === 'AI_REJECTED'
             ? "bg-red-950/20 border-red-500/50 hover:bg-red-900/30 cursor-pointer"
+            : status === 'AI_SCANNING'
+            ? "bg-indigo-950/20 border-indigo-500/50 cursor-wait shadow-[0_0_15px_rgba(99,102,241,0.1)]"
             : isUploading
             ? "bg-slate-800/80 border-cyan-500/50 cursor-wait"
             : "bg-slate-800/50 border-slate-700/50 hover:bg-slate-700/50 cursor-pointer hover:border-slate-600/50"
@@ -158,13 +173,18 @@ export default function WorkerFileUploader({
 
         {isUploading ? (
           <div className="w-5 h-5 rounded-full border-2 border-cyan-500 border-t-transparent animate-spin shrink-0 z-10" />
-        ) : status === 'VERIFIED' ? (
+        ) : status === 'AI_SCANNING' ? (
+          <div className="relative w-6 h-6 rounded shrink-0 overflow-hidden border border-indigo-500/40 bg-slate-900 z-10">
+            {thumbnail && <img src={thumbnail} className="w-full h-full object-cover opacity-60" alt="Scanning" />}
+            <div className="absolute left-0 right-0 h-[2px] bg-indigo-400 shadow-[0_0_8px_2px_rgba(99,102,241,0.9)] animate-laserScan" />
+          </div>
+        ) : status === 'VERIFIED' || status === 'AI_APPROVED' ? (
           <CheckCircle2 className="w-5 h-5 text-green-500 shrink-0 z-10" />
         ) : status === 'PENDING_REVIEW' ? (
           <div className="w-5 h-5 rounded-full border-2 border-amber-500 flex items-center justify-center shrink-0 z-10">
             <div className="w-1 h-1 bg-amber-500 rounded-full" />
           </div>
-        ) : status === 'REJECTED' ? (
+        ) : status === 'REJECTED' || status === 'AI_REJECTED' ? (
           <X className="w-5 h-5 text-red-500 shrink-0 z-10" />
         ) : (
           <Upload className="w-5 h-5 text-slate-400 shrink-0 z-10" />
@@ -173,14 +193,18 @@ export default function WorkerFileUploader({
         <div className="z-10 flex-1 overflow-hidden">
           <span className="text-xs font-bold text-slate-200 block">{label}</span>
           <span
-            className={`text-[9px] font-bold uppercase transition-colors truncate block ${
-              status === 'VERIFIED' ? "text-green-500" 
+            className={`text-[9px] font-bold uppercase transition-colors block leading-snug mt-0.5 ${
+              status === 'VERIFIED' || status === 'AI_APPROVED' ? "text-green-500" 
               : status === 'PENDING_REVIEW' ? "text-amber-500"
-              : status === 'REJECTED' ? "text-red-500"
+              : status === 'REJECTED' || status === 'AI_REJECTED' ? "text-red-500"
+              : status === 'AI_SCANNING' ? "text-indigo-400"
               : isUploading ? "text-cyan-400" : "text-slate-400"
             }`}
           >
             {isUploading ? `Uploading... ${progress}%` 
+              : status === 'AI_SCANNING' ? "Scanning Document..."
+              : status === 'AI_APPROVED' ? "AI Match: 98% (Name & Face matched) - Auto-Approved"
+              : status === 'AI_REJECTED' ? "AI Rejected: Image too blurry or poorly lit. Please retake."
               : status === 'VERIFIED' ? (fileName || "Verified")
               : status === 'PENDING_REVIEW' ? (fileName || "Pending Review")
               : status === 'REJECTED' ? "Rejected (Click to re-upload)"

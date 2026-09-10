@@ -351,9 +351,15 @@ export default function ProviderProfile() {
                     status={docsStatus.nationalId}
                     fileName={docNames.nationalId}
                     onUploadSuccess={(name) => {
-                      setDocsStatus(prev => ({ ...prev, nationalId: 'PENDING_REVIEW' }));
+                      // 1. Enter Scanning State
+                      setDocsStatus(prev => ({ ...prev, nationalId: 'AI_SCANNING' }));
                       setDocNames(prev => ({ ...prev, nationalId: name }));
-                      setVerificationStatus('PENDING_REVIEW');
+                      
+                      // 2. Simulate AI Processing Delay (3s) -> Auto-Approve
+                      setTimeout(() => {
+                        setDocsStatus(prev => ({ ...prev, nationalId: 'AI_APPROVED' }));
+                        setVerificationStatus('APPROVED');
+                      }, 3000);
                     }}
                   />
 
@@ -363,8 +369,14 @@ export default function ProviderProfile() {
                     status={docsStatus.criminalRecord}
                     fileName={docNames.criminalRecord}
                     onUploadSuccess={(name) => {
-                      setDocsStatus(prev => ({ ...prev, criminalRecord: 'PENDING_REVIEW' }));
+                      // 1. Enter Scanning State
+                      setDocsStatus(prev => ({ ...prev, criminalRecord: 'AI_SCANNING' }));
                       setDocNames(prev => ({ ...prev, criminalRecord: name }));
+                      
+                      // 2. Simulate AI Processing Delay (3s) -> Auto-Reject
+                      setTimeout(() => {
+                        setDocsStatus(prev => ({ ...prev, criminalRecord: 'AI_REJECTED' }));
+                      }, 3000);
                     }}
                   />
 
