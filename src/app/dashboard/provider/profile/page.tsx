@@ -363,16 +363,16 @@ export default function ProviderProfile() {
                       label="National ID"
                       status={docsStatus.nationalId}
                       ocrData={{
-                        identified: "Egyptian National ID",
-                        confidence: "99.8%",
-                        statusText: "Cleared & Auto-Approved"
+                        identified: "Type: ID Match",
+                        confidence: "AI Confidence: 99.8%",
+                        statusText: ""
                       }}
                       onClick={() => {
                         setDocsStatus(prev => ({ ...prev, nationalId: 'scanning' }));
                         setTimeout(() => {
                           setDocsStatus(prev => ({ ...prev, nationalId: 'success' }));
-                          setAiLogs(prev => [...prev, "[System] National ID OCR Scan: 99.8% Match", "[System] Face Matching: Confirmed - Auto Approved"]);
-                        }, 3500);
+                          setAiLogs(prev => [...prev, "[System] National ID processed. Face matched."]);
+                        }, 3000);
                       }}
                     />
 
@@ -381,13 +381,15 @@ export default function ProviderProfile() {
                       label="Criminal Record"
                       status={docsStatus.criminalRecord}
                       ocrData={{
-                        errorText: "AI Rejected: Image too blurry or poorly lit. Please retake."
+                        identified: "Status: Cleared",
+                        confidence: "AI Confidence: 95.0%",
+                        statusText: ""
                       }}
                       onClick={() => {
                         setDocsStatus(prev => ({ ...prev, criminalRecord: 'scanning' }));
                         setTimeout(() => {
-                          setDocsStatus(prev => ({ ...prev, criminalRecord: 'error' }));
-                          setAiLogs(prev => [...prev, "[Error] Criminal Record Scan: Quality Too Low (Blurry)"]);
+                          setDocsStatus(prev => ({ ...prev, criminalRecord: 'success' }));
+                          setAiLogs(prev => [...prev, "[System] Criminal Record processed. No infractions found."]);
                         }, 3000);
                       }}
                     />
@@ -417,7 +419,7 @@ export default function ProviderProfile() {
                   <div className="bg-slate-900 border-b border-slate-800 px-4 py-2 flex items-center gap-2">
                     <Terminal className="w-4 h-4 text-slate-500" />
                     <span className="text-[10px] font-mono font-bold text-slate-400 tracking-widest uppercase">
-                      AI VERIFICATION REPORT (تقرير تحقق الذكاء الاصطناعي)
+                      AI VERIFICATION SYSTEM LOGS
                     </span>
                   </div>
                   <div className="p-4 h-40 overflow-y-auto font-mono text-[11px] space-y-1.5 flex flex-col justify-end bg-gradient-to-b from-transparent to-indigo-950/5">
