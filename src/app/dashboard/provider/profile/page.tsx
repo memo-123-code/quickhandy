@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import WorkerFileUploader, { UploadStatus } from "@/components/ui/WorkerFileUploader";
 import SmartUploadCard, { SmartStatus, OcrData } from "@/components/ui/SmartUploadCard";
+import VerificationSection from "@/components/ui/VerificationSection";
 import AvatarUploader from "@/components/ui/AvatarUploader";
 import ProviderWallet from "@/components/wallet/ProviderWallet";
 import { api } from "@/lib/api";

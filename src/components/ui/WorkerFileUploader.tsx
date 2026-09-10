@@ -130,6 +130,7 @@ export default function WorkerFileUploader({
   };
 
   return (
+    <>
       <style>{`
         @keyframes laserScan {
           0% { top: -10%; opacity: 0; }
