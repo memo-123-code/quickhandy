@@ -234,20 +234,44 @@ export default function ProviderWallet() {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Transfer Method</label>
-                  <div className="relative">
-                    <select
-                      value={withdrawMethod}
-                      onChange={(e) => setWithdrawMethod(e.target.value)}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white font-bold appearance-none focus:border-brand-orange-500 focus:outline-none focus:ring-1 focus:ring-brand-orange-500 transition-all"
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Payout Method</label>
+                  <div className="grid grid-cols-3 gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setWithdrawMethod("VODAFONE_CASH")}
+                      className={`p-3 rounded-xl border text-xs font-bold text-center flex flex-col items-center gap-2 transition-all ${
+                        withdrawMethod === "VODAFONE_CASH" 
+                          ? "border-brand-orange-500 bg-brand-orange-500/10 text-brand-orange-400" 
+                          : "border-slate-800 bg-slate-950 text-slate-400 hover:border-slate-700"
+                      }`}
                     >
-                      <option value="VODAFONE_CASH">Vodafone Cash</option>
-                      <option value="INSTAPAY">InstaPay</option>
-                      <option value="BANK_TRANSFER">Bank Transfer</option>
-                    </select>
-                    <div className="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none text-slate-400">
-                      <ArrowDownToLine className="w-4 h-4" />
-                    </div>
+                      <div className={`w-3 h-3 rounded-full ${withdrawMethod === "VODAFONE_CASH" ? "bg-red-500" : "bg-slate-600"}`} />
+                      Vodafone Cash
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setWithdrawMethod("INSTAPAY")}
+                      className={`p-3 rounded-xl border text-xs font-bold text-center flex flex-col items-center gap-2 transition-all ${
+                        withdrawMethod === "INSTAPAY" 
+                          ? "border-brand-orange-500 bg-brand-orange-500/10 text-brand-orange-400" 
+                          : "border-slate-800 bg-slate-950 text-slate-400 hover:border-slate-700"
+                      }`}
+                    >
+                      <div className={`w-3 h-3 rounded-full ${withdrawMethod === "INSTAPAY" ? "bg-brand-blue-500" : "bg-slate-600"}`} />
+                      InstaPay
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setWithdrawMethod("BANK_TRANSFER")}
+                      className={`p-3 rounded-xl border text-xs font-bold text-center flex flex-col items-center gap-2 transition-all ${
+                        withdrawMethod === "BANK_TRANSFER" 
+                          ? "border-brand-orange-500 bg-brand-orange-500/10 text-brand-orange-400" 
+                          : "border-slate-800 bg-slate-950 text-slate-400 hover:border-slate-700"
+                      }`}
+                    >
+                      <div className={`w-3 h-3 rounded-full ${withdrawMethod === "BANK_TRANSFER" ? "bg-blue-500" : "bg-slate-600"}`} />
+                      Bank Transfer
+                    </button>
                   </div>
                 </div>
 
