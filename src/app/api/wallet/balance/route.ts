@@ -26,13 +26,20 @@ export async function GET(req: Request) {
     // Create wallet if it doesn't exist
     if (!user.wallet) {
       const newWallet = await prisma.wallet.create({
-        data: { userId: user.id, balance: 0.0, currency: 'EGP' },
+        data: { userId: user.id, availableBalance: 0.0, pendingBalance: 0.0, lifetimeEarnings: 0.0, currency: 'EGP' },
       });
-      return NextResponse.json({ balance: newWallet.balance, currency: 'EGP' });
+      return NextResponse.json({ 
+        balance: newWallet.availableBalance, 
+        pending: newWallet.pendingBalance,
+        lifetime: newWallet.lifetimeEarnings,
+        currency: newWallet.currency 
+      });
     }
 
     return NextResponse.json({
-      balance: user.wallet.balance,
+      balance: user.wallet.availableBalance,
+      pending: user.wallet.pendingBalance,
+      lifetime: user.wallet.lifetimeEarnings,
       currency: user.wallet.currency,
     });
   } catch (error) {

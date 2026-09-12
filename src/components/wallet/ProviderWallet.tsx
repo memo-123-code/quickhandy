@@ -14,7 +14,14 @@ export default function ProviderWallet() {
 
   React.useEffect(() => {
     api.get("/wallet/balance").then((res) => {
-      if (res.data?.balance !== undefined) setBalances(prev => ({ ...prev, available: res.data.balance }));
+      if (res.data) {
+        setBalances(prev => ({ 
+          ...prev, 
+          available: res.data.balance !== undefined ? res.data.balance : prev.available,
+          pending: res.data.pending !== undefined ? res.data.pending : prev.pending,
+          lifetime: res.data.lifetime !== undefined ? res.data.lifetime : prev.lifetime
+        }));
+      }
     }).catch(console.error);
   }, []);
 
