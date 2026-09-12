@@ -127,8 +127,16 @@ export async function PATCH(
         // Ensure provider wallet exists
         const providerWallet = await tx.wallet.upsert({
           where: { userId: providerId },
-          update: { balance: { increment: providerPayout } },
-          create: { userId: providerId, balance: providerPayout, currency: "EGP" }
+          update: { 
+            availableBalance: { increment: providerPayout },
+            lifetimeEarnings: { increment: providerPayout }
+          },
+          create: { 
+            userId: providerId, 
+            availableBalance: providerPayout,
+            lifetimeEarnings: providerPayout, 
+            currency: "EGP" 
+          }
         });
 
         // Record Payout Transaction

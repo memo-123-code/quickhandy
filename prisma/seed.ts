@@ -56,7 +56,7 @@ async function main() {
       },
       wallet: {
         create: {
-          balance: 0,
+          availableBalance: 0,
           currency: "EGP",
         },
       },
@@ -83,7 +83,7 @@ async function main() {
       },
       wallet: {
         create: {
-          balance: 500.0,
+          availableBalance: 500.0,
           currency: "EGP",
         },
       },
@@ -114,7 +114,7 @@ async function main() {
       },
       wallet: {
         create: {
-          balance: 1200.0,
+          availableBalance: 1200.0,
           currency: "EGP",
         },
       },

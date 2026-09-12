@@ -21,7 +21,7 @@ export async function POST(
       where: { userId: quote.booking.clientId }
     });
 
-    if (!clientWallet || clientWallet.balance < quote.price) {
+    if (!clientWallet || clientWallet.availableBalance < quote.price) {
       return NextResponse.json({ 
         error: "Insufficient funds. Please top up your wallet to accept this quote." 
       }, { status: 400 });
@@ -32,7 +32,7 @@ export async function POST(
       // Deduct from wallet
       await tx.wallet.update({
         where: { id: clientWallet.id },
-        data: { balance: { decrement: quote.price } }
+        data: { availableBalance: { decrement: quote.price } }
       });
 
       // Record Escrow Transaction
