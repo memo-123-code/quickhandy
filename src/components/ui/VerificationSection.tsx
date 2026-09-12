@@ -71,14 +71,15 @@ export default function VerificationSection() {
           const { data } = await Tesseract.recognize(file, 'ara');
           extractedText = data.text;
           setLogs((prev) => [...prev, `[AI] Text extracted successfully.`]);
+          setLogs((prev) => [...prev, `[OCR Raw Data]: "${extractedText}"`]);
           
           let isValid = false;
           if (docKey === 'id') {
-            const idKeywords = ["بطاقة", "الرقم القومي", "جمهورية مصر", "تحقيق شخصية"];
+            const idKeywords = ["قوم", "رقم", "شخصي", "جمهور", "مصر", "بطاق"];
             const matchCount = idKeywords.filter(kw => extractedText.includes(kw)).length;
             isValid = matchCount >= 1;
           } else if (docKey === 'criminal') {
-            const criminalKeywords = ["صحيفة", "حالة جنائية", "الادلة الجنائية", "وزارة الداخلية"];
+            const criminalKeywords = ["صحيف", "جنائ", "ادلة", "داخل", "فيش"];
             isValid = criminalKeywords.some(kw => extractedText.includes(kw));
           } else {
             isValid = true;
@@ -345,9 +346,9 @@ export default function VerificationSection() {
             <TerminalSquare className="w-4 h-4" />
             <span>AI VERIFICATION SYSTEM LOGS</span>
           </div>
-          <div className="space-y-2 max-h-40 overflow-y-auto">
+          <div className="space-y-2 max-h-60 overflow-y-auto">
             {logs.map((log, index) => (
-              <div key={index} className={`animate-slideUp ${log.startsWith('[Error]') ? 'text-red-400' : 'text-green-400'}`}>
+              <div key={index} className={`animate-slideUp whitespace-pre-wrap break-words ${log.startsWith('[Error]') ? 'text-red-400' : 'text-green-400'}`}>
                 <span className="text-slate-500">[{new Date().toLocaleTimeString()}]</span> {log}
               </div>
             ))}

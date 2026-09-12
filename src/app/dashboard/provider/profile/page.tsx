@@ -12,6 +12,7 @@ import SmartUploadCard, { SmartStatus, OcrData } from "@/components/ui/SmartUplo
 import VerificationSection from "@/components/ui/VerificationSection";
 import AvatarUploader from "@/components/ui/AvatarUploader";
 import ProviderWallet from "@/components/wallet/ProviderWallet";
+import ProviderAvailability from "@/components/provider/ProviderAvailability";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
 
@@ -352,88 +353,7 @@ export default function ProviderProfile() {
 
           {/* TAB 4: AVAILABILITY & PREFERENCES */}
           {activeTab === "PREFERENCES" && (
-            <div className="space-y-6 animate-fadeIn">
-              
-              {/* Service Radius Slider */}
-              <div className="p-5 rounded-xl bg-slate-900 border border-slate-800 space-y-4">
-                <div className="flex justify-between items-center">
-                  <h3 dir="auto" className="text-sm font-bold text-white">Service Travel Radius</h3>
-                  <span className="text-xs font-bold text-brand-orange-500">{radius} km</span>
-                </div>
-                <div className="space-y-2">
-                  <input 
-                    type="range" 
-                    min="1" 
-                    max="50" 
-                    value={radius} 
-                    onChange={(e) => setRadius(parseInt(e.target.value))}
-                    className="w-full accent-brand-orange-500 bg-slate-950 h-2 rounded-lg cursor-pointer"
-                  />
-                  <div className="flex justify-between text-[10px] text-slate-500 font-bold">
-                    <span>1 km</span>
-                    <span>25 km</span>
-                    <span>50 km</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Shift Management */}
-              <div className="p-5 rounded-xl bg-slate-900 border border-slate-800 space-y-4">
-                <h3 dir="auto" className="text-sm font-bold text-white">Availability Preferences</h3>
-                <div className="divide-y divide-slate-850">
-                  
-                  <div className="py-3.5 flex justify-between items-center">
-                    <div>
-                      <span className="text-xs font-bold text-white block">Available for Emergency/Instant Jobs</span>
-                      <span className="text-[10px] text-slate-500 block mt-0.5">Receive immediate gig dispatches within your radius</span>
-                    </div>
-                    <button
-                      onClick={() => {
-                        if (!isFullyVerified) {
-                          setVerificationError("عفواً، لا يمكنك تفعيل حسابك واستقبال الطلبات قبل رفع جميع الأوراق الرسمية المطلوبة (البطاقة، الفيش، والشهادات).");
-                          setTimeout(() => setVerificationError(null), 5000);
-                          return;
-                        }
-                        handleUpdateAvailability("EMERGENCY", !allowEmergency);
-                      }}
-                      className={`relative w-11 h-6 rounded-full p-0.5 transition-colors ${
-                        allowEmergency ? "bg-brand-orange-500" : "bg-slate-800"
-                      } ${!isFullyVerified ? "opacity-40 cursor-not-allowed" : "cursor-pointer"}`}
-                    >
-                      <span className={`block w-5 h-5 rounded-full bg-white transition-transform ${
-                        allowEmergency ? "translate-x-5" : "translate-x-0"
-                      }`} />
-                    </button>
-                  </div>
-
-                  <div className="py-3.5 flex justify-between items-center">
-                    <div>
-                      <span className="text-xs font-bold text-white block">Accept Scheduled Bookings</span>
-                      <span className="text-[10px] text-slate-500 block mt-0.5">Allow clients to book appointments in advance</span>
-                    </div>
-                    <button
-                      onClick={() => {
-                        if (!isFullyVerified) {
-                          setVerificationError("عفواً، لا يمكنك تفعيل حسابك واستقبال الطلبات قبل رفع جميع الأوراق الرسمية المطلوبة (البطاقة، الفيش، والشهادات).");
-                          setTimeout(() => setVerificationError(null), 5000);
-                          return;
-                        }
-                        handleUpdateAvailability("SCHEDULED", !allowScheduled);
-                      }}
-                      className={`relative w-11 h-6 rounded-full p-0.5 transition-colors ${
-                        allowScheduled ? "bg-brand-orange-500" : "bg-slate-800"
-                      } ${!isFullyVerified ? "opacity-40 cursor-not-allowed" : "cursor-pointer"}`}
-                    >
-                      <span className={`block w-5 h-5 rounded-full bg-white transition-transform ${
-                        allowScheduled ? "translate-x-5" : "translate-x-0"
-                      }`} />
-                    </button>
-                  </div>
-
-                </div>
-              </div>
-
-            </div>
+            <ProviderAvailability />
           )}
 
         </div>

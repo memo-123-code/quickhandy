@@ -160,29 +160,33 @@ model Review {
 // ==========================================
 
 model Wallet {
-  id          String        @id @default(cuid())
-  userId      String        @unique
-  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  balance     Float         @default(0.0)
-  currency    String        @default("EGP")
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  id               String        @id @default(cuid())
+  userId           String        @unique
+  user             User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  availableBalance Float         @default(0.0)
+  pendingBalance   Float         @default(0.0)
+  lifetimeEarnings Float         @default(0.0)
+  currency         String        @default("EGP")
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
 
-  transactions Transaction[]
+  transactions     Transaction[]
 }
 
 model Transaction {
-  id          String          @id @default(cuid())
-  walletId    String
-  bookingId   String?
-  type        String          // TOP_UP, WITHDRAWAL, PAYMENT, COMMISSION, REFUND
-  amount      Float
-  status      String          @default("COMPLETED")
-  referenceId String?         @unique
-  createdAt   DateTime        @default(now())
+  id           String          @id @default(cuid())
+  walletId     String
+  bookingId    String?
+  type         String          // DEPOSIT, WITHDRAWAL, ESCROW, PAYMENT, COMMISSION, REFUND
+  amount       Float
+  status       String          @default("PENDING") // PENDING, COMPLETED, FAILED
+  payoutMethod String?         // VODAFONE_CASH, INSTAPAY, BANK_TRANSFER
+  referenceId  String?         @unique // External Gateway ID (e.g., Paymob)
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
 
-  wallet      Wallet          @relation(fields: [walletId], references: [id], onDelete: Cascade)
-  booking     Booking?        @relation(fields: [bookingId], references: [id])
+  wallet       Wallet          @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  booking      Booking?        @relation(fields: [bookingId], references: [id])
 }
 
 model ChatMessage {
