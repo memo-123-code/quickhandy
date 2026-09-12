@@ -118,8 +118,8 @@ export default function ProviderProfile() {
           <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Worker Profile</span>
         </div>
 
-        {/* Developer Bypass Button */}
-        {process.env.NODE_ENV === 'development' && !devBypassMode && (
+        {/* Developer Bypass Button (TODO: Hide behind NODE_ENV === 'production' later) */}
+        {!devBypassMode && (
           <div className="flex justify-end mb-4">
             <button 
               onClick={handleDevBypass}
