@@ -57,7 +57,17 @@ export default function ProviderDashboard() {
   const [isLocating, setIsLocating] = useState(false);
 
   // Mock Global Verification State
-  const verificationStatus: string = "REJECTED"; // ENUM: 'INCOMPLETE' | 'PENDING_REVIEW' | 'APPROVED' | 'REJECTED'
+  const [verificationStatus, setVerificationStatus] = useState<string>("REJECTED"); // ENUM: 'INCOMPLETE' | 'PENDING_REVIEW' | 'APPROVED' | 'REJECTED'
+
+  // Apply Developer Bypass
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const bypass = localStorage.getItem('dev_bypass_kyc');
+      if (bypass === 'true') {
+        setVerificationStatus('APPROVED');
+      }
+    }
+  }, []);
 
   // Trigger and continuously watch real-time GPS location
   useEffect(() => {

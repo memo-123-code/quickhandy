@@ -68,7 +68,19 @@ export default function ProviderProfile() {
       criminalRecord: 'success',
       certificates: 'success'
     });
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('dev_bypass_kyc', 'true');
+    }
   };
+
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const bypass = localStorage.getItem('dev_bypass_kyc');
+      if (bypass === 'true') {
+        handleDevBypass();
+      }
+    }
+  }, []);
 
   // Profile Completeness
   const totalDocs = 3;
