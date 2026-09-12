@@ -16,13 +16,20 @@ interface DocState {
   fileSize?: string;
 }
 
-export default function VerificationSection() {
+export default function VerificationSection({ devBypassMode = false }: { devBypassMode?: boolean }) {
   const [docs, setDocs] = useState<Record<DocKey, DocState>>({
     id: { status: 'idle' },
     criminal: { status: 'idle' },
     certs: { status: 'idle' }
   });
   const [logs, setLogs] = useState<string[]>([]);
+
+  // Apply dev bypass styling
+  const actualDocs = devBypassMode ? {
+    id: { status: 'verified', result: 'Dev Bypass: ID Verified', fileName: 'bypass.jpg', fileSize: 'N/A' },
+    criminal: { status: 'verified', result: 'Dev Bypass: Record Verified', fileName: 'bypass.jpg', fileSize: 'N/A' },
+    certs: { status: 'verified', result: 'Dev Bypass: Certs Verified', fileName: 'bypass.jpg', fileSize: 'N/A' }
+  } : docs;
 
   // Refs for hidden file inputs
   const idInputRef = useRef<HTMLInputElement>(null);
@@ -184,51 +191,53 @@ export default function VerificationSection() {
         
         {/* National ID Card */}
         <div 
-          onClick={() => triggerUpload('id')}
-          className={`relative p-4 rounded-xl border cursor-pointer transition-all overflow-hidden ${
-            docs.id.status === 'verified' ? 'bg-slate-900/50 border-green-500/50' 
-            : docs.id.status === 'error' ? 'bg-red-950/20 border-red-500/50'
+          onClick={() => !devBypassMode && triggerUpload('id')}
+          className={`relative p-4 rounded-xl border transition-all overflow-hidden ${
+            !devBypassMode && 'cursor-pointer'
+          } ${
+            actualDocs.id.status === 'verified' ? 'bg-slate-900/50 border-green-500/50' 
+            : actualDocs.id.status === 'error' ? 'bg-red-950/20 border-red-500/50'
             : 'bg-[#1a1d27] border-slate-700 hover:border-slate-500'
           }`}
         >
-          {docs.id.status === 'idle' && (
+          {actualDocs.id.status === 'idle' && (
             <div className="flex items-center gap-3 text-gray-400">
-              {renderThumbnail(docs.id)}
+              {renderThumbnail(actualDocs.id as any)}
               <div>
                 <p className="font-medium text-white">National ID</p>
                 <p className="text-xs">UPLOAD PENDING (أضغط للرفع)</p>
               </div>
             </div>
           )}
-          {docs.id.status === 'scanning' && (
+          {actualDocs.id.status === 'scanning' && (
             <div className="flex items-center gap-3 text-blue-400 animate-pulse">
-              {renderThumbnail(docs.id)}
+              {renderThumbnail(actualDocs.id as any)}
               <div className="flex-1 truncate">
                 <p className="font-medium text-blue-400">Uploading & Analyzing...</p>
-                <p className="text-xs truncate" title={docs.id.fileName}>{docs.id.fileName}</p>
+                <p className="text-xs truncate" title={actualDocs.id.fileName}>{actualDocs.id.fileName}</p>
               </div>
               <ScanLine className="w-5 h-5 shrink-0 animate-[spin_3s_linear_infinite]" />
             </div>
           )}
-          {docs.id.status === 'verified' && (
+          {actualDocs.id.status === 'verified' && (
             <div className="flex items-center gap-3 text-green-500">
-              {renderThumbnail(docs.id)}
+              {renderThumbnail(actualDocs.id as any)}
               <div className="flex-1">
                 <p className="font-medium text-white flex items-center justify-between">
                   National ID <CheckCircle2 className="w-4 h-4 shrink-0" />
                 </p>
-                <p className="text-xs text-green-500 line-clamp-2">{docs.id.result}</p>
+                <p className="text-xs text-green-500 line-clamp-2">{actualDocs.id.result}</p>
               </div>
             </div>
           )}
-          {docs.id.status === 'error' && (
+          {actualDocs.id.status === 'error' && (
             <div className="flex items-center gap-3 text-red-500">
-              {renderThumbnail(docs.id)}
+              {renderThumbnail(actualDocs.id as any)}
               <div className="flex-1">
                 <p className="font-medium text-white flex items-center justify-between">
                   National ID <AlertCircle className="w-4 h-4 shrink-0" />
                 </p>
-                <p className="text-xs text-red-500 line-clamp-2">{docs.id.result}</p>
+                <p className="text-xs text-red-500 line-clamp-2">{actualDocs.id.result}</p>
               </div>
             </div>
           )}
@@ -236,51 +245,53 @@ export default function VerificationSection() {
 
         {/* Criminal Record Card */}
         <div 
-          onClick={() => triggerUpload('criminal')}
-          className={`relative p-4 rounded-xl border cursor-pointer transition-all overflow-hidden ${
-            docs.criminal.status === 'verified' ? 'bg-slate-900/50 border-green-500/50' 
-            : docs.criminal.status === 'error' ? 'bg-red-950/20 border-red-500/50'
+          onClick={() => !devBypassMode && triggerUpload('criminal')}
+          className={`relative p-4 rounded-xl border transition-all overflow-hidden ${
+            !devBypassMode && 'cursor-pointer'
+          } ${
+            actualDocs.criminal.status === 'verified' ? 'bg-slate-900/50 border-green-500/50' 
+            : actualDocs.criminal.status === 'error' ? 'bg-red-950/20 border-red-500/50'
             : 'bg-[#1a1d27] border-slate-700 hover:border-slate-500'
           }`}
         >
-          {docs.criminal.status === 'idle' && (
+          {actualDocs.criminal.status === 'idle' && (
             <div className="flex items-center gap-3 text-gray-400">
-              {renderThumbnail(docs.criminal)}
+              {renderThumbnail(actualDocs.criminal as any)}
               <div>
                 <p className="font-medium text-white">Criminal Record</p>
                 <p className="text-xs">UPLOAD PENDING (أضغط للرفع)</p>
               </div>
             </div>
           )}
-          {docs.criminal.status === 'scanning' && (
+          {actualDocs.criminal.status === 'scanning' && (
             <div className="flex items-center gap-3 text-blue-400 animate-pulse">
-              {renderThumbnail(docs.criminal)}
+              {renderThumbnail(actualDocs.criminal as any)}
               <div className="flex-1 truncate">
                 <p className="font-medium text-blue-400">Uploading & Analyzing...</p>
-                <p className="text-xs truncate" title={docs.criminal.fileName}>{docs.criminal.fileName}</p>
+                <p className="text-xs truncate" title={actualDocs.criminal.fileName}>{actualDocs.criminal.fileName}</p>
               </div>
               <ScanLine className="w-5 h-5 shrink-0 animate-[spin_3s_linear_infinite]" />
             </div>
           )}
-          {docs.criminal.status === 'verified' && (
+          {actualDocs.criminal.status === 'verified' && (
             <div className="flex items-center gap-3 text-green-500">
-              {renderThumbnail(docs.criminal)}
+              {renderThumbnail(actualDocs.criminal as any)}
               <div className="flex-1">
                 <p className="font-medium text-white flex items-center justify-between">
                   Criminal Record <CheckCircle2 className="w-4 h-4 shrink-0" />
                 </p>
-                <p className="text-xs text-green-500 line-clamp-2">{docs.criminal.result}</p>
+                <p className="text-xs text-green-500 line-clamp-2">{actualDocs.criminal.result}</p>
               </div>
             </div>
           )}
-          {docs.criminal.status === 'error' && (
+          {actualDocs.criminal.status === 'error' && (
             <div className="flex items-center gap-3 text-red-500">
-              {renderThumbnail(docs.criminal)}
+              {renderThumbnail(actualDocs.criminal as any)}
               <div className="flex-1">
                 <p className="font-medium text-white flex items-center justify-between">
                   Criminal Record <AlertCircle className="w-4 h-4 shrink-0" />
                 </p>
-                <p className="text-xs text-red-500 line-clamp-2">{docs.criminal.result}</p>
+                <p className="text-xs text-red-500 line-clamp-2">{actualDocs.criminal.result}</p>
               </div>
             </div>
           )}
@@ -288,51 +299,53 @@ export default function VerificationSection() {
 
         {/* Certificates Card */}
         <div 
-          onClick={() => triggerUpload('certs')}
-          className={`relative p-4 rounded-xl border cursor-pointer transition-all overflow-hidden ${
-            docs.certs.status === 'verified' ? 'bg-slate-900/50 border-green-500/50' 
-            : docs.certs.status === 'error' ? 'bg-red-950/20 border-red-500/50'
+          onClick={() => !devBypassMode && triggerUpload('certs')}
+          className={`relative p-4 rounded-xl border transition-all overflow-hidden ${
+            !devBypassMode && 'cursor-pointer'
+          } ${
+            actualDocs.certs.status === 'verified' ? 'bg-slate-900/50 border-green-500/50' 
+            : actualDocs.certs.status === 'error' ? 'bg-red-950/20 border-red-500/50'
             : 'bg-[#1a1d27] border-slate-700 hover:border-slate-500'
           }`}
         >
-          {docs.certs.status === 'idle' && (
+          {actualDocs.certs.status === 'idle' && (
             <div className="flex items-center gap-3 text-gray-400">
-              {renderThumbnail(docs.certs)}
+              {renderThumbnail(actualDocs.certs as any)}
               <div>
                 <p className="font-medium text-white">Certificates</p>
                 <p className="text-xs">UPLOAD PENDING (أضغط للرفع)</p>
               </div>
             </div>
           )}
-          {docs.certs.status === 'scanning' && (
+          {actualDocs.certs.status === 'scanning' && (
             <div className="flex items-center gap-3 text-blue-400 animate-pulse">
-              {renderThumbnail(docs.certs)}
+              {renderThumbnail(actualDocs.certs as any)}
               <div className="flex-1 truncate">
-                <p className="font-medium text-blue-400">Uploading & Analyzing...</p>
-                <p className="text-xs truncate" title={docs.certs.fileName}>{docs.certs.fileName}</p>
+                <p className="font-medium text-blue-400">Uploading...</p>
+                <p className="text-xs truncate" title={actualDocs.certs.fileName}>{actualDocs.certs.fileName}</p>
               </div>
               <ScanLine className="w-5 h-5 shrink-0 animate-[spin_3s_linear_infinite]" />
             </div>
           )}
-          {docs.certs.status === 'verified' && (
+          {actualDocs.certs.status === 'verified' && (
             <div className="flex items-center gap-3 text-green-500">
-              {renderThumbnail(docs.certs)}
+              {renderThumbnail(actualDocs.certs as any)}
               <div className="flex-1">
                 <p className="font-medium text-white flex items-center justify-between">
                   Certificates <CheckCircle2 className="w-4 h-4 shrink-0" />
                 </p>
-                <p className="text-xs text-green-500 line-clamp-2">{docs.certs.result}</p>
+                <p className="text-xs text-green-500 line-clamp-2">{actualDocs.certs.result}</p>
               </div>
             </div>
           )}
-          {docs.certs.status === 'error' && (
+          {actualDocs.certs.status === 'error' && (
             <div className="flex items-center gap-3 text-red-500">
-              {renderThumbnail(docs.certs)}
+              {renderThumbnail(actualDocs.certs as any)}
               <div className="flex-1">
                 <p className="font-medium text-white flex items-center justify-between">
                   Certificates <AlertCircle className="w-4 h-4 shrink-0" />
                 </p>
-                <p className="text-xs text-red-500 line-clamp-2">{docs.certs.result}</p>
+                <p className="text-xs text-red-500 line-clamp-2">{actualDocs.certs.result}</p>
               </div>
             </div>
           )}

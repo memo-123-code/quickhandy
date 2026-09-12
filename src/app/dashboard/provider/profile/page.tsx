@@ -56,8 +56,19 @@ export default function ProviderProfile() {
   
   const [aiLogs, setAiLogs] = useState<string[]>([]);
   const [verificationError, setVerificationError] = useState<string | null>(null);
+  const [devBypassMode, setDevBypassMode] = useState(false);
 
   const isFullyVerified = verificationStatus === 'APPROVED';
+
+  const handleDevBypass = () => {
+    setDevBypassMode(true);
+    setVerificationStatus('APPROVED');
+    setDocsStatus({
+      nationalId: 'success',
+      criminalRecord: 'success',
+      certificates: 'success'
+    });
+  };
 
   // Profile Completeness
   const totalDocs = 3;
@@ -106,6 +117,19 @@ export default function ProviderProfile() {
           </button>
           <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Worker Profile</span>
         </div>
+
+        {/* Developer Bypass Button */}
+        {process.env.NODE_ENV === 'development' && !devBypassMode && (
+          <div className="flex justify-end mb-4">
+            <button 
+              onClick={handleDevBypass}
+              className="text-xs font-bold px-4 py-2 rounded-lg border-2 border-amber-500 text-amber-500 hover:bg-amber-500 hover:text-amber-950 transition-colors flex items-center gap-2 shadow-lg shadow-amber-500/20"
+            >
+              <Terminal className="w-4 h-4" />
+              Dev Mode: Bypass Verification
+            </button>
+          </div>
+        )}
 
         {/* Profile Completeness Bar */}
         <div className="space-y-1">
@@ -339,7 +363,7 @@ export default function ProviderProfile() {
               </div>
 
               {/* Documents Verification Status (eKYC / OCR) */}
-              <VerificationSection />
+              <VerificationSection devBypassMode={devBypassMode} />
 
             </div>
           )}
