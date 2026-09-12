@@ -3,6 +3,8 @@
 import { useState, useRef } from 'react';
 import { Upload, CheckCircle2, ScanLine, TerminalSquare, FileText, AlertCircle } from 'lucide-react';
 
+import Tesseract from 'tesseract.js';
+
 type DocKey = 'id' | 'criminal' | 'certs';
 type ScanStatus = 'idle' | 'scanning' | 'verified' | 'error';
 
@@ -60,12 +62,49 @@ export default function VerificationSection() {
     setLogs((prev) => [...prev, `[System] Initiating upload for ${docName} (${fileSizeStr})...`]);
 
     try {
-      // 2. Prepare FormData
+      let extractedText = '';
+
+      // 2. Client-Side OCR Validation
+      if (file.type.startsWith('image/')) {
+        setLogs((prev) => [...prev, `[AI] Analyzing document via OCR...`]);
+        try {
+          const { data } = await Tesseract.recognize(file, 'ara');
+          extractedText = data.text;
+          setLogs((prev) => [...prev, `[AI] Text extracted successfully.`]);
+          
+          let isValid = false;
+          if (docKey === 'id') {
+            const idKeywords = ["بطاقة", "الرقم القومي", "جمهورية مصر", "تحقيق شخصية"];
+            const matchCount = idKeywords.filter(kw => extractedText.includes(kw)).length;
+            isValid = matchCount >= 1;
+          } else if (docKey === 'criminal') {
+            const criminalKeywords = ["صحيفة", "حالة جنائية", "الادلة الجنائية", "وزارة الداخلية"];
+            isValid = criminalKeywords.some(kw => extractedText.includes(kw));
+          } else {
+            isValid = true;
+          }
+
+          if (!isValid && docKey !== 'certs') {
+            throw new Error("AI Rejected: Real document keywords not found. Please upload a valid Egyptian document.");
+          }
+        } catch (ocrError: any) {
+          if (ocrError.message && ocrError.message.includes('AI Rejected')) {
+            throw ocrError;
+          }
+          console.error("OCR Error:", ocrError);
+          setLogs((prev) => [...prev, `[Warning] OCR processing failed or encountered an error.`]);
+        }
+      }
+
+      // 3. Prepare FormData
       const formData = new FormData();
       formData.append('file', file);
       formData.append('type', docKey);
+      if (extractedText) {
+        formData.append('extractedText', extractedText);
+      }
 
-      // 3. Real API call
+      // 4. Real API call
       const response = await fetch('/api/verify-document', {
         method: 'POST',
         body: formData,
@@ -77,7 +116,7 @@ export default function VerificationSection() {
         throw new Error(data.error || 'Failed to process document');
       }
 
-      // 4. Update state on success
+      // 5. Update state on success
       setDocs((prev) => ({
         ...prev,
         [docKey]: {
