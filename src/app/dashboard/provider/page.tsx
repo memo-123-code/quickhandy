@@ -13,6 +13,7 @@ import dynamic from "next/dynamic";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
 import { SkeletonCard } from "@/components/ui/SkeletonCard";
+import SmartNegotiationChat from "@/components/ui/SmartNegotiationChat";
 
 const Map = dynamic(() => import("@/components/InteractiveMap"), {
   ssr: false,
@@ -45,6 +46,9 @@ export default function ProviderDashboard() {
   // Notification State
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [hasUnreadNotifications, setHasUnreadNotifications] = useState(true);
+
+  // Chat State
+  const [isChatOpen, setIsChatOpen] = useState(false);
 
   // Wallet & Stats State (InDrive Prepaid Wallet model)
   const [prepaidBalance, setPrepaidBalance] = useState(0.00); // Default prepaid wallet balance
@@ -546,14 +550,24 @@ export default function ProviderDashboard() {
                   </div>
                 </div>
               ) : dashboardState === "WAITING_CLIENT_APPROVAL" ? (
-                <div className="p-4 rounded-xl bg-brand-orange-950/20 border border-brand-orange-500/20 flex gap-3 items-center">
-                  <span className="w-2.5 h-2.5 rounded-full bg-brand-orange-500 animate-ping shrink-0" />
-                  <div className="flex-1">
-                    <h4 dir="auto" className="text-xs font-bold text-brand-orange-400">Waiting for Client Approval</h4>
-                    <p dir="auto" className="text-[9px] text-slate-400 mt-0.5">
-                      Your quote of {bidAmount} EGP has been submitted to {activeJob?.clientName || "the client"}. Waiting for response...
-                    </p>
+                <div className="space-y-3">
+                  <div className="p-4 rounded-xl bg-brand-orange-950/20 border border-brand-orange-500/20 flex gap-3 items-center">
+                    <span className="w-2.5 h-2.5 rounded-full bg-brand-orange-500 animate-ping shrink-0" />
+                    <div className="flex-1">
+                      <h4 dir="auto" className="text-xs font-bold text-brand-orange-400">Waiting for Client Approval</h4>
+                      <p dir="auto" className="text-[9px] text-slate-400 mt-0.5">
+                        Your quote of {bidAmount} EGP has been submitted to {activeJob?.clientName || "the client"}. Waiting for response...
+                      </p>
+                    </div>
                   </div>
+                  {/* Chat (Live) Button */}
+                  <button
+                    onClick={() => setIsChatOpen(true)}
+                    className="w-full py-2.5 rounded-lg bg-slate-900 hover:bg-slate-850 border border-slate-800 text-xs font-bold flex items-center justify-center gap-2 transition-all hover:scale-[1.01]"
+                  >
+                    <MessageSquare className="w-4 h-4 text-brand-blue-400 animate-bounce" />
+                    <span>Chat & Negotiate (Live)</span>
+                  </button>
                 </div>
               ) : (
                 <div className="p-4 rounded-xl bg-green-950/10 border border-green-500/20 flex gap-3 items-center">
@@ -1185,6 +1199,16 @@ export default function ProviderDashboard() {
             className="max-w-full max-h-[85vh] object-contain rounded-xl shadow-2xl transition-transform duration-300 cursor-default animate-scaleUp"
           />
         </div>
+      )}
+
+      {/* Chat Modal Overlay */}
+      {isChatOpen && (
+        <SmartNegotiationChat 
+          onClose={() => setIsChatOpen(false)}
+          otherPartyName={activeJob?.clientName || "Client"}
+          otherPartyPhotoUrl={"https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=120&h=120&fit=crop"}
+          currentUserRole="provider"
+        />
       )}
 
     </div>

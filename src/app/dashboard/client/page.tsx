@@ -15,6 +15,7 @@ import dynamic from "next/dynamic";
 import { toast } from "sonner";
 import { SkeletonCard } from "@/components/ui/SkeletonCard";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
+import SmartNegotiationChat from "@/components/ui/SmartNegotiationChat";
 import { useLanguageStore } from "@/store/useLanguageStore";
 import { dictionary } from "@/locales/dictionary";
 import { api } from "@/lib/api";
@@ -1137,109 +1138,12 @@ export default function ClientDashboard() {
 
       {/* Chat Modal Overlay */}
       {isChatOpen && (
-        <div className="absolute inset-0 z-[2000] bg-slate-950/60 backdrop-blur-sm flex items-end md:items-center justify-center p-4">
-          <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl flex flex-col h-[480px] overflow-hidden animate-slideUp">
-            {/* Header */}
-            <div className="p-4 border-b border-slate-800/80 bg-slate-950/40 flex justify-between items-center">
-              <div className="flex items-center gap-2.5">
-                <div className="relative">
-                  <img
-                    src={provider.photoUrl}
-                    alt={provider.name}
-                    className="w-9 h-9 rounded-full object-cover border border-brand-orange-500/20"
-                  />
-                  <span className="absolute bottom-0 end-0 w-2.5 h-2.5 bg-green-500 border-2 border-slate-900 rounded-full" />
-                </div>
-                <div>
-                  <h4 dir="auto" className="text-xs font-bold text-white">{provider.name}</h4>
-                  <span className="text-[9px] text-green-400 font-medium">Online & Ready</span>
-                </div>
-              </div>
-              <button
-                onClick={() => setIsChatOpen(false)}
-                className="p-1.5 hover:bg-slate-800 rounded-full text-slate-400 hover:text-white transition-colors"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* Message History */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-slate-950/25 flex flex-col">
-              {(chatMessages || []).map((msg, idx) => {
-                if (msg.sender === "system") {
-                  return (
-                    <div key={idx} className="flex justify-center my-2">
-                      <div className="bg-red-500/10 border border-red-500/20 text-red-400 text-[10px] px-3 py-1.5 rounded-lg text-center max-w-[90%]">
-                        <span dir="auto">{msg.text}</span>
-                      </div>
-                    </div>
-                  );
-                }
-                const isMe = msg.sender === "client";
-                return (
-                  <div
-                    key={idx}
-                    className={`flex ${isMe ? "justify-end" : "justify-start"}`}
-                  >
-                    <div
-                      className={`max-w-[80%] rounded-2xl px-3.5 py-2 text-[11px] leading-relaxed shadow-sm ${
-                        isMe
-                          ? "bg-brand-blue-600 text-white rounded-te-none"
-                          : "bg-slate-800 text-slate-200 rounded-ts-none text-end"
-                      }`}
-                      dir={isMe ? "ltr" : "rtl"}
-                    >
-                      <p dir="auto">{msg.text}</p>
-                      <span className="block text-[8px] text-slate-400 mt-1 text-end">
-                        {msg.time}
-                      </span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Message Input Form */}
-            <form
-              onSubmit={async (e) => {
-                e.preventDefault();
-                if (!newMessage.trim() || !bookingId) return;
-                
-                const textToSend = newMessage;
-                setNewMessage(""); 
-                
-                const time = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-                setChatMessages((prev) => [...prev, { sender: "client", text: textToSend, time }]);
-
-                try {
-                  await api.post(`/bookings/${bookingId}/chat`, {
-                    senderId: (session?.user as any)?.id || 'CLIENT',
-                    senderRole: 'CLIENT',
-                    text: textToSend
-                  });
-                } catch (err) {
-                  console.error("Failed to send message", err);
-                  toast.error("Failed to send message.");
-                }
-              }}
-              className="p-3 bg-slate-900 border-t border-slate-800/80 flex gap-2"
-            >
-              <input
-                type="text"
-                value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
-                placeholder="Type your message..."
-                className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-blue-500 transition-colors"
-              />
-              <button
-                type="submit"
-                className="bg-brand-blue-600 hover:bg-brand-blue-500 text-xs font-bold px-4 py-2 rounded-xl text-white transition-colors"
-              >
-                Send
-              </button>
-            </form>
-          </div>
-        </div>
+        <SmartNegotiationChat 
+          onClose={() => setIsChatOpen(false)}
+          otherPartyName={provider?.name || "Provider"}
+          otherPartyPhotoUrl={provider?.photoUrl || ""}
+          currentUserRole="client"
+        />
       )}
 
     </div>
