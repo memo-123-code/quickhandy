@@ -58,6 +58,7 @@ export default function AdminDashboard() {
           status: "ACTIVE",
           joinedDate: new Date(u.createdAt).toLocaleDateString(),
           totalJobs: u.profile?.totalJobs || u._count?.clientBookings || 0,
+          walletBalance: u.wallet?.availableBalance,
         })));
       }
     }).catch(console.error);
@@ -85,7 +86,7 @@ export default function AdminDashboard() {
 
   // Platform Settings State
   const [platformConfig, setPlatformConfig] = useState({
-    commissionPercentage: 20,
+    commissionPercentage: 13,
     minimumJobFee: 35,
     emergencySurcharge: 15,
     autoApproveKYC: false,
@@ -96,15 +97,19 @@ export default function AdminDashboard() {
   // Export State
   const [exportingFormat, setExportingFormat] = useState<string | null>(null);
 
-  // Modal State
   const [modalConfig, setModalConfig] = useState({
     isOpen: false,
     title: "",
     message: "",
-    confirmText: "Confirm",
+    confirmText: "",
     variant: "danger" as "danger" | "warning" | "info",
-    onConfirm: () => {},
+    onConfirm: async () => {}
   });
+
+  // Treasury State
+  const [showTreasuryModal, setShowTreasuryModal] = useState(false);
+  const [treasuryIban, setTreasuryIban] = useState("");
+  const dummyTreasuryBalance = 14500.50; // Mocked for MVP
 
   const openModal = (config: Partial<typeof modalConfig>) => {
     setModalConfig({ ...modalConfig, ...config, isOpen: true });
@@ -116,7 +121,7 @@ export default function AdminDashboard() {
   const handleApproveKyc = async (id: string) => {
     setIsProcessing(id);
     try {
-      // await api.post(`/admin/kyc/${id}/approve`);
+      await api.put(`/admin/kyc`, { documentId: id, status: "APPROVED" });
       setProviders(prev => (prev || []).map(p => p.id === id ? { ...p, status: "APPROVED" } : p));
       toast.success(`Provider ${id} approved successfully.`);
     } catch (error) {
@@ -135,7 +140,7 @@ export default function AdminDashboard() {
       onConfirm: async () => {
         setIsProcessing(id);
         try {
-          // await api.post(`/admin/kyc/${id}/reject`);
+          await api.put(`/admin/kyc`, { documentId: id, status: "REJECTED" });
           setProviders(prev => (prev || []).map(p => p.id === id ? { ...p, status: "REJECTED" } : p));
           toast.error(`Provider ${id} application rejected.`);
         } catch (error) {
@@ -243,7 +248,7 @@ export default function AdminDashboard() {
     if (timeframe === "WEEKLY") {
       return {
         label: "Weekly Platform Revenue",
-        total: "$4,710",
+        total: "4,710 EGP",
         growth: "+8.4% vs last week",
         items: [
           { label: "Mon", amt: 420, pct: "40%" },
@@ -258,7 +263,7 @@ export default function AdminDashboard() {
     } else if (timeframe === "YEARLY") {
       return {
         label: "Yearly Platform Revenue Growth",
-        total: "$190,400",
+        total: "190,400 EGP",
         growth: "+32.1% YoY",
         items: [
           { label: "2023", amt: 24500, pct: "35%" },
@@ -271,7 +276,7 @@ export default function AdminDashboard() {
     // Default: MONTHLY
     return {
       label: "Monthly Platform Gross Profit",
-      total: "$14,840",
+      total: "14,840 EGP",
       growth: "+14.2% MoM",
       items: [
         { label: "Jan", amt: 1200, pct: "30%" },
@@ -490,6 +495,18 @@ export default function AdminDashboard() {
                     </span>
                   )}
                 </button>
+
+                <button
+                  onClick={() => setActiveTab("TREASURY_PAYOUTS")}
+                  className={`w-full text-start px-3.5 py-2.5 rounded-xl text-xs font-bold flex items-center gap-3 transition-all ${
+                    activeTab === "TREASURY_PAYOUTS" 
+                      ? "bg-gradient-to-r from-brand-blue-600 to-brand-blue-500 text-white shadow-lg shadow-brand-blue-600/20" 
+                      : "text-slate-400 hover:text-slate-200 hover:bg-slate-850/60"
+                  }`}
+                >
+                  <DollarSign className="w-4 h-4" />
+                  <span>Treasury & Payouts</span>
+                </button>
               </div>
             </div>
 
@@ -644,7 +661,7 @@ export default function AdminDashboard() {
                       <DollarSign className="w-4 h-4 text-emerald-400" />
                     </div>
                   </div>
-                  <div className="text-3xl font-black text-emerald-400 tracking-tight">$340.50</div>
+                  <div className="text-3xl font-black text-emerald-400 tracking-tight">340.50 EGP</div>
                   <div className="flex items-center justify-between pt-1 border-t border-slate-850">
                     <span className="text-[10px] text-emerald-400 font-bold flex items-center gap-1">
                       <TrendingUp className="w-3 h-3" /> +18% vs yesterday
@@ -1105,6 +1122,7 @@ export default function AdminDashboard() {
                         <th className="px-6 py-4">Role</th>
                         <th className="px-6 py-4">Status</th>
                         <th className="px-6 py-4">Jobs / Rating</th>
+                        <th className="px-6 py-4">Wallet Balance</th>
                         <th className="px-6 py-4">Joined Date</th>
                         <th className="px-6 py-4 text-end">Actions</th>
                       </tr>
@@ -1139,20 +1157,43 @@ export default function AdminDashboard() {
                             <span className="font-semibold block">{u.completedJobs || 0} jobs</span>
                             {u.rating && <span className="text-[10px] text-brand-gold-500 font-bold">★ {u.rating}</span>}
                           </td>
+                          <td className="px-6 py-4">
+                            <span className={`font-bold ${u.walletBalance && u.walletBalance < 0 ? 'text-red-500' : 'text-green-500'}`}>
+                              {u.walletBalance !== undefined ? `${u.walletBalance.toFixed(2)} EGP` : '0.00 EGP'}
+                            </span>
+                          </td>
                           <td className="px-6 py-4 font-mono text-slate-400">{u.joinedDate}</td>
                           <td className="px-6 py-4 text-end">
-                            <button 
-                              onClick={() => {
-                                setUsersList(prev => prev.map(usr => usr.id === u.id ? { ...usr, status: usr.status === "ACTIVE" ? "SUSPENDED" : "ACTIVE" } : usr));
-                              }}
-                              className={`px-3 py-1 rounded-lg text-[10px] font-bold transition-all ${
-                                u.status === "ACTIVE" 
-                                  ? "bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30"
-                                  : "bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
-                              }`}
-                            >
-                              {u.status === "ACTIVE" ? "Suspend" : "Activate"}
-                            </button>
+                            <div className="flex items-center justify-end gap-2">
+                              {u.walletBalance && u.walletBalance < 0 && (
+                                <button 
+                                  onClick={async () => {
+                                    try {
+                                      await api.post('/admin/debt/settle', { userId: u.id });
+                                      toast.success(`Debt settled for ${u.name}`);
+                                      setUsersList(prev => prev.map(usr => usr.id === u.id ? { ...usr, walletBalance: 0 } : usr));
+                                    } catch (err) {
+                                      toast.error('Failed to settle debt');
+                                    }
+                                  }}
+                                  className="px-3 py-1 rounded-lg text-[10px] font-bold bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 border border-amber-500/30 transition-all"
+                                >
+                                  Settle Debt
+                                </button>
+                              )}
+                              <button 
+                                onClick={() => {
+                                  setUsersList(prev => prev.map(usr => usr.id === u.id ? { ...usr, status: usr.status === "ACTIVE" ? "SUSPENDED" : "ACTIVE" } : usr));
+                                }}
+                                className={`px-3 py-1 rounded-lg text-[10px] font-bold transition-all ${
+                                  u.status === "ACTIVE" 
+                                    ? "bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30"
+                                    : "bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
+                                }`}
+                              >
+                                {u.status === "ACTIVE" ? "Suspend" : "Activate"}
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))}
@@ -1191,7 +1232,7 @@ export default function AdminDashboard() {
                     </div>
 
                     <div>
-                      <label className="block text-slate-400 font-medium mb-1">Minimum Job Fee ($)</label>
+                      <label className="block text-slate-400 font-medium mb-1">Minimum Job Fee (EGP)</label>
                       <input 
                         type="number"
                         value={platformConfig.minimumJobFee}
@@ -1201,7 +1242,7 @@ export default function AdminDashboard() {
                     </div>
 
                     <div>
-                      <label className="block text-slate-400 font-medium mb-1">Emergency Dispatch Surcharge ($)</label>
+                      <label className="block text-slate-400 font-medium mb-1">Emergency Dispatch Surcharge (EGP)</label>
                       <input 
                         type="number"
                         value={platformConfig.emergencySurcharge}
@@ -1264,6 +1305,83 @@ export default function AdminDashboard() {
                 </div>
 
               </div>
+            </div>
+          )}
+
+          {/* TAB: TREASURY & PAYOUTS */}
+          {activeTab === "TREASURY_PAYOUTS" && (
+            <div className="space-y-6 animate-fadeIn">
+              <div>
+                <h2 dir="auto" className="text-xl font-extrabold text-white">Platform Treasury & Payouts</h2>
+                <p dir="auto" className="text-xs text-slate-400 mt-0.5">Manage platform commissions, view net revenue, and withdraw funds to the corporate bank account.</p>
+              </div>
+
+              <div className="bg-slate-900 border border-slate-800 p-8 rounded-3xl shadow-2xl max-w-2xl text-center space-y-6 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-brand-blue-500/10 rounded-full blur-3xl" />
+                <div className="absolute bottom-0 left-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl" />
+                
+                <h3 className="text-slate-400 font-bold tracking-widest uppercase text-sm">Total Available Platform Revenue (EGP)</h3>
+                
+                <div className="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-brand-blue-400">
+                  {dummyTreasuryBalance.toLocaleString('en-US')} EGP
+                </div>
+                
+                <div className="pt-8 flex justify-center">
+                  <button 
+                    onClick={() => setShowTreasuryModal(true)}
+                    className="px-8 py-4 bg-gradient-to-r from-brand-blue-600 to-brand-blue-500 hover:from-brand-blue-500 hover:to-brand-blue-400 text-white rounded-xl font-extrabold shadow-lg shadow-brand-blue-600/30 transition-all hover:scale-105 active:scale-95"
+                  >
+                    Withdraw to Corporate Bank Account
+                  </button>
+                </div>
+              </div>
+
+              {/* Treasury Modal */}
+              {showTreasuryModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
+                  <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl max-w-md w-full shadow-2xl space-y-6" onClick={e => e.stopPropagation()}>
+                    <div>
+                      <h3 className="text-xl font-extrabold text-white">Withdraw to Corporate Bank</h3>
+                      <p className="text-xs text-slate-400 mt-1">Enter the corporate IBAN to transfer the available balance of {dummyTreasuryBalance} EGP.</p>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-slate-300">Corporate IBAN</label>
+                      <input 
+                        type="text"
+                        placeholder="EGXX XXXX XXXX XXXX XXXX XXXX XXXX"
+                        value={treasuryIban}
+                        onChange={(e) => setTreasuryIban(e.target.value)}
+                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-brand-blue-500 uppercase tracking-widest font-mono"
+                      />
+                    </div>
+
+                    <div className="flex gap-3 pt-2">
+                      <button 
+                        onClick={() => { setShowTreasuryModal(false); setTreasuryIban(""); }}
+                        className="flex-1 py-3 bg-slate-800 hover:bg-slate-750 text-white font-bold rounded-xl transition-all"
+                      >
+                        Cancel
+                      </button>
+                      <button 
+                        onClick={() => {
+                          if (!treasuryIban || treasuryIban.length < 15) {
+                            toast.error("Please enter a valid IBAN.");
+                            return;
+                          }
+                          toast.success("Withdrawal initiated to corporate bank account.");
+                          setShowTreasuryModal(false);
+                          setTreasuryIban("");
+                        }}
+                        className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl transition-all shadow-lg shadow-emerald-600/30"
+                      >
+                        Confirm Transfer
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
             </div>
           )}
 

@@ -21,6 +21,7 @@ export async function GET() {
         createdAt: true,
         profile: { select: { isVerified: true, totalJobs: true, rating: true } },
         _count: { select: { clientBookings: true } },
+        wallet: { select: { availableBalance: true, pendingBalance: true } }
       },
       orderBy: { createdAt: 'desc' },
     });

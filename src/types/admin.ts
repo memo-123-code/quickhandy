@@ -4,7 +4,8 @@ export type AdminTab =
   | "DISPUTE_MANAGEMENT" 
   | "USER_MANAGEMENT" 
   | "PLATFORM_SETTINGS" 
-  | "REPORTS_EXPORTS";
+  | "REPORTS_EXPORTS"
+  | "TREASURY_PAYOUTS";
 
 export interface PendingProvider {
   id: string;
@@ -38,6 +39,7 @@ export interface PlatformUser {
   joinedDate: string;
   rating?: number;
   completedJobs?: number;
+  walletBalance?: number;
 }
 
 export interface NotificationItem {
