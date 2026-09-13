@@ -47,8 +47,6 @@ export default function ProviderDashboard() {
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [hasUnreadNotifications, setHasUnreadNotifications] = useState(true);
 
-  // Chat State
-  const [isChatOpen, setIsChatOpen] = useState(false);
 
   // Wallet & Stats State (InDrive Prepaid Wallet model)
   const [prepaidBalance, setPrepaidBalance] = useState(0.00); // Default prepaid wallet balance
