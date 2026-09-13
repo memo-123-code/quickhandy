@@ -1,8 +1,9 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { X, Send, ShieldAlert } from "lucide-react";
+import { X, Send, ShieldAlert, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { api } from "@/lib/api";
 
 export interface ChatMessage {
   sender: string;
@@ -15,6 +16,8 @@ interface SmartNegotiationChatProps {
   otherPartyName: string;
   otherPartyPhotoUrl: string;
   currentUserRole: "client" | "provider";
+  bookingId?: string | null;
+  currentUserId?: string;
 }
 
 export default function SmartNegotiationChat({
@@ -22,17 +25,52 @@ export default function SmartNegotiationChat({
   otherPartyName,
   otherPartyPhotoUrl,
   currentUserRole,
+  bookingId,
+  currentUserId = "unknown",
 }: SmartNegotiationChatProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([
     { sender: "system", text: "Welcome to QuickHandy Chat. For your safety and to comply with platform rules, please keep all negotiations and payments on the platform.", time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) },
   ]);
   const [newMessage, setNewMessage] = useState("");
+  const [isSending, setIsSending] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Auto scroll to bottom
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  // Fetch real messages if bookingId is provided
+  useEffect(() => {
+    if (!bookingId) return;
+
+    let intervalId: NodeJS.Timeout;
+    
+    const fetchMessages = async () => {
+      try {
+        const res = await api.get(`/bookings/${bookingId}/chat`);
+        if (res.data && Array.isArray(res.data)) {
+          const apiMessages = res.data.map((msg: any) => ({
+            sender: msg.sender === 'system' ? 'system' : msg.sender === currentUserRole ? 'me' : 'other',
+            text: msg.text,
+            time: msg.time
+          }));
+          
+          setMessages([
+            { sender: "system", text: "Welcome to QuickHandy Chat. For your safety and to comply with platform rules, please keep all negotiations and payments on the platform.", time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) },
+            ...apiMessages
+          ]);
+        }
+      } catch (err) {
+        console.error("Failed to fetch messages", err);
+      }
+    };
+
+    fetchMessages(); // Initial fetch
+    intervalId = setInterval(fetchMessages, 3000); // Poll every 3 seconds
+
+    return () => clearInterval(intervalId);
+  }, [bookingId, currentUserRole]);
 
   const moderateMessage = (text: string): { isValid: boolean; sanitizedText: string; reason?: string } => {
     let isValid = true;
@@ -64,17 +102,15 @@ export default function SmartNegotiationChat({
     };
   };
 
-  const handleSendMessage = (e: React.FormEvent) => {
+  const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newMessage.trim()) return;
+    if (!newMessage.trim() || isSending) return;
 
     const { isValid, sanitizedText, reason } = moderateMessage(newMessage);
 
-    if (!isValid) {
+    if (!isValid && !bookingId) {
       toast.error(`System Alert: ${reason} Repeated attempts will suspend your account.`, { duration: 5000 });
-      setNewMessage(sanitizedText); // Replace input with [BLOCKED BY AI] so the user sees what was caught
-      
-      // Optionally add a system warning to the chat
+      setNewMessage(sanitizedText); 
       setMessages(prev => [...prev, { 
         sender: "system", 
         text: `Warning: Message blocked. ${reason}`, 
@@ -83,19 +119,38 @@ export default function SmartNegotiationChat({
       return;
     }
 
+    // Optimistic UI Update
+    const timeNow = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     setMessages(prev => [
       ...prev,
-      { sender: "me", text: sanitizedText, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }
+      { sender: "me", text: sanitizedText, time: timeNow }
     ]);
+    const textToSend = newMessage; // Send original to backend to get flagged, or send sanitized. Let's send original so backend flags it.
     setNewMessage("");
 
-    // Mock auto-reply for demo
-    setTimeout(() => {
-      setMessages(prev => [
-        ...prev,
-        { sender: "other", text: "Understood.", time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }
-      ]);
-    }, 2000);
+    if (bookingId) {
+      setIsSending(true);
+      try {
+        await api.post(`/bookings/${bookingId}/chat`, {
+          senderId: currentUserId,
+          senderRole: currentUserRole.toUpperCase(),
+          text: textToSend
+        });
+      } catch (err) {
+        console.error("Failed to send message to backend", err);
+        toast.error("Failed to send message");
+      } finally {
+        setIsSending(false);
+      }
+    } else {
+      // Mock auto-reply for demo mode
+      setTimeout(() => {
+        setMessages(prev => [
+          ...prev,
+          { sender: "other", text: "Understood.", time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }
+        ]);
+      }, 2000);
+    }
   };
 
   return (
@@ -171,10 +226,10 @@ export default function SmartNegotiationChat({
             />
             <button
               type="submit"
-              disabled={!newMessage.trim()}
+              disabled={!newMessage.trim() || isSending}
               className="absolute right-1.5 p-1.5 bg-brand-orange-500 hover:bg-brand-orange-400 disabled:bg-slate-800 disabled:text-slate-500 text-white rounded-full transition-colors flex items-center justify-center"
             >
-              <Send className="w-4 h-4" />
+              {isSending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
             </button>
           </form>
           <div className="mt-2 text-center flex justify-center items-center gap-1">

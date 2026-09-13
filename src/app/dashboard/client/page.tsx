@@ -1143,6 +1143,8 @@ export default function ClientDashboard() {
           otherPartyName={provider?.name || "Provider"}
           otherPartyPhotoUrl={provider?.photoUrl || ""}
           currentUserRole="client"
+          bookingId={bookingId}
+          currentUserId={(session?.user as any)?.id}
         />
       )}
 

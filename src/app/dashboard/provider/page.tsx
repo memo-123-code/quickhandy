@@ -1206,6 +1206,8 @@ export default function ProviderDashboard() {
           otherPartyName={activeJob?.clientName || "Client"}
           otherPartyPhotoUrl={"https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=120&h=120&fit=crop"}
           currentUserRole="provider"
+          bookingId={jobId}
+          currentUserId={(session?.user as any)?.id}
         />
       )}
 
