@@ -176,6 +176,17 @@ export default function ProviderWallet() {
                 <td className="px-4 py-4 text-right font-bold text-green-500">+ 250.00 EGP</td>
               </tr>
               <tr className="hover:bg-slate-800/20 transition-colors">
+                <td className="px-4 py-4 whitespace-nowrap text-xs text-slate-300">12 Sept 2026</td>
+                <td className="px-4 py-4 font-bold text-white">Platform Commission (13%) - Job #102</td>
+                <td className="px-4 py-4 text-xs text-slate-300">System Deduction</td>
+                <td className="px-4 py-4">
+                  <span className="text-[10px] font-bold px-2 py-1 rounded uppercase bg-slate-800 text-slate-300 border border-slate-700">
+                    Completed
+                  </span>
+                </td>
+                <td className="px-4 py-4 text-right font-bold text-orange-500">- 39.00 EGP</td>
+              </tr>
+              <tr className="hover:bg-slate-800/20 transition-colors">
                 <td className="px-4 py-4 whitespace-nowrap text-xs text-slate-300">10 Sept 2026</td>
                 <td className="px-4 py-4 font-bold text-white">Withdrawal Request</td>
                 <td className="px-4 py-4 text-xs text-slate-300">Vodafone Cash</td>

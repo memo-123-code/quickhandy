@@ -103,50 +103,75 @@ export async function PATCH(
       }
     });
 
-    // --- Escrow Fund Release Logic ---
+    // --- Commission Engine & Fund Release Logic ---
     if (status === "COMPLETED" && updatedBooking.providerId && updatedBooking.estimatedCost) {
       const providerId = updatedBooking.providerId;
-      const amount = updatedBooking.estimatedCost;
+      const jobTotal = updatedBooking.estimatedCost;
       
-      // Dynamic Commission (Gamification Rewards)
-      let commissionRate = 0.10; // Default Bronze
-      const providerProfile = await prisma.profile.findUnique({
-        where: { userId: providerId }
-      });
-      
-      if (providerProfile) {
-        const jobs = providerProfile.totalJobs;
-        if (jobs >= 100) commissionRate = 0.05; // Platinum (5%)
-        else if (jobs >= 50) commissionRate = 0.07; // Gold (7%)
-        else if (jobs >= 10) commissionRate = 0.09; // Silver (9%)
-      }
+      // We need to know the payment method. For this MVP, let's assume we can get it from the request body or default to CASH if not provided.
+      // Alternatively, the booking schema could store it. Since Prisma schema doesn't have paymentMethod on Booking currently,
+      // we'll extract it from the PATCH body, defaulting to "CASH".
+      const paymentMethod = body.paymentMethod || "CASH";
 
-      const providerPayout = amount * (1 - commissionRate);
+      const COMMISSION_RATE = 0.13;
+      const platformFee = jobTotal * COMMISSION_RATE;
+      const providerEarnings = jobTotal - platformFee;
 
       await prisma.$transaction(async (tx) => {
         // Ensure provider wallet exists
         const providerWallet = await tx.wallet.upsert({
           where: { userId: providerId },
-          update: { 
-            availableBalance: { increment: providerPayout },
-            lifetimeEarnings: { increment: providerPayout }
-          },
+          update: {},
           create: { 
             userId: providerId, 
-            availableBalance: providerPayout,
-            lifetimeEarnings: providerPayout, 
+            availableBalance: 0,
+            lifetimeEarnings: 0, 
             currency: "EGP" 
           }
         });
 
-        // Record Payout Transaction
+        if (paymentMethod === "CREDIT_CARD") {
+          // Money is with platform. Provider gets earnings added to wallet.
+          await tx.wallet.update({
+            where: { id: providerWallet.id },
+            data: { 
+              availableBalance: { increment: providerEarnings },
+              lifetimeEarnings: { increment: providerEarnings }
+            }
+          });
+
+          // Log provider payment
+          await tx.transaction.create({
+            data: {
+              walletId: providerWallet.id,
+              bookingId: updatedBooking.id,
+              type: "PAYMENT",
+              amount: providerEarnings,
+              status: "COMPLETED",
+              payoutMethod: "CREDIT_CARD", // Using this field to store payment source
+            }
+          });
+        } else if (paymentMethod === "CASH") {
+          // Provider took full cash from client. Deduct only the platform fee.
+          // availableBalance can go negative, representing debt.
+          await tx.wallet.update({
+            where: { id: providerWallet.id },
+            data: { 
+              availableBalance: { decrement: platformFee },
+              lifetimeEarnings: { increment: providerEarnings } // They still earned this amount
+            }
+          });
+        }
+
+        // Log Commission Transaction
         await tx.transaction.create({
           data: {
             walletId: providerWallet.id,
             bookingId: updatedBooking.id,
-            type: "PAYMENT", // Payout to provider
-            amount: providerPayout,
-            status: "COMPLETED"
+            type: "COMMISSION_FEE", // Using COMMISSION string but our schema expects COMMISSION
+            amount: -platformFee,
+            status: "COMPLETED",
+            payoutMethod: "SYSTEM_DEDUCTION"
           }
         });
         
