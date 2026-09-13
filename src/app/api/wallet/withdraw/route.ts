@@ -62,46 +62,52 @@ export async function POST(req: Request) {
       return { wallet: updatedWallet, transaction };
     });
 
-    // 3. Initiate External Gateway Request (e.g., Paymob Disbursement)
+    // 3. Initiate External Gateway Request (Paymob Disbursement)
     // ----------------------------------------------------------------------
-    // NOTE: In a production FinTech app, you would call external APIs here 
-    // using environment variables like process.env.PAYMOB_SECRET_KEY.
-    //
-    // Theoretical Flow for Paymob Disbursement:
-    // a. Authenticate using API Key to get an auth token.
-    // b. Call the Disbursement API endpoint:
-    //    POST https://accept.paymob.com/api/acceptance/disbursements/withdraw
-    //    Body: {
-    //      "amount": amount,
-    //      "currency": "EGP",
-    //      "issuer": methodType === 'VODAFONE_CASH' ? "vodafone" : "instapay",
-    //      "account_number": accountDetails // The phone number or InstaPay address
-    //    }
-    //
-    // c. Receive the Gateway Transaction ID.
-    // ----------------------------------------------------------------------
-    
     let externalGatewaySuccess = false;
     let externalReferenceId = null;
 
     try {
-      // === MOCK GATEWAY CALL ===
-      // const response = await fetch('https://accept.paymob.com/api/acceptance/disbursements', {
-      //   method: 'POST',
-      //   headers: { 
-      //      'Authorization': `Bearer ${process.env.PAYMOB_SECRET_KEY}`,
-      //      'Content-Type': 'application/json'
-      //   },
-      //   body: JSON.stringify({ amount, account_number: accountDetails })
-      // });
-      // const data = await response.json();
-      // if (!response.ok) throw new Error(data.message);
-      // externalReferenceId = data.id;
-      // externalGatewaySuccess = true;
+      const apiKey = process.env.PAYMOB_API_KEY;
+      if (!apiKey) {
+        throw new Error("PAYMOB_API_KEY is not configured on the server.");
+      }
 
-      // For this implementation, we simulate a successful gateway response
+      // Step 3a: Authenticate with Paymob to get an auth token
+      const authRes = await fetch('https://accept.paymob.com/api/auth/tokens', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ api_key: apiKey })
+      });
+      
+      const authData = await authRes.json();
+      if (!authRes.ok) throw new Error(authData.detail || "Failed to authenticate with Paymob");
+      const authToken = authData.token;
+
+      // Step 3b: Call Paymob Disbursement API
+      const amountCents = Math.round(amount * 100);
+      let issuer = "vodafone"; // Default for Vodafone Cash
+      if (methodType === "INSTAPAY") issuer = "instapay";
+      else if (methodType === "BANK_TRANSFER") issuer = "bank"; // Depends on Paymob setup
+      
+      const disburseRes = await fetch('https://accept.paymob.com/api/acceptance/disbursements/disburse', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          auth_token: authToken,
+          amount_cents: amountCents,
+          issuer: issuer,
+          account_number: accountDetails,
+          merchant_order_id: result.transaction.id // Link to our internal transaction ID
+        })
+      });
+
+      const disburseData = await disburseRes.json();
+      if (!disburseRes.ok) throw new Error(disburseData.detail || disburseData.message || "Failed to disburse funds");
+
+      // Paymob returns an ID for the transaction
+      externalReferenceId = String(disburseData.id || `PAYMOB-${Date.now()}`);
       externalGatewaySuccess = true;
-      externalReferenceId = `PAYMOB-${Date.now()}`;
       
     } catch (gatewayError) {
       console.error('External Payment Gateway Error:', gatewayError);
