@@ -58,6 +58,7 @@ export default function ProviderDashboard() {
 
   // Mock Global Verification State
   const [verificationStatus, setVerificationStatus] = useState<string>("REJECTED"); // ENUM: 'INCOMPLETE' | 'PENDING_REVIEW' | 'APPROVED' | 'REJECTED'
+  const [isDevBypass, setIsDevBypass] = useState(false);
 
   // Apply Developer Bypass
   useEffect(() => {
@@ -65,6 +66,7 @@ export default function ProviderDashboard() {
       const bypass = localStorage.getItem('dev_bypass_kyc');
       if (bypass === 'true') {
         setVerificationStatus('APPROVED');
+        setIsDevBypass(true);
       }
     }
   }, []);
@@ -190,11 +192,11 @@ export default function ProviderDashboard() {
 
   // Enforcement: Block going online if prepaidBalance <= 0
   useEffect(() => {
-    if (prepaidBalance <= 0) {
+    if (prepaidBalance <= 0 && !isDevBypass) {
       setIsOnline(false);
       setDashboardState("IDLE");
     }
-  }, [prepaidBalance]);
+  }, [prepaidBalance, isDevBypass]);
 
   // Polling for incoming jobs
   useEffect(() => {
@@ -477,16 +479,16 @@ export default function ProviderDashboard() {
             <button
               onClick={() => {
                 if (verificationStatus !== 'APPROVED') return;
-                if (prepaidBalance <= 0) return;
+                if (prepaidBalance <= 0 && !isDevBypass) return;
                 setIsOnline(!isOnline);
               }}
-              disabled={verificationStatus !== 'APPROVED' || prepaidBalance <= 0}
+              disabled={verificationStatus !== 'APPROVED' || (prepaidBalance <= 0 && !isDevBypass)}
               className={`flex items-center gap-2 px-3 py-1.5 rounded-full border border-slate-800/80 bg-slate-900 hover:bg-slate-850 transition-all shadow-sm ${
-                (verificationStatus !== 'APPROVED' || prepaidBalance <= 0) ? "opacity-40 cursor-not-allowed" : "cursor-pointer"
+                (verificationStatus !== 'APPROVED' || (prepaidBalance <= 0 && !isDevBypass)) ? "opacity-40 cursor-not-allowed" : "cursor-pointer"
               }`}
               title={
                 verificationStatus !== 'APPROVED' ? "Verification Required: Please complete your profile to go online."
-                : prepaidBalance <= 0 ? "Top-up required to go online." 
+                : (prepaidBalance <= 0 && !isDevBypass) ? "Top-up required to go online." 
                 : "Toggle Online Status"
               }
             >
@@ -512,7 +514,7 @@ export default function ProviderDashboard() {
         <div className="flex-1 overflow-y-auto p-5 space-y-5">
 
           {/* Wallet Blocker Warning Banner */}
-          {prepaidBalance <= 0 && (
+          {prepaidBalance <= 0 && !isDevBypass && (
             <div className="p-4 rounded-xl bg-red-950/20 border border-red-500/20 flex gap-3 items-start animate-pulse">
               <ShieldAlert className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
               <div>
@@ -534,9 +536,12 @@ export default function ProviderDashboard() {
                   <div>
                     <h4 dir="auto" className="text-xs font-bold text-slate-200">You are currently Offline</h4>
                     <p dir="auto" className="text-[10px] text-slate-400 mt-1 leading-relaxed">
-                      {prepaidBalance <= 0 
-                        ? "Please top-up your prepaid balance to go online and receive jobs." 
-                        : "Toggle your status to Online in the top right to start receiving custom quote requests in your area."}
+                      {verificationStatus !== 'APPROVED' 
+                        ? "Your account is not verified. Please upload required documents in your profile."
+                        : (prepaidBalance <= 0 && !isDevBypass)
+                            ? "Please top-up your prepaid balance to go online and receive jobs." 
+                            : "Toggle your status to Online to view map requests and receive new jobs."
+                      }
                     </p>
                   </div>
                 </div>
