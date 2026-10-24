@@ -9,7 +9,7 @@ import {
   MapPin, Clock, Calendar, ShieldCheck, Star, Phone, 
   MessageSquare, AlertCircle, X, Search, LogOut, CheckCircle, Navigation, Crosshair,
   Paintbrush, Grid, Tv, Flame, Layers, Radio, Sparkles, User,
-  Zap, Snowflake, LayoutGrid, WashingMachine, Anvil, Satellite, Truck, AppWindow, Bug, Cctv, Loader2, Home, HeartPulse, Pill
+  Zap, Snowflake, LayoutGrid, WashingMachine, Anvil, Satellite, Truck, AppWindow, Bug, Cctv, Loader2, Home, HeartPulse, Pill, Wrench
 } from "lucide-react";
 import dynamic from "next/dynamic";
 import { toast } from "sonner";
@@ -528,48 +528,61 @@ export default function ClientDashboard() {
     <div className="h-[100dvh] overflow-hidden bg-slate-950 text-slate-100 flex flex-col md:flex-row">
       
       {/* SIDEBAR: Booking panel & states */}
-      <div className="w-full h-[55vh] md:h-full md:w-[420px] shrink-0 bg-slate-900 border-r border-slate-800 flex flex-col justify-between shadow-2xl z-20">
+      <div className="w-full h-[55vh] md:h-full md:w-[440px] shrink-0 bg-slate-900 border-r border-slate-800 flex flex-col justify-between shadow-2xl z-20">
         
-        {/* Header */}
-        <div className="p-4 sm:p-5 border-b border-slate-800 flex items-center justify-between bg-slate-950/40 gap-2">
-          <Link href="/" className="flex items-center gap-2 hover:opacity-90 transition-opacity" title="الصفحة الرئيسية / Home">
-            <div className="p-2 bg-brand-blue-600 rounded-lg shrink-0">
-              <Droplet className="w-5 h-5 text-white" />
+        {/* Header - Harmonious & Professional Top Bar */}
+        <div className="px-4 py-3 sm:px-5 sm:py-3.5 border-b border-slate-800/80 flex items-center justify-between bg-slate-950/70 backdrop-blur-md gap-2">
+          {/* Official Brand Logo */}
+          <Link 
+            href="/" 
+            className="flex items-center gap-2.5 group hover:opacity-95 transition-opacity shrink-0" 
+            title={language === "ar" ? "الصفحة الرئيسية" : "Home"}
+          >
+            <div className="p-2 bg-gradient-to-tr from-brand-blue-600 to-brand-orange-500 rounded-xl shadow-md group-hover:scale-105 transition-transform shrink-0">
+              <Wrench className="w-4 h-4 text-white" />
             </div>
-            <div>
-              <h1 dir="auto" className="text-sm font-bold text-white leading-tight">QuickHandy</h1>
-              <p dir="auto" className="text-[10px] text-brand-blue-400 font-semibold leading-tight">CLIENT PORTAL</p>
+            <div className="flex flex-col text-start">
+              <span className="text-sm font-extrabold tracking-tight text-white leading-none">
+                Quick<span className="text-brand-orange-500">Handy</span>
+              </span>
+              <span className="text-[9px] font-bold text-brand-blue-400 mt-1 uppercase tracking-wider leading-none">
+                {language === "ar" ? "بوابة العميل" : "Client Portal"}
+              </span>
             </div>
           </Link>
 
+          {/* Unified Proportional Actions Row */}
           <div className="flex items-center gap-1.5 shrink-0">
             {/* Quick Home Link */}
             <Link
               href="/"
-              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-900/80 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700/60 text-xs font-medium transition-all"
+              className="w-8.5 h-8.5 flex items-center justify-center rounded-xl bg-slate-900/90 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 hover:border-slate-700 transition-all shadow-sm active:scale-95 shrink-0"
               title={language === "ar" ? "الصفحة الرئيسية" : "Home"}
             >
-              <Home className="w-3.5 h-3.5 text-blue-400" />
-              <span className="hidden sm:inline">{language === "ar" ? "الرئيسية" : "Home"}</span>
+              <Home className="w-4 h-4 text-brand-blue-400" />
             </Link>
 
-            <LanguageSwitcher />
+            {/* Language Switcher */}
+            <LanguageSwitcher className="h-8.5 px-2.5 flex items-center gap-1 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 hover:border-slate-700 text-xs font-bold transition-all shadow-sm active:scale-95 shrink-0" />
 
+            {/* Profile Button */}
             <button 
               onClick={() => router.push("/dashboard/client/profile")}
-              className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors"
-              title={language === "ar" ? "الملف الشخصي" : "Profile"}
+              className="w-8.5 h-8.5 flex items-center justify-center rounded-xl bg-slate-900/90 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 hover:border-slate-700 transition-all shadow-sm active:scale-95 shrink-0 group"
+              title={language === "ar" ? "الملف الشخصي" : "My Profile"}
             >
-              <User className="w-4 h-4" />
+              <div className="w-5 h-5 rounded-full bg-brand-blue-500/20 text-brand-blue-400 flex items-center justify-center text-[10px] font-bold group-hover:bg-brand-blue-500 group-hover:text-white transition-colors">
+                {session?.user?.name ? session.user.name.charAt(0).toUpperCase() : <User className="w-3.5 h-3.5" />}
+              </div>
             </button>
 
+            {/* Sign Out Button */}
             <button 
               onClick={handleLogout}
-              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 border border-red-500/20 text-xs font-medium transition-all"
+              className="w-8.5 h-8.5 flex items-center justify-center rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 hover:text-rose-300 border border-rose-500/20 hover:border-rose-500/40 transition-all shadow-sm active:scale-95 shrink-0"
               title={language === "ar" ? "تسجيل الخروج" : "Sign Out"}
             >
               <LogOut className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">{language === "ar" ? "خروج" : "Sign Out"}</span>
             </button>
           </div>
         </div>

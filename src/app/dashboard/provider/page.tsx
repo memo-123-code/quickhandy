@@ -427,17 +427,25 @@ export default function ProviderDashboard() {
       )}
 
       {/* SIDEBAR: Stats, Wallet & Active Jobs */}
-      <div className="w-full h-[55vh] md:h-full md:w-[420px] shrink-0 bg-slate-900 border-r border-slate-800 flex flex-col justify-between shadow-2xl z-20">
+      <div className="w-full h-[55vh] md:h-full md:w-[440px] shrink-0 bg-slate-900 border-r border-slate-800 flex flex-col justify-between shadow-2xl z-20">
         
-        {/* Header */}
-        <div className="p-4 sm:p-5 border-b border-slate-800 flex items-center justify-between bg-slate-950/40 gap-2">
-          <Link href="/" className="flex items-center gap-2 hover:opacity-90 transition-opacity" title="الصفحة الرئيسية / Home">
-            <div className="p-2 bg-brand-orange-500 rounded-lg shrink-0">
-              <Wrench className="w-5 h-5 text-white" />
+        {/* Header - Harmonious & Professional Top Bar */}
+        <div className="px-4 py-3 sm:px-5 sm:py-3.5 border-b border-slate-800/80 flex items-center justify-between bg-slate-950/70 backdrop-blur-md gap-2">
+          <Link 
+            href="/" 
+            className="flex items-center gap-2.5 group hover:opacity-95 transition-opacity shrink-0" 
+            title={language === "ar" ? "الصفحة الرئيسية" : "Home"}
+          >
+            <div className="p-2 bg-gradient-to-tr from-brand-blue-600 to-brand-orange-500 rounded-xl shadow-md group-hover:scale-105 transition-transform shrink-0">
+              <Wrench className="w-4 h-4 text-white" />
             </div>
-            <div>
-              <h1 dir="auto" className="text-sm font-bold text-white leading-tight">QuickHandy</h1>
-              <p dir="auto" className="text-[10px] text-brand-orange-400 font-semibold leading-tight">PROVIDER PORTAL</p>
+            <div className="flex flex-col text-start">
+              <span className="text-sm font-extrabold tracking-tight text-white leading-none">
+                Quick<span className="text-brand-orange-500">Handy</span>
+              </span>
+              <span className="text-[9px] font-bold text-brand-orange-400 mt-1 uppercase tracking-wider leading-none">
+                {language === "ar" ? "بوابة الفني" : "Provider Portal"}
+              </span>
             </div>
           </Link>
 
@@ -446,14 +454,25 @@ export default function ProviderDashboard() {
             {/* Quick Home Link */}
             <Link
               href="/"
-              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-900/80 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700/60 text-xs font-medium transition-all"
+              className="w-8.5 h-8.5 flex items-center justify-center rounded-xl bg-slate-900/90 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 hover:border-slate-700 transition-all shadow-sm active:scale-95 shrink-0"
               title={language === "ar" ? "الصفحة الرئيسية" : "Home"}
             >
-              <Home className="w-3.5 h-3.5 text-orange-400" />
-              <span className="hidden sm:inline">{language === "ar" ? "الرئيسية" : "Home"}</span>
+              <Home className="w-4 h-4 text-brand-orange-400" />
             </Link>
 
-            <LanguageSwitcher />
+            {/* Language Switcher */}
+            <LanguageSwitcher className="h-8.5 px-2.5 flex items-center gap-1 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 hover:border-slate-700 text-xs font-bold transition-all shadow-sm active:scale-95 shrink-0" />
+
+            {/* Profile Button */}
+            <button 
+              onClick={() => router.push("/dashboard/provider/profile")}
+              className="w-8.5 h-8.5 flex items-center justify-center rounded-xl bg-slate-900/90 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 hover:border-slate-700 transition-all shadow-sm active:scale-95 shrink-0 group"
+              title={language === "ar" ? "الملف الشخصي" : "My Profile"}
+            >
+              <div className="w-5 h-5 rounded-full bg-brand-orange-500/20 text-brand-orange-400 flex items-center justify-center text-[10px] font-bold group-hover:bg-brand-orange-500 group-hover:text-white transition-colors">
+                <User className="w-3.5 h-3.5" />
+              </div>
+            </button>
 
             {/* Notifications & Toggle */}
             <div className="relative">
@@ -462,10 +481,10 @@ export default function ProviderDashboard() {
                   setIsNotificationsOpen(!isNotificationsOpen);
                   if (hasUnreadNotifications) setHasUnreadNotifications(false);
                 }}
-                className="relative p-2 text-slate-400 hover:text-white transition-colors rounded-lg hover:bg-slate-800 focus:outline-none"
+                className="h-8.5 w-8.5 flex items-center justify-center text-slate-300 hover:text-white transition-colors rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 shadow-sm relative active:scale-95"
                 title="Notifications"
               >
-                <Bell className="w-4 h-4" />
+                <Bell className="w-3.5 h-3.5" />
                 {hasUnreadNotifications && (
                   <span className="absolute top-1.5 end-1.5 flex h-2 w-2">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-orange-400 opacity-75"></span>
@@ -474,30 +493,31 @@ export default function ProviderDashboard() {
                 )}
               </button>
 
-            {/* Notifications Dropdown */}
-            {isNotificationsOpen && (
-              <div className="absolute top-12 end-16 w-64 bg-slate-900 border border-slate-700 shadow-2xl rounded-xl overflow-hidden z-50 animate-fadeIn">
-                <div className="p-3 border-b border-slate-800 bg-slate-950/50">
-                  <span className="text-xs font-bold text-white">Notifications</span>
+              {/* Notifications Dropdown */}
+              {isNotificationsOpen && (
+                <div className="absolute top-11 end-0 w-64 bg-slate-900 border border-slate-700 shadow-2xl rounded-xl overflow-hidden z-50 animate-fadeIn">
+                  <div className="p-3 border-b border-slate-800 bg-slate-950/50">
+                    <span className="text-xs font-bold text-white">Notifications</span>
+                  </div>
+                  <div className="flex flex-col max-h-60 overflow-y-auto">
+                    <div className="p-3 border-b border-slate-800 hover:bg-slate-850 cursor-pointer transition-colors">
+                      <p className="text-[11px] text-slate-300">New custom quote request nearby</p>
+                      <span className="text-[9px] text-brand-orange-400 mt-1 block">Just now</span>
+                    </div>
+                    <div className="p-3 border-b border-slate-800 hover:bg-slate-850 cursor-pointer transition-colors">
+                      <p className="text-[11px] text-slate-300">Wallet topped up with 500 EGP</p>
+                      <span className="text-[9px] text-slate-500 mt-1 block">2 hours ago</span>
+                    </div>
+                    <div className="p-3 hover:bg-slate-850 cursor-pointer transition-colors">
+                      <p className="text-[11px] text-slate-300">Congratulations on reaching Bronze Tier!</p>
+                      <span className="text-[9px] text-slate-500 mt-1 block">1 day ago</span>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex flex-col max-h-60 overflow-y-auto">
-                  <div className="p-3 border-b border-slate-800 hover:bg-slate-850 cursor-pointer transition-colors">
-                    <p className="text-[11px] text-slate-300">New custom quote request nearby</p>
-                    <span className="text-[9px] text-brand-orange-400 mt-1 block">Just now</span>
-                  </div>
-                  <div className="p-3 border-b border-slate-800 hover:bg-slate-850 cursor-pointer transition-colors">
-                    <p className="text-[11px] text-slate-300">Wallet topped up with 500 EGP</p>
-                    <span className="text-[9px] text-slate-500 mt-1 block">2 hours ago</span>
-                  </div>
-                  <div className="p-3 hover:bg-slate-850 cursor-pointer transition-colors">
-                    <p className="text-[11px] text-slate-300">Congratulations on reaching Bronze Tier!</p>
-                    <span className="text-[9px] text-slate-500 mt-1 block">1 day ago</span>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
 
+            {/* Online Status Toggle */}
             <button
               onClick={() => {
                 if (verificationStatus !== 'APPROVED') return;
@@ -505,8 +525,8 @@ export default function ProviderDashboard() {
                 setIsOnline(!isOnline);
               }}
               disabled={verificationStatus !== 'APPROVED' || (prepaidBalance <= 0 && !isDevBypass)}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-full border border-slate-800/80 bg-slate-900 hover:bg-slate-850 transition-all shadow-sm ${
-                (verificationStatus !== 'APPROVED' || (prepaidBalance <= 0 && !isDevBypass)) ? "opacity-40 cursor-not-allowed" : "cursor-pointer"
+              className={`h-8.5 flex items-center gap-2 px-2.5 sm:px-3 rounded-xl border border-slate-800/80 bg-slate-900/90 hover:bg-slate-850 transition-all shadow-sm ${
+                (verificationStatus !== 'APPROVED' || (prepaidBalance <= 0 && !isDevBypass)) ? "opacity-40 cursor-not-allowed" : "cursor-pointer active:scale-95"
               }`}
               title={
                 verificationStatus !== 'APPROVED' ? "Verification Required: Please complete your profile to go online."
@@ -520,23 +540,23 @@ export default function ProviderDashboard() {
                 {isOnline ? (language === "ar" ? "متصل" : "Online") : (language === "ar" ? "غير متصل" : "Offline")}
               </span>
               <div
-                className={`relative w-11 h-6 rounded-full p-1 transition-colors duration-300 ${
+                className={`relative w-8 h-4 rounded-full p-0.5 transition-colors duration-300 ${
                   isOnline ? "bg-green-500" : "bg-slate-700"
                 }`}
               >
-                <span className={`block w-4 h-4 rounded-full bg-white transition-transform duration-300 shadow-sm ${
-                  isOnline ? "translate-x-5" : "translate-x-0"
+                <span className={`block w-3 h-3 rounded-full bg-white transition-transform duration-300 shadow-sm ${
+                  isOnline ? "translate-x-4 rtl:-translate-x-4" : "translate-x-0"
                 }`} />
               </div>
             </button>
 
+            {/* Sign Out Button */}
             <button 
               onClick={handleLogout}
-              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 border border-red-500/20 text-xs font-medium transition-all"
+              className="w-8.5 h-8.5 flex items-center justify-center rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 hover:text-rose-300 border border-rose-500/20 hover:border-rose-500/40 transition-all shadow-sm active:scale-95 shrink-0"
               title={language === "ar" ? "تسجيل الخروج" : "Sign Out"}
             >
               <LogOut className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">{language === "ar" ? "خروج" : "Sign Out"}</span>
             </button>
           </div>
         </div>
