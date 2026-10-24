@@ -3,16 +3,19 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowRight, Mail, Lock, User, Shield, Wrench, Loader2 } from "lucide-react";
+import { ArrowRight, Mail, Lock, User, Shield, Wrench, Loader2, Home, ArrowLeft } from "lucide-react";
 import Cookies from "js-cookie";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { signIn, getSession } from "next-auth/react";
+import { useLanguageStore } from "@/store/useLanguageStore";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 
 type Role = "CLIENT" | "PROVIDER" | "ADMIN";
 
 export default function LoginPage() {
   const router = useRouter();
+  const { language } = useLanguageStore();
   const [role, setRole] = useState<Role>("CLIENT");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -81,8 +84,43 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen w-full bg-slate-900 flex items-center justify-center p-4">
-      <div className="w-full max-w-md bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl shadow-2xl p-8 flex flex-col gap-8">
+    <div className="min-h-screen w-full bg-slate-900 flex items-center justify-center p-4 relative">
+      {/* Top Floating Navigation */}
+      <div className="fixed top-4 sm:top-6 inset-x-4 sm:inset-x-8 z-30 flex items-center justify-between pointer-events-none">
+        <Link
+          href="/"
+          className="pointer-events-auto flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-800/80 hover:bg-slate-700/90 text-slate-300 hover:text-white border border-slate-700/60 shadow-xl backdrop-blur-md transition-all text-xs sm:text-sm font-medium group active:scale-95"
+          title={language === "ar" ? "العودة للصفحة الرئيسية" : "Back to Home"}
+        >
+          <ArrowLeft className="w-4 h-4 rtl:rotate-180 group-hover:-translate-x-1 rtl:group-hover:translate-x-1 transition-transform" />
+          <Home className="w-4 h-4 text-blue-400 group-hover:text-blue-300" />
+          <span>{language === "ar" ? "الصفحة الرئيسية" : "Home"}</span>
+        </Link>
+
+        <div className="pointer-events-auto">
+          <LanguageSwitcher />
+        </div>
+      </div>
+
+      <div className="w-full max-w-md bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 rounded-2xl shadow-2xl p-8 flex flex-col gap-6 relative my-12">
+        {/* Header with Back to Home & Brand */}
+        <div className="flex items-center justify-between pb-3 border-b border-slate-700/40">
+          <Link
+            href="/"
+            className="flex items-center gap-2 text-xs font-semibold text-slate-400 hover:text-white transition-colors group"
+            title={language === "ar" ? "العودة للصفحة الرئيسية" : "Back to Home"}
+          >
+            <div className="p-1.5 rounded-lg bg-slate-900/80 border border-slate-700/60 text-blue-400 group-hover:text-blue-300 group-hover:border-blue-500/50 transition-all">
+              <Home className="w-4 h-4" />
+            </div>
+            <span>{language === "ar" ? "الرئيسية" : "Home"}</span>
+          </Link>
+
+          <Link href="/" className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-300 hover:text-white transition-colors">
+            <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
+            <span>Quick<span className="text-blue-400">Handy</span></span>
+          </Link>
+        </div>
         
         {/* Segmented Control */}
         <div className="flex bg-slate-900/80 p-1.5 rounded-xl border border-slate-700/50 relative">

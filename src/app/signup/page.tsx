@@ -3,11 +3,14 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Wrench, User, Lock, Mail, Phone, Upload, Check, ShieldCheck } from "lucide-react";
+import { Wrench, User, Lock, Mail, Phone, Upload, Check, ShieldCheck, Home, ArrowLeft } from "lucide-react";
 import { signIn } from "next-auth/react";
+import { useLanguageStore } from "@/store/useLanguageStore";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 
 export default function SignupPage() {
   const router = useRouter();
+  const { language } = useLanguageStore();
   const [role, setRole] = useState<"CLIENT" | "PROVIDER">("CLIENT");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -88,11 +91,28 @@ export default function SignupPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-12 relative overflow-hidden bg-slate-950">
+      {/* Top Floating Navigation */}
+      <div className="fixed top-4 sm:top-6 inset-x-4 sm:inset-x-8 z-30 flex items-center justify-between pointer-events-none">
+        <Link
+          href="/"
+          className="pointer-events-auto flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-900/80 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 shadow-xl backdrop-blur-md transition-all text-xs sm:text-sm font-medium group active:scale-95"
+          title={language === "ar" ? "العودة للصفحة الرئيسية" : "Back to Home"}
+        >
+          <ArrowLeft className="w-4 h-4 rtl:rotate-180 group-hover:-translate-x-1 rtl:group-hover:translate-x-1 transition-transform" />
+          <Home className="w-4 h-4 text-brand-blue-400 group-hover:text-brand-blue-300" />
+          <span>{language === "ar" ? "الصفحة الرئيسية" : "Home"}</span>
+        </Link>
+
+        <div className="pointer-events-auto">
+          <LanguageSwitcher />
+        </div>
+      </div>
+
       {/* Background blobs */}
       <div className="absolute top-[-20%] right-[-10%] w-[50%] h-[50%] rounded-full bg-brand-blue-950/20 blur-[120px] pointer-events-none" />
       <div className="absolute bottom-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full bg-brand-orange-950/10 blur-[120px] pointer-events-none" />
 
-      <div className="w-full max-w-lg z-10">
+      <div className="w-full max-w-lg z-10 my-8">
         {/* Branding */}
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-2 mb-3">
