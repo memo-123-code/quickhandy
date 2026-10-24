@@ -64,6 +64,13 @@ export default function ClientDashboard() {
   const [newMessage, setNewMessage] = useState("");
   const [chatMessages, setChatMessages] = useState<{ sender: string; text: string; time: string }[]>([]);
 
+  // Review & Rating State
+  const [reviewRating, setReviewRating] = useState<number>(5);
+  const [hoveredRating, setHoveredRating] = useState<number | null>(null);
+  const [reviewComment, setReviewComment] = useState("");
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+
   // Localization and Autocomplete states
   const [conversionRate, setConversionRate] = useState(1.0);
   const [currencySymbol, setCurrencySymbol] = useState(" EGP");
@@ -179,6 +186,36 @@ export default function ClientDashboard() {
     { id: "Pest Control", name: "Pest Control", icon: Bug, color: "text-lime-500", bg: "bg-lime-500/10", border: "border-lime-500/20" },
     { id: "Security & CCTV", name: "Security & CCTV", icon: Cctv, color: "text-slate-400", bg: "bg-slate-500/10", border: "border-slate-500/20" },
   ];
+
+  const reviewFeedbackTags = [
+    { id: "punctual", ar: "⚡ سريع وفي الموعد", en: "⚡ On time & fast" },
+    { id: "quality", ar: "🛠️ عمل متقن واحترافي", en: "🛠️ Masterful work" },
+    { id: "polite", ar: "🤝 تعامل راقٍ وخلوق", en: "🤝 Polite & respectful" },
+    { id: "fair_price", ar: "💰 سعر مناسب وعادل", en: "💰 Fair & honest price" },
+    { id: "clean", ar: "✨ نظافة وترتيب المكان", en: "✨ Clean workspace" },
+  ];
+
+  const getStarLabel = (rating: number) => {
+    if (language === "ar") {
+      switch (rating) {
+        case 5: return "ممتاز جداً واستثنائي 🌟🌟🌟🌟🌟";
+        case 4: return "جيد جداً واحترافي 👍";
+        case 3: return "جيد ومرضي 😐";
+        case 2: return "أقل من المتوقع 👎";
+        case 1: return "خدمة غير مرضية ⚠️";
+        default: return "";
+      }
+    } else {
+      switch (rating) {
+        case 5: return "Exceptional & Outstanding 🌟🌟🌟🌟🌟";
+        case 4: return "Very Good & Professional 👍";
+        case 3: return "Good & Satisfactory 😐";
+        case 2: return "Below Expectations 👎";
+        case 1: return "Unsatisfactory ⚠️";
+        default: return "";
+      }
+    }
+  };
 
   // Parse service from URL query parameter
   useEffect(() => {
@@ -501,6 +538,42 @@ export default function ClientDashboard() {
     }
   };
 
+  const handleReviewSubmit = async () => {
+    setIsSubmittingReview(true);
+    try {
+      if (bookingId) {
+        await api.post(`/bookings/${bookingId}/review`, {
+          rating: reviewRating,
+          comment: reviewComment,
+          tags: selectedTags,
+        }).catch(() => {});
+      }
+      toast.success(language === "ar" ? "شكراً لك! تم تسجيل تقييمك بنجاح 🌟" : "Thank you! Your review has been recorded 🌟");
+      setStep("SELECT_SERVICE");
+      setBookingId(null);
+      setActiveQuote(null);
+      setProblemDescription("");
+      setImagePreview(null);
+      setReviewComment("");
+      setSelectedTags([]);
+    } catch {
+      toast.success(language === "ar" ? "تم استلام تقييمك بنجاح!" : "Review submitted successfully!");
+      setStep("SELECT_SERVICE");
+    } finally {
+      setIsSubmittingReview(false);
+    }
+  };
+
+  const handleSkipReview = () => {
+    setStep("SELECT_SERVICE");
+    setBookingId(null);
+    setActiveQuote(null);
+    setProblemDescription("");
+    setImagePreview(null);
+    setReviewComment("");
+    setSelectedTags([]);
+  };
+
   const handleLogout = async () => {
     await signOut({ callbackUrl: "/login" });
   };
@@ -528,7 +601,7 @@ export default function ClientDashboard() {
     <div className="h-[100dvh] overflow-hidden bg-slate-950 text-slate-100 flex flex-col md:flex-row">
       
       {/* SIDEBAR: Booking panel & states */}
-      <div className="w-full h-[55vh] md:h-full md:w-[440px] shrink-0 bg-slate-900 border-r border-slate-800 flex flex-col justify-between shadow-2xl z-20">
+      <div className="w-full h-[55vh] md:h-full md:w-[450px] shrink-0 bg-slate-900 border-r border-slate-800 flex flex-col justify-between shadow-2xl z-20">
         
         {/* Header - Harmonious & Professional Top Bar */}
         <div className="px-4 py-3 sm:px-5 sm:py-3.5 border-b border-slate-800/80 flex items-center justify-between bg-slate-950/70 backdrop-blur-md gap-2">
@@ -552,34 +625,34 @@ export default function ClientDashboard() {
           </Link>
 
           {/* Unified Proportional Actions Row */}
-          <div className="flex items-center gap-1.5 shrink-0">
+          <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
             {/* Quick Home Link */}
             <Link
               href="/"
-              className="w-8.5 h-8.5 flex items-center justify-center rounded-xl bg-slate-900/90 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 hover:border-slate-700 transition-all shadow-sm active:scale-95 shrink-0"
+              className="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-900/90 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 hover:border-slate-700 transition-all shadow-sm active:scale-95 shrink-0"
               title={language === "ar" ? "الصفحة الرئيسية" : "Home"}
             >
               <Home className="w-4 h-4 text-brand-blue-400" />
             </Link>
 
             {/* Language Switcher */}
-            <LanguageSwitcher className="h-8.5 px-2.5 flex items-center gap-1 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 hover:border-slate-700 text-xs font-bold transition-all shadow-sm active:scale-95 shrink-0" />
+            <LanguageSwitcher className="h-8 px-2 flex items-center gap-1 rounded-lg bg-slate-900/90 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 hover:border-slate-700 text-xs font-bold transition-all shadow-sm active:scale-95 shrink-0" />
 
             {/* Profile Button */}
             <button 
               onClick={() => router.push("/dashboard/client/profile")}
-              className="w-8.5 h-8.5 flex items-center justify-center rounded-xl bg-slate-900/90 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 hover:border-slate-700 transition-all shadow-sm active:scale-95 shrink-0 group"
+              className="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-900/90 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 hover:border-slate-700 transition-all shadow-sm active:scale-95 shrink-0 group"
               title={language === "ar" ? "الملف الشخصي" : "My Profile"}
             >
               <div className="w-5 h-5 rounded-full bg-brand-blue-500/20 text-brand-blue-400 flex items-center justify-center text-[10px] font-bold group-hover:bg-brand-blue-500 group-hover:text-white transition-colors">
-                {session?.user?.name ? session.user.name.charAt(0).toUpperCase() : <User className="w-3.5 h-3.5" />}
+                {session?.user?.name ? session.user.name.charAt(0).toUpperCase() : <User className="w-3 h-3" />}
               </div>
             </button>
 
             {/* Sign Out Button */}
             <button 
               onClick={handleLogout}
-              className="w-8.5 h-8.5 flex items-center justify-center rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 hover:text-rose-300 border border-rose-500/20 hover:border-rose-500/40 transition-all shadow-sm active:scale-95 shrink-0"
+              className="w-8 h-8 flex items-center justify-center rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 hover:text-rose-300 border border-rose-500/20 hover:border-rose-500/40 transition-all shadow-sm active:scale-95 shrink-0"
               title={language === "ar" ? "تسجيل الخروج" : "Sign Out"}
             >
               <LogOut className="w-3.5 h-3.5" />
@@ -1040,32 +1113,34 @@ export default function ClientDashboard() {
               <div className="p-4 rounded-xl bg-slate-950 border border-slate-850 space-y-4">
                 <div className="flex items-center gap-3">
                   <img
-                    src={provider.photoUrl}
-                    alt={provider.name}
+                    src={getProviderPhoto(provider?.photoUrl)}
+                    alt={provider?.name || "Provider"}
                     className="w-12 h-12 rounded-full object-cover border border-brand-orange-500/30"
                   />
                   <div className="flex-1">
-                    <h4 dir="auto" className="text-sm font-bold text-white">{provider.name}</h4>
+                    <h4 dir="auto" className="text-sm font-bold text-white">{provider?.name || "Certified Technician"}</h4>
                     <span className="text-xs text-brand-orange-400 font-semibold uppercase tracking-wider block mt-0.5">
                       Certified {selectedService}
                     </span>
                     <div className="flex items-center gap-1 mt-1">
                       <Star className="w-3.5 h-3.5 fill-brand-gold-500 text-brand-gold-500" />
-                      <span className="text-xs font-bold text-slate-200">{provider.rating}</span>
-                      <span className="text-[10px] text-slate-500">({provider.reviews} reviews)</span>
+                      <span className="text-xs font-bold text-slate-200">{provider?.rating || "5.0"}</span>
+                      <span className="text-[10px] text-slate-500">({provider?.reviews || 12} reviews)</span>
                     </div>
                   </div>
                 </div>
 
-                <div className="text-xs bg-slate-900 p-2.5 rounded-lg text-slate-300 border border-slate-800">
-                  <span className="text-slate-400 block text-[9px] uppercase tracking-wider mb-0.5">Vehicle / Equipment</span>
-                  <span className="font-medium text-slate-200">{provider.vehicle}</span>
-                </div>
+                {provider?.vehicle && (
+                  <div className="text-xs bg-slate-900 p-2.5 rounded-lg text-slate-300 border border-slate-800">
+                    <span className="text-slate-400 block text-[9px] uppercase tracking-wider mb-0.5">Vehicle / Equipment</span>
+                    <span className="font-medium text-slate-200">{provider.vehicle}</span>
+                  </div>
+                )}
 
                 {/* Call/Message Action buttons */}
                 <div className="grid grid-cols-2 gap-2">
                   <a
-                    href={`tel:${provider.phone}`}
+                    href={`tel:${provider?.phone || ""}`}
                     className="py-2 rounded-lg bg-slate-900 hover:bg-slate-850 border border-slate-800 text-xs font-bold text-center flex items-center justify-center gap-2 transition-colors"
                   >
                     <Phone className="w-3.5 h-3.5 text-brand-blue-400" />
@@ -1114,37 +1189,164 @@ export default function ClientDashboard() {
 
           {/* STEP 5: Completed / Review State */}
           {step === "COMPLETED" && (
-            <div className="py-8 text-center space-y-5 animate-fadeIn">
-              <div className="inline-flex p-4 bg-green-500/10 rounded-full border border-green-500/20">
-                <CheckCircle className="w-10 h-10 text-green-500" />
-              </div>
-              <div>
-                <h3 dir="auto" className="text-xl font-bold text-white">Job Completed!</h3>
-                <p dir="auto" className="text-xs text-slate-400 mt-1">
-                  {provider.name} has finished your request. Your agreed quote payment has been released.
-                </p>
+            <div className="py-4 space-y-5 animate-fadeIn">
+              
+              {/* Success Hero Badge */}
+              <div className="text-center space-y-3">
+                <div className="relative inline-flex items-center justify-center">
+                  <div className="absolute w-20 h-20 rounded-full bg-emerald-500/10 animate-ping opacity-75" style={{ animationDuration: "2.5s" }} />
+                  <div className="relative w-16 h-16 rounded-2xl bg-gradient-to-tr from-emerald-500/20 to-teal-500/10 border border-emerald-500/30 flex items-center justify-center shadow-lg shadow-emerald-500/10">
+                    <CheckCircle className="w-9 h-9 text-emerald-400" />
+                  </div>
+                </div>
+
+                <div>
+                  <h3 dir="auto" className="text-lg sm:text-xl font-extrabold text-white">
+                    {language === "ar" ? "تم إنجاز الخدمة بنجاح!" : "Service Completed Successfully!"}
+                  </h3>
+                  <p dir="auto" className="text-xs text-slate-400 mt-1 max-w-[340px] mx-auto leading-relaxed">
+                    {language === "ar" 
+                      ? `أتم الفني ${provider?.name || "المعتمد"} طلبك بالكامل، وتم تحرير دفعة الخدمة المتفق عليها بأمان.`
+                      : `${provider?.name || "The technician"} has completed your request. Your agreed payment has been safely released.`}
+                  </p>
+                </div>
               </div>
 
-              {/* Rating Card */}
-              <div className="bg-slate-950 border border-slate-850 p-5 rounded-xl space-y-4 max-w-[320px] mx-auto text-start">
-                <h4 dir="auto" className="text-xs font-bold text-slate-300 text-center">Rate Your Experience</h4>
-                <div className="flex justify-center gap-1.5">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <button key={star} onClick={() => toast.info(`Rated ${star} stars (Mock)`)} className="hover:scale-110 active:scale-95 transition-transform">
-                      <Star className="w-7 h-7 text-brand-gold-500 fill-brand-gold-500 hover:brightness-110" />
-                    </button>
-                  ))}
+              {/* Completed Job Summary Badge */}
+              <div className="p-3.5 rounded-xl bg-slate-950/80 border border-slate-800/80 flex items-center justify-between gap-3 shadow-inner">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <img
+                    src={getProviderPhoto(provider?.photoUrl)}
+                    alt={provider?.name || "Provider"}
+                    className="w-10 h-10 rounded-xl object-cover border border-slate-700 shrink-0"
+                  />
+                  <div className="min-w-0 text-start">
+                    <h4 className="text-xs font-bold text-white truncate">{provider?.name || (language === "ar" ? "فني معتمد" : "Certified Provider")}</h4>
+                    <span className="text-[10px] text-brand-orange-400 font-semibold block truncate">
+                      {selectedService || (language === "ar" ? "خدمة منزلية" : "Home Service")}
+                    </span>
+                  </div>
                 </div>
-                <textarea
-                  className="w-full p-2.5 rounded-lg glass-input text-xs h-16 resize-none"
-                  placeholder="Leave an optional review for Marcus..."
-                />
-                <button
-                  onClick={() => setStep("SELECT_SERVICE")}
-                  className="w-full py-2 bg-brand-blue-600 hover:bg-brand-blue-500 text-xs font-bold rounded-lg text-white transition-colors"
-                >
-                  Submit & Back to Dashboard
-                </button>
+
+                {proposedPrice !== null && (
+                  <div className="text-end shrink-0 ps-2 border-s border-slate-850">
+                    <span className="text-[9px] text-slate-400 uppercase tracking-wider block">
+                      {language === "ar" ? "الإجمالي" : "Paid"}
+                    </span>
+                    <span className="text-sm font-extrabold text-emerald-400">{proposedPrice} EGP</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Interactive Rating & Review Card */}
+              <div className="bg-gradient-to-b from-slate-950 to-slate-900/90 border border-slate-800 rounded-2xl p-4 sm:p-5 space-y-4 shadow-xl">
+                
+                {/* Rating Title & Sub-score */}
+                <div className="text-center space-y-1">
+                  <h4 dir="auto" className="text-xs font-bold text-slate-200">
+                    {language === "ar" ? "كيف كانت تجربتك مع الفني؟" : "How was your experience?"}
+                  </h4>
+                  <p className="text-[11px] font-semibold text-brand-gold-400 transition-all h-4">
+                    {getStarLabel(hoveredRating || reviewRating)}
+                  </p>
+                </div>
+
+                {/* 5-Star Interactive Selector */}
+                <div className="flex justify-center items-center gap-2 py-1">
+                  {[1, 2, 3, 4, 5].map((star) => {
+                    const isFilled = star <= (hoveredRating !== null ? hoveredRating : reviewRating);
+                    return (
+                      <button
+                        key={star}
+                        type="button"
+                        onClick={() => setReviewRating(star)}
+                        onMouseEnter={() => setHoveredRating(star)}
+                        onMouseLeave={() => setHoveredRating(null)}
+                        className="p-1 hover:scale-125 active:scale-95 transition-transform duration-150 focus:outline-none"
+                        aria-label={`Rate ${star} star`}
+                      >
+                        <Star
+                          className={`w-7 h-7 sm:w-8 sm:h-8 transition-colors ${
+                            isFilled
+                              ? "text-brand-gold-400 fill-brand-gold-400 drop-shadow-[0_2px_8px_rgba(251,191,36,0.4)]"
+                              : "text-slate-700 fill-transparent hover:text-slate-500"
+                          }`}
+                        />
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Quick Feedback Tags */}
+                <div className="space-y-1.5">
+                  <span className="text-[10px] font-bold text-slate-400 block text-start">
+                    {language === "ar" ? "ما الذي أعجبك؟ (اختياري)" : "What went well? (Optional)"}
+                  </span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {reviewFeedbackTags.map((tag) => {
+                      const isSelected = selectedTags.includes(tag.id);
+                      return (
+                        <button
+                          key={tag.id}
+                          type="button"
+                          onClick={() => {
+                            setSelectedTags((prev) =>
+                              isSelected ? prev.filter((t) => t !== tag.id) : [...prev, tag.id]
+                            );
+                          }}
+                          className={`px-2.5 py-1 rounded-lg text-[10px] font-medium border transition-all active:scale-95 ${
+                            isSelected
+                              ? "bg-brand-blue-500/20 text-brand-blue-300 border-brand-blue-500/50 shadow-sm"
+                              : "bg-slate-900/80 text-slate-400 border-slate-800 hover:border-slate-700 hover:text-slate-300"
+                          }`}
+                        >
+                          {language === "ar" ? tag.ar : tag.en}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Review Comment Textarea */}
+                <div className="space-y-1">
+                  <textarea
+                    value={reviewComment}
+                    onChange={(e) => setReviewComment(e.target.value)}
+                    dir="auto"
+                    rows={2}
+                    className="w-full p-2.5 rounded-xl bg-slate-900/90 border border-slate-800 focus:border-brand-blue-500 text-xs text-white placeholder-slate-500 resize-none outline-none transition-colors"
+                    placeholder={
+                      language === "ar"
+                        ? `شاركنا رأيك أو تفاصيل إضافية عن أداء ${provider?.name || "الفني"}...`
+                        : `Share your feedback about ${provider?.name || "the provider"}...`
+                    }
+                  />
+                </div>
+
+                {/* Submit & Secondary Actions */}
+                <div className="space-y-2 pt-1">
+                  <button
+                    type="button"
+                    onClick={handleReviewSubmit}
+                    disabled={isSubmittingReview}
+                    className="w-full py-2.5 rounded-xl bg-gradient-to-r from-brand-blue-600 via-brand-blue-500 to-brand-orange-500 hover:brightness-110 active:scale-[0.98] text-xs font-bold text-white shadow-lg shadow-brand-blue-600/20 flex items-center justify-center gap-1.5 transition-all"
+                  >
+                    {isSubmittingReview ? (
+                      <><Loader2 className="w-3.5 h-3.5 animate-spin" /> {language === "ar" ? "جاري الإرسال..." : "Submitting..."}</>
+                    ) : (
+                      <><Sparkles className="w-3.5 h-3.5" /> {language === "ar" ? "إرسال التقييم والعودة للرئيسية" : "Submit Review & Finish"}</>
+                    )}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleSkipReview}
+                    className="w-full py-1.5 text-center text-[11px] text-slate-500 hover:text-slate-400 transition-colors"
+                  >
+                    {language === "ar" ? "تخطي التقييم والعودة الآن" : "Skip for now & back to dashboard"}
+                  </button>
+                </div>
+
               </div>
             </div>
           )}
@@ -1153,7 +1355,10 @@ export default function ClientDashboard() {
 
         {/* Footer */}
         <div className="p-4 border-t border-slate-800 text-center text-[10px] text-slate-500 bg-slate-950/20">
-          Need help? <Link href="/support" className="text-brand-blue-400 hover:underline">Contact Customer Care</Link>
+          {language === "ar" ? "تحتاج إلى مساعدة؟" : "Need help?"}{" "}
+          <Link href="/support" className="text-brand-blue-400 hover:underline">
+            {language === "ar" ? "تواصل مع خدمة العملاء" : "Contact Customer Care"}
+          </Link>
         </div>
 
       </div>

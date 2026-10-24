@@ -427,61 +427,61 @@ export default function ProviderDashboard() {
       )}
 
       {/* SIDEBAR: Stats, Wallet & Active Jobs */}
-      <div className="w-full h-[55vh] md:h-full md:w-[440px] shrink-0 bg-slate-900 border-r border-slate-800 flex flex-col justify-between shadow-2xl z-20">
+      <div className="w-full h-[55vh] md:h-full md:w-[450px] shrink-0 bg-slate-900 border-r border-slate-800 flex flex-col justify-between shadow-2xl z-20">
         
         {/* Header - Harmonious & Professional Top Bar */}
-        <div className="px-4 py-3 sm:px-5 sm:py-3.5 border-b border-slate-800/80 flex items-center justify-between bg-slate-950/70 backdrop-blur-md gap-2">
+        <div className="px-3 sm:px-4 py-2.5 border-b border-slate-800/80 flex items-center justify-between bg-slate-950/70 backdrop-blur-md gap-2">
           <Link 
             href="/" 
-            className="flex items-center gap-2.5 group hover:opacity-95 transition-opacity shrink-0" 
+            className="flex items-center gap-2 group hover:opacity-95 transition-opacity shrink-0" 
             title={language === "ar" ? "الصفحة الرئيسية" : "Home"}
           >
-            <div className="p-2 bg-gradient-to-tr from-brand-blue-600 to-brand-orange-500 rounded-xl shadow-md group-hover:scale-105 transition-transform shrink-0">
+            <div className="p-1.5 bg-gradient-to-tr from-brand-blue-600 to-brand-orange-500 rounded-lg shadow-md group-hover:scale-105 transition-transform shrink-0">
               <Wrench className="w-4 h-4 text-white" />
             </div>
             <div className="flex flex-col text-start">
               <span className="text-sm font-extrabold tracking-tight text-white leading-none">
                 Quick<span className="text-brand-orange-500">Handy</span>
               </span>
-              <span className="text-[9px] font-bold text-brand-orange-400 mt-1 uppercase tracking-wider leading-none">
+              <span className="text-[9px] font-bold text-brand-orange-400 mt-0.5 uppercase tracking-wider leading-none">
                 {language === "ar" ? "بوابة الفني" : "Provider Portal"}
               </span>
             </div>
           </Link>
 
-          {/* Controls & Navigation */}
-          <div className="flex items-center gap-1.5 shrink-0">
+          {/* Controls & Navigation - Unified 32px height buttons */}
+          <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
             {/* Quick Home Link */}
             <Link
               href="/"
-              className="w-8.5 h-8.5 flex items-center justify-center rounded-xl bg-slate-900/90 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 hover:border-slate-700 transition-all shadow-sm active:scale-95 shrink-0"
+              className="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-900/90 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 hover:border-slate-700 transition-all shadow-sm active:scale-95 shrink-0"
               title={language === "ar" ? "الصفحة الرئيسية" : "Home"}
             >
               <Home className="w-4 h-4 text-brand-orange-400" />
             </Link>
 
             {/* Language Switcher */}
-            <LanguageSwitcher className="h-8.5 px-2.5 flex items-center gap-1 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 hover:border-slate-700 text-xs font-bold transition-all shadow-sm active:scale-95 shrink-0" />
+            <LanguageSwitcher className="h-8 px-2 flex items-center gap-1 rounded-lg bg-slate-900/90 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 hover:border-slate-700 text-xs font-bold transition-all shadow-sm active:scale-95 shrink-0" />
 
             {/* Profile Button */}
             <button 
               onClick={() => router.push("/dashboard/provider/profile")}
-              className="w-8.5 h-8.5 flex items-center justify-center rounded-xl bg-slate-900/90 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 hover:border-slate-700 transition-all shadow-sm active:scale-95 shrink-0 group"
+              className="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-900/90 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 hover:border-slate-700 transition-all shadow-sm active:scale-95 shrink-0 group"
               title={language === "ar" ? "الملف الشخصي" : "My Profile"}
             >
               <div className="w-5 h-5 rounded-full bg-brand-orange-500/20 text-brand-orange-400 flex items-center justify-center text-[10px] font-bold group-hover:bg-brand-orange-500 group-hover:text-white transition-colors">
-                <User className="w-3.5 h-3.5" />
+                <User className="w-3 h-3" />
               </div>
             </button>
 
-            {/* Notifications & Toggle */}
-            <div className="relative">
+            {/* Notifications */}
+            <div className="relative shrink-0">
               <button 
                 onClick={() => {
                   setIsNotificationsOpen(!isNotificationsOpen);
                   if (hasUnreadNotifications) setHasUnreadNotifications(false);
                 }}
-                className="h-8.5 w-8.5 flex items-center justify-center text-slate-300 hover:text-white transition-colors rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 shadow-sm relative active:scale-95"
+                className="w-8 h-8 flex items-center justify-center text-slate-300 hover:text-white transition-colors rounded-lg bg-slate-900/90 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 shadow-sm relative active:scale-95"
                 title="Notifications"
               >
                 <Bell className="w-3.5 h-3.5" />
@@ -495,7 +495,7 @@ export default function ProviderDashboard() {
 
               {/* Notifications Dropdown */}
               {isNotificationsOpen && (
-                <div className="absolute top-11 end-0 w-64 bg-slate-900 border border-slate-700 shadow-2xl rounded-xl overflow-hidden z-50 animate-fadeIn">
+                <div className="absolute top-10 end-0 w-64 bg-slate-900 border border-slate-700 shadow-2xl rounded-xl overflow-hidden z-50 animate-fadeIn">
                   <div className="p-3 border-b border-slate-800 bg-slate-950/50">
                     <span className="text-xs font-bold text-white">Notifications</span>
                   </div>
@@ -517,7 +517,7 @@ export default function ProviderDashboard() {
               )}
             </div>
 
-            {/* Online Status Toggle */}
+            {/* Online Status Toggle Badge */}
             <button
               onClick={() => {
                 if (verificationStatus !== 'APPROVED') return;
@@ -525,7 +525,7 @@ export default function ProviderDashboard() {
                 setIsOnline(!isOnline);
               }}
               disabled={verificationStatus !== 'APPROVED' || (prepaidBalance <= 0 && !isDevBypass)}
-              className={`h-8.5 flex items-center gap-2 px-2.5 sm:px-3 rounded-xl border border-slate-800/80 bg-slate-900/90 hover:bg-slate-850 transition-all shadow-sm ${
+              className={`h-8 px-2 flex items-center gap-1.5 rounded-lg border border-slate-800/80 bg-slate-900/90 hover:bg-slate-850 transition-all shadow-sm shrink-0 ${
                 (verificationStatus !== 'APPROVED' || (prepaidBalance <= 0 && !isDevBypass)) ? "opacity-40 cursor-not-allowed" : "cursor-pointer active:scale-95"
               }`}
               title={
@@ -534,26 +534,16 @@ export default function ProviderDashboard() {
                 : "Toggle Online Status"
               }
             >
-              <span className={`text-[10px] font-bold uppercase tracking-wide transition-colors ${
-                isOnline ? "text-green-400" : "text-slate-400"
-              }`}>
+              <span className={`w-2 h-2 rounded-full ${isOnline ? 'bg-emerald-400 animate-pulse' : 'bg-slate-500'}`} />
+              <span className={`text-[10px] font-bold uppercase tracking-wider ${isOnline ? 'text-emerald-400' : 'text-slate-400'}`}>
                 {isOnline ? (language === "ar" ? "متصل" : "Online") : (language === "ar" ? "غير متصل" : "Offline")}
               </span>
-              <div
-                className={`relative w-8 h-4 rounded-full p-0.5 transition-colors duration-300 ${
-                  isOnline ? "bg-green-500" : "bg-slate-700"
-                }`}
-              >
-                <span className={`block w-3 h-3 rounded-full bg-white transition-transform duration-300 shadow-sm ${
-                  isOnline ? "translate-x-4 rtl:-translate-x-4" : "translate-x-0"
-                }`} />
-              </div>
             </button>
 
             {/* Sign Out Button */}
             <button 
               onClick={handleLogout}
-              className="w-8.5 h-8.5 flex items-center justify-center rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 hover:text-rose-300 border border-rose-500/20 hover:border-rose-500/40 transition-all shadow-sm active:scale-95 shrink-0"
+              className="w-8 h-8 flex items-center justify-center rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 hover:text-rose-300 border border-rose-500/20 hover:border-rose-500/40 transition-all shadow-sm active:scale-95 shrink-0"
               title={language === "ar" ? "تسجيل الخروج" : "Sign Out"}
             >
               <LogOut className="w-3.5 h-3.5" />
