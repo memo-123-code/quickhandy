@@ -79,6 +79,55 @@ export const dictionary = {
         terms: "Terms of Service",
         support: "Support"
       }
+    },
+    auth: {
+      login: {
+        backToHome: "Home",
+        client: "Client",
+        provider: "Provider",
+        admin: "Admin",
+        demoClick: "Demo Account Click-to-Fill:",
+        clientDemo: "Client Demo",
+        providerDemo: "Provider Demo",
+        adminDemo: "Admin Demo",
+        emailLabel: "Email Address",
+        emailPlaceholder: "name@example.com",
+        passwordLabel: "Password",
+        forgot: "Forgot?",
+        signInAs: "Sign In as",
+        authenticating: "Authenticating...",
+        noAccount: "Don't have an account?",
+        signUp: "Sign Up",
+        fillAllFields: "Please fill in all fields.",
+        invalidCreds: "Invalid email or password. Please check your credentials.",
+        welcomeBack: "Welcome back! Signed in as"
+      },
+      signup: {
+        backToHome: "Home",
+        createAccount: "Create your account",
+        subtitle: "Get connected to top manual home services",
+        clientTab: "I need a Service (Client)",
+        providerTab: "I want to Work (Provider)",
+        fullName: "Full Name",
+        email: "Email Address",
+        phone: "Phone Number",
+        password: "Password",
+        category: "Category",
+        license: "License / National ID",
+        uploadKyc: "Upload Identity Document (KYC)",
+        chooseFile: "Choose file",
+        noFileChosen: "No file chosen",
+        registerButton: "Create Account & Start",
+        registering: "Creating account...",
+        haveAccount: "Already have an account?",
+        signIn: "Sign In",
+        fillBasic: "Please fill in all basic fields.",
+        kycRequired: "Please provide your license and upload identity documents for KYC verification."
+      },
+      nav: {
+        home: "Home",
+        signOut: "Sign Out"
+      }
     }
   },
   ar: {
@@ -160,6 +209,55 @@ export const dictionary = {
         privacy: "سياسة الخصوصية",
         terms: "شروط الخدمة",
         support: "الدعم الفني"
+      }
+    },
+    auth: {
+      login: {
+        backToHome: "الصفحة الرئيسية",
+        client: "عميل",
+        provider: "فني",
+        admin: "مسؤول",
+        demoClick: "حسابات تجريبية للمعاينة:",
+        clientDemo: "تجربة عميل",
+        providerDemo: "تجربة فني",
+        adminDemo: "تجربة مسؤول",
+        emailLabel: "البريد الإلكتروني",
+        emailPlaceholder: "name@example.com",
+        passwordLabel: "كلمة المرور",
+        forgot: "نسيت كلمة المرور؟",
+        signInAs: "تسجيل الدخول كـ",
+        authenticating: "جاري التحقق...",
+        noAccount: "ليس لديك حساب؟",
+        signUp: "إنشاء حساب جديد",
+        fillAllFields: "يرجى ملء جميع الحقول.",
+        invalidCreds: "البريد الإلكتروني أو كلمة المرور غير صحيحة.",
+        welcomeBack: "مرحباً بك! تم تسجيل الدخول بنجاح كـ"
+      },
+      signup: {
+        backToHome: "الصفحة الرئيسية",
+        createAccount: "إنشاء حساب جديد",
+        subtitle: "تواصل مع أمهر الفنيين وأصحاب الحرف اليدوية",
+        clientTab: "أحتاج إلى خدمة (عميل)",
+        providerTab: "أريد تقديم خدمات (فني)",
+        fullName: "الاسم بالكامل",
+        email: "البريد الإلكتروني",
+        phone: "رقم الهاتف",
+        password: "كلمة المرور",
+        category: "التخصص / الحرفة",
+        license: "رقم الهوية / رخصة العمل",
+        uploadKyc: "رفع إثبات الهوية والمهنة",
+        chooseFile: "اختر ملف",
+        noFileChosen: "لم يتم اختيار ملف",
+        registerButton: "إنشاء الحساب والبدء",
+        registering: "جاري إنشاء الحساب...",
+        haveAccount: "لديك حساب بالفعل؟",
+        signIn: "تسجيل الدخول",
+        fillBasic: "يرجى ملء جميع البيانات الأساسية.",
+        kycRequired: "يرجى تقديم بيانات الترخيص ورفع بطاقة الهوية للتحقق."
+      },
+      nav: {
+        home: "الرئيسية",
+        signOut: "تسجيل الخروج"
       }
     }
   }

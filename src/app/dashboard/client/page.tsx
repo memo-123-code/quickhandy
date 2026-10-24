@@ -15,7 +15,6 @@ import dynamic from "next/dynamic";
 import { toast } from "sonner";
 import { SkeletonCard } from "@/components/ui/SkeletonCard";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
-import DashboardPortalSwitcher from "@/components/DashboardPortalSwitcher";
 import SmartNegotiationChat from "@/components/ui/SmartNegotiationChat";
 import { useLanguageStore } from "@/store/useLanguageStore";
 import { dictionary } from "@/locales/dictionary";
@@ -540,33 +539,33 @@ export default function ClientDashboard() {
           </Link>
 
           <div className="flex items-center gap-1.5 shrink-0">
-            {/* Quick Home Icon */}
+            {/* Quick Home Link */}
             <Link
               href="/"
-              className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors"
-              title="الصفحة الرئيسية / Home"
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-900/80 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700/60 text-xs font-medium transition-all"
+              title={language === "ar" ? "الصفحة الرئيسية" : "Home"}
             >
-              <Home className="w-4 h-4 text-blue-400" />
+              <Home className="w-3.5 h-3.5 text-blue-400" />
+              <span className="hidden sm:inline">{language === "ar" ? "الرئيسية" : "Home"}</span>
             </Link>
-
-            {/* Portal Switcher */}
-            <DashboardPortalSwitcher currentRole="client" />
 
             <LanguageSwitcher />
 
             <button 
               onClick={() => router.push("/dashboard/client/profile")}
               className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors"
-              title="My Profile & Settings"
+              title={language === "ar" ? "الملف الشخصي" : "Profile"}
             >
               <User className="w-4 h-4" />
             </button>
+
             <button 
               onClick={handleLogout}
-              className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors"
-              title="Logout"
+              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 border border-red-500/20 text-xs font-medium transition-all"
+              title={language === "ar" ? "تسجيل الخروج" : "Sign Out"}
             >
-              <LogOut className="w-4 h-4" />
+              <LogOut className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">{language === "ar" ? "خروج" : "Sign Out"}</span>
             </button>
           </div>
         </div>

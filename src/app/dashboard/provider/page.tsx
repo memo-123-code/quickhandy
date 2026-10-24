@@ -16,7 +16,7 @@ import { api } from "@/lib/api";
 import { SkeletonCard } from "@/components/ui/SkeletonCard";
 import SmartNegotiationChat from "@/components/ui/SmartNegotiationChat";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
-import DashboardPortalSwitcher from "@/components/DashboardPortalSwitcher";
+import { useLanguageStore } from "@/store/useLanguageStore";
 
 const Map = dynamic(() => import("@/components/InteractiveMap"), {
   ssr: false,
@@ -42,6 +42,7 @@ function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: numbe
 export default function ProviderDashboard() {
   const router = useRouter();
   const { data: session, status } = useSession();
+  const { language } = useLanguageStore();
   const [isOnline, setIsOnline] = useState(false);
   const [dashboardState, setDashboardState] = useState<ProviderState>("IDLE");
   const [isProcessing, setIsProcessing] = useState(false);
@@ -445,14 +446,12 @@ export default function ProviderDashboard() {
             {/* Quick Home Link */}
             <Link
               href="/"
-              className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors"
-              title="الصفحة الرئيسية / Home"
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-900/80 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700/60 text-xs font-medium transition-all"
+              title={language === "ar" ? "الصفحة الرئيسية" : "Home"}
             >
-              <Home className="w-4 h-4 text-orange-400" />
+              <Home className="w-3.5 h-3.5 text-orange-400" />
+              <span className="hidden sm:inline">{language === "ar" ? "الرئيسية" : "Home"}</span>
             </Link>
-
-            {/* Portal Switcher */}
-            <DashboardPortalSwitcher currentRole="provider" />
 
             <LanguageSwitcher />
 
@@ -518,7 +517,7 @@ export default function ProviderDashboard() {
               <span className={`text-[10px] font-bold uppercase tracking-wide transition-colors ${
                 isOnline ? "text-green-400" : "text-slate-400"
               }`}>
-                {isOnline ? "Online" : "Offline"}
+                {isOnline ? (language === "ar" ? "متصل" : "Online") : (language === "ar" ? "غير متصل" : "Offline")}
               </span>
               <div
                 className={`relative w-11 h-6 rounded-full p-1 transition-colors duration-300 ${
@@ -533,10 +532,11 @@ export default function ProviderDashboard() {
 
             <button 
               onClick={handleLogout}
-              className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors"
-              title="Logout / تسجيل الخروج"
+              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 border border-red-500/20 text-xs font-medium transition-all"
+              title={language === "ar" ? "تسجيل الخروج" : "Sign Out"}
             >
-              <LogOut className="w-4 h-4" />
+              <LogOut className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">{language === "ar" ? "خروج" : "Sign Out"}</span>
             </button>
           </div>
         </div>

@@ -4,11 +4,11 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowRight, Mail, Lock, User, Shield, Wrench, Loader2, Home, ArrowLeft } from "lucide-react";
-import Cookies from "js-cookie";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { signIn, getSession } from "next-auth/react";
 import { useLanguageStore } from "@/store/useLanguageStore";
+import { dictionary } from "@/locales/dictionary";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 
 type Role = "CLIENT" | "PROVIDER" | "ADMIN";
@@ -16,15 +16,17 @@ type Role = "CLIENT" | "PROVIDER" | "ADMIN";
 export default function LoginPage() {
   const router = useRouter();
   const { language } = useLanguageStore();
+  const t = dictionary[language]?.auth?.login || dictionary.en.auth.login;
+
   const [role, setRole] = useState<Role>("CLIENT");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
   const roles = [
-    { id: "CLIENT", label: "Client", icon: User },
-    { id: "PROVIDER", label: "Provider", icon: Wrench },
-    { id: "ADMIN", label: "Admin", icon: Shield },
+    { id: "CLIENT", label: t.client, icon: User },
+    { id: "PROVIDER", label: t.provider, icon: Wrench },
+    { id: "ADMIN", label: t.admin, icon: Shield },
   ] as const;
 
   const handleQuickFill = (selectedRole: Role) => {
@@ -47,7 +49,7 @@ export default function LoginPage() {
 
     try {
       if (!email || !password) {
-        throw new Error("Please fill in all fields.");
+        throw new Error(t.fillAllFields);
       }
 
       const response = await signIn("credentials", {
@@ -57,16 +59,15 @@ export default function LoginPage() {
       });
 
       if (response?.error) {
-        throw new Error("Invalid email or password. Please check your credentials.");
+        throw new Error(t.invalidCreds);
       }
       
-      // Get real session to route based on actual role from DB
       const session = await getSession();
       const actualRole = (session?.user as any)?.role || role;
+      const roleDisplayName = actualRole === "CLIENT" ? t.client : actualRole === "PROVIDER" ? t.provider : t.admin;
       
-      toast.success(`Welcome back! Signed in as ${actualRole.charAt(0) + actualRole.slice(1).toLowerCase()}`);
+      toast.success(`${t.welcomeBack} ${roleDisplayName}`);
 
-      // Route based on actual DB role
       if (actualRole === "CLIENT") {
         router.push("/dashboard/client");
       } else if (actualRole === "PROVIDER") {
@@ -77,7 +78,7 @@ export default function LoginPage() {
         router.push("/dashboard/client");
       }
     } catch (error: any) {
-      toast.error(error.message || "Failed to authenticate");
+      toast.error(error.message || t.invalidCreds);
     } finally {
       setLoading(false);
     }
@@ -90,11 +91,11 @@ export default function LoginPage() {
         <Link
           href="/"
           className="pointer-events-auto flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-800/80 hover:bg-slate-700/90 text-slate-300 hover:text-white border border-slate-700/60 shadow-xl backdrop-blur-md transition-all text-xs sm:text-sm font-medium group active:scale-95"
-          title={language === "ar" ? "العودة للصفحة الرئيسية" : "Back to Home"}
+          title={t.backToHome}
         >
           <ArrowLeft className="w-4 h-4 rtl:rotate-180 group-hover:-translate-x-1 rtl:group-hover:translate-x-1 transition-transform" />
           <Home className="w-4 h-4 text-blue-400 group-hover:text-blue-300" />
-          <span>{language === "ar" ? "الصفحة الرئيسية" : "Home"}</span>
+          <span>{t.backToHome}</span>
         </Link>
 
         <div className="pointer-events-auto">
@@ -108,12 +109,12 @@ export default function LoginPage() {
           <Link
             href="/"
             className="flex items-center gap-2 text-xs font-semibold text-slate-400 hover:text-white transition-colors group"
-            title={language === "ar" ? "العودة للصفحة الرئيسية" : "Back to Home"}
+            title={t.backToHome}
           >
             <div className="p-1.5 rounded-lg bg-slate-900/80 border border-slate-700/60 text-blue-400 group-hover:text-blue-300 group-hover:border-blue-500/50 transition-all">
               <Home className="w-4 h-4" />
             </div>
-            <span>{language === "ar" ? "الرئيسية" : "Home"}</span>
+            <span>{t.backToHome}</span>
           </Link>
 
           <Link href="/" className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-300 hover:text-white transition-colors">
@@ -152,28 +153,30 @@ export default function LoginPage() {
 
         {/* Demo Account Auto-Fill */}
         <div className="bg-slate-900/40 rounded-xl p-4 border border-slate-700/30">
-          <p dir="auto" className="text-xs font-semibold text-blue-400 mb-3 uppercase tracking-wider">Demo Account Click-to-Fill:</p>
+          <p dir="auto" className="text-xs font-semibold text-blue-400 mb-3 tracking-wider">
+            {t.demoClick}
+          </p>
           <div className="flex flex-wrap gap-2">
             <button
               onClick={() => handleQuickFill("CLIENT")}
               type="button"
               className="px-3 py-1.5 text-xs font-medium text-slate-300 bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-md transition-colors"
             >
-              Client Demo
+              {t.clientDemo}
             </button>
             <button
               onClick={() => handleQuickFill("PROVIDER")}
               type="button"
               className="px-3 py-1.5 text-xs font-medium text-slate-300 bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-md transition-colors"
             >
-              Provider Demo
+              {t.providerDemo}
             </button>
             <button
               onClick={() => handleQuickFill("ADMIN")}
               type="button"
               className="px-3 py-1.5 text-xs font-medium text-slate-300 bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-md transition-colors"
             >
-              Admin Demo
+              {t.adminDemo}
             </button>
           </div>
         </div>
@@ -182,8 +185,8 @@ export default function LoginPage() {
         <form onSubmit={handleLogin} className="flex flex-col gap-5">
           {/* Email Input */}
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-              Email Address
+            <label className="text-xs font-bold text-slate-400 tracking-wider">
+              {t.emailLabel}
             </label>
             <div className="relative group">
               <div className="absolute inset-y-0 start-0 ps-3.5 flex items-center pointer-events-none text-slate-500 group-focus-within:text-blue-500 transition-colors">
@@ -193,8 +196,8 @@ export default function LoginPage() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="name@example.com"
-                className="w-full bg-slate-900/50 border border-slate-700 text-slate-100 rounded-xl ps-11 pe-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all placeholder:text-slate-600"
+                placeholder={t.emailPlaceholder}
+                className="w-full bg-slate-900/50 border border-slate-700 text-slate-100 rounded-xl ps-11 pe-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all placeholder:text-slate-600 text-sm"
                 required
               />
             </div>
@@ -203,11 +206,15 @@ export default function LoginPage() {
           {/* Password Input */}
           <div className="flex flex-col gap-1.5">
             <div className="flex justify-between items-center">
-              <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-                Password
+              <label className="text-xs font-bold text-slate-400 tracking-wider">
+                {t.passwordLabel}
               </label>
-              <button type="button" onClick={() => toast.info("Forgot password feature in development")} className="text-xs text-blue-400 hover:text-blue-300 transition-colors">
-                Forgot?
+              <button 
+                type="button" 
+                onClick={() => toast.info(t.forgot)} 
+                className="text-xs text-blue-400 hover:text-blue-300 transition-colors"
+              >
+                {t.forgot}
               </button>
             </div>
             <div className="relative group">
@@ -219,7 +226,7 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full bg-slate-900/50 border border-slate-700 text-slate-100 rounded-xl ps-11 pe-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all placeholder:text-slate-600"
+                className="w-full bg-slate-900/50 border border-slate-700 text-slate-100 rounded-xl ps-11 pe-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all placeholder:text-slate-600 text-sm"
                 required
               />
             </div>
@@ -229,16 +236,16 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="mt-2 w-full flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white font-semibold py-3.5 px-4 rounded-xl shadow-lg shadow-blue-500/20 hover:shadow-blue-500/40 transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed disabled:active:scale-100"
+            className="mt-2 w-full flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white font-semibold py-3.5 px-4 rounded-xl shadow-lg shadow-blue-500/20 hover:shadow-blue-500/40 transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed disabled:active:scale-100 text-sm"
           >
             {loading ? (
               <>
                 <Loader2 className="w-5 h-5 animate-spin" />
-                <span>Authenticating...</span>
+                <span>{t.authenticating}</span>
               </>
             ) : (
               <>
-                <span>Sign In as {role.charAt(0) + role.slice(1).toLowerCase()}</span>
+                <span>{t.signInAs} {role === "CLIENT" ? t.client : role === "PROVIDER" ? t.provider : t.admin}</span>
                 <ArrowRight className="w-5 h-5 rtl:rotate-180" />
               </>
             )}
@@ -246,9 +253,9 @@ export default function LoginPage() {
 
           <div className="text-center mt-2">
             <span className="text-sm text-slate-400">
-              Don't have an account?{" "}
-              <Link href="/signup" className="text-blue-400 hover:text-blue-300 font-medium">
-                Sign Up
+              {t.noAccount}{" "}
+              <Link href="/signup" className="text-blue-400 hover:text-blue-300 font-medium ms-1">
+                {t.signUp}
               </Link>
             </span>
           </div>

@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import InstallButton from "@/components/InstallButton";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
-import DashboardPortalSwitcher from "@/components/DashboardPortalSwitcher";
+import { useLanguageStore } from "@/store/useLanguageStore";
 import AdminFinancials from "@/components/wallet/AdminFinancials";
 import { api } from "@/lib/api";
 import { AdminTab, PendingProvider, DisputeTicket, PlatformUser, NotificationItem } from "@/types/admin";
@@ -23,6 +23,7 @@ import { ConfirmModal } from "@/components/ui/ConfirmModal";
 
 export default function AdminDashboard() {
   const router = useRouter();
+  const { language } = useLanguageStore();
   const [activeTab, setActiveTab] = useState<AdminTab>("KPI_ANALYTICS");
   const [isProcessing, setIsProcessing] = useState<string | null>(null);
   
@@ -337,24 +338,32 @@ export default function AdminDashboard() {
         </div>
 
         {/* Right Header Actions */}
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2">
           {/* Quick Home Link */}
           <Link
             href="/"
-            className="p-2 bg-slate-800 hover:bg-slate-750 border border-slate-700/60 rounded-lg text-slate-300 transition-colors"
-            title="الصفحة الرئيسية / Home"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 bg-slate-800 hover:bg-slate-750 border border-slate-700/60 rounded-lg text-slate-300 hover:text-white transition-colors text-xs font-semibold"
+            title={language === "ar" ? "الصفحة الرئيسية" : "Home"}
           >
-            <Home className="w-4 h-4 text-brand-blue-400" />
+            <Home className="w-3.5 h-3.5 text-brand-blue-400" />
+            <span className="hidden sm:inline">{language === "ar" ? "الرئيسية" : "Home"}</span>
           </Link>
-
-          {/* Portal Switcher */}
-          <DashboardPortalSwitcher currentRole="admin" />
 
           {/* Language Switcher */}
           <LanguageSwitcher />
 
           {/* Standalone PWA Install Button */}
           <InstallButton />
+
+          {/* Direct Sign Out Button */}
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 rounded-lg text-red-400 hover:text-red-300 transition-colors text-xs font-semibold"
+            title={language === "ar" ? "تسجيل الخروج" : "Sign Out"}
+          >
+            <LogOut className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">{language === "ar" ? "خروج" : "Sign Out"}</span>
+          </button>
 
           {/* Notifications Bell Dropdown */}
           <div className="relative">
