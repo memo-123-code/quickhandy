@@ -19,14 +19,14 @@ export default function Navbar() {
   return (
     <div className="sticky top-0 z-50 flex flex-col w-full">
       <header className="max-w-7xl w-full mx-auto px-4 sm:px-6 py-3 sm:py-5 flex items-center justify-between bg-slate-950/80 backdrop-blur-md rounded-b-2xl border-b border-slate-800/50 shadow-sm relative">
-        <div className="flex items-center gap-2 z-50">
+        <Link href="/" className="flex items-center gap-2 z-50 hover:opacity-90 transition-opacity">
           <div className="p-2 sm:p-2.5 bg-gradient-to-tr from-brand-blue-600 to-brand-orange-500 rounded-lg sm:rounded-xl shadow-lg">
             <Wrench className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
           </div>
           <span className="text-lg sm:text-xl font-extrabold tracking-tight text-white">
             Quick<span className="text-brand-orange-500">Handy</span>
           </span>
-        </div>
+        </Link>
         
         {/* Desktop Navigation */}
         <div className="hidden md:flex items-center gap-4 ms-auto">

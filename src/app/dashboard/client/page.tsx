@@ -9,12 +9,13 @@ import {
   MapPin, Clock, Calendar, ShieldCheck, Star, Phone, 
   MessageSquare, AlertCircle, X, Search, LogOut, CheckCircle, Navigation, Crosshair,
   Paintbrush, Grid, Tv, Flame, Layers, Radio, Sparkles, User,
-  Zap, Snowflake, LayoutGrid, WashingMachine, Anvil, Satellite, Truck, AppWindow, Bug, Cctv, Loader2
+  Zap, Snowflake, LayoutGrid, WashingMachine, Anvil, Satellite, Truck, AppWindow, Bug, Cctv, Loader2, Home
 } from "lucide-react";
 import dynamic from "next/dynamic";
 import { toast } from "sonner";
 import { SkeletonCard } from "@/components/ui/SkeletonCard";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
+import DashboardPortalSwitcher from "@/components/DashboardPortalSwitcher";
 import SmartNegotiationChat from "@/components/ui/SmartNegotiationChat";
 import { useLanguageStore } from "@/store/useLanguageStore";
 import { dictionary } from "@/locales/dictionary";
@@ -527,19 +528,32 @@ export default function ClientDashboard() {
       <div className="w-full h-[55vh] md:h-full md:w-[420px] shrink-0 bg-slate-900 border-r border-slate-800 flex flex-col justify-between shadow-2xl z-20">
         
         {/* Header */}
-        <div className="p-5 border-b border-slate-800 flex items-center justify-between bg-slate-950/40">
-          <div className="flex items-center gap-2">
-            <div className="p-2 bg-brand-blue-600 rounded-lg">
+        <div className="p-4 sm:p-5 border-b border-slate-800 flex items-center justify-between bg-slate-950/40 gap-2">
+          <Link href="/" className="flex items-center gap-2 hover:opacity-90 transition-opacity" title="الصفحة الرئيسية / Home">
+            <div className="p-2 bg-brand-blue-600 rounded-lg shrink-0">
               <Droplet className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h1 dir="auto" className="text-sm font-bold text-white">QuickHandy</h1>
-              <p dir="auto" className="text-[10px] text-brand-blue-400 font-semibold">CLIENT PORTAL</p>
+              <h1 dir="auto" className="text-sm font-bold text-white leading-tight">QuickHandy</h1>
+              <p dir="auto" className="text-[10px] text-brand-blue-400 font-semibold leading-tight">CLIENT PORTAL</p>
             </div>
-          </div>
+          </Link>
 
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5 shrink-0">
+            {/* Quick Home Icon */}
+            <Link
+              href="/"
+              className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors"
+              title="الصفحة الرئيسية / Home"
+            >
+              <Home className="w-4 h-4 text-blue-400" />
+            </Link>
+
+            {/* Portal Switcher */}
+            <DashboardPortalSwitcher currentRole="client" />
+
             <LanguageSwitcher />
+
             <button 
               onClick={() => router.push("/dashboard/client/profile")}
               className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors"

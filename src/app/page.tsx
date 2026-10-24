@@ -25,13 +25,9 @@ export default function LandingPage() {
 
   useEffect(() => {
     setMounted(true);
-    if (status === "authenticated" && session?.user) {
-      const role = (session.user as any).role?.toLowerCase() || 'client';
-      router.push(`/dashboard/${role}`);
-    }
-  }, [status, session, router]);
+  }, []);
 
-  if (!mounted || status === "loading") {
+  if (!mounted) {
     return (
       <div className="min-h-screen bg-slate-950 flex items-center justify-center">
         <div className="w-10 h-10 border-4 border-brand-blue-500 border-t-transparent rounded-full animate-spin"></div>

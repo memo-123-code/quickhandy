@@ -1,16 +1,20 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { signOut } from "next-auth/react";
 import { 
   ShieldAlert, Users, TrendingUp, TrendingDown, DollarSign, Clock, FileText, 
   Check, X, AlertTriangle, MessageSquare, BarChart2, 
   ExternalLink, UserCheck, LogOut, Bell, Search, Filter, 
   ChevronDown, Settings, Download, Sliders, Info, Calendar, 
   ChevronLeft, ChevronRight, ArrowUpDown, User, Plus, RefreshCw, 
-  FileSpreadsheet, Shield, Eye, HelpCircle, CheckCircle2, XCircle
+  FileSpreadsheet, Shield, Eye, HelpCircle, CheckCircle2, XCircle, Home
 } from "lucide-react";
 import InstallButton from "@/components/InstallButton";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
+import DashboardPortalSwitcher from "@/components/DashboardPortalSwitcher";
 import AdminFinancials from "@/components/wallet/AdminFinancials";
 import { api } from "@/lib/api";
 import { AdminTab, PendingProvider, DisputeTicket, PlatformUser, NotificationItem } from "@/types/admin";
@@ -195,8 +199,8 @@ export default function AdminDashboard() {
     });
   };
 
-  const handleLogout = () => {
-    router.push("/login");
+  const handleLogout = async () => {
+    await signOut({ callbackUrl: "/login" });
   };
 
   // Filtered KYC Providers
@@ -305,7 +309,7 @@ export default function AdminDashboard() {
       <nav className="bg-slate-900/80 backdrop-blur-md border-b border-slate-800 px-6 py-3 flex items-center justify-between shadow-xl relative z-40 sticky top-0">
         
         {/* Brand Logo & Title */}
-        <div className="flex items-center gap-3">
+        <Link href="/" className="flex items-center gap-3 hover:opacity-90 transition-opacity" title="الصفحة الرئيسية / Home">
           <div className="p-2 bg-slate-800/80 border border-slate-700/60 rounded-xl text-brand-blue-400 shadow-inner">
             <ShieldAlert className="w-5 h-5 text-brand-blue-400" />
           </div>
@@ -313,7 +317,7 @@ export default function AdminDashboard() {
             <h1 dir="auto" className="text-md font-bold text-white tracking-wide">QuickHandy Admin Panel</h1>
             <p dir="auto" className="text-[9px] text-brand-blue-400 font-bold uppercase tracking-widest">Enterprise Administration Suite</p>
           </div>
-        </div>
+        </Link>
 
         {/* Global Search Bar */}
         <div className="hidden md:flex items-center relative w-80">
@@ -333,7 +337,21 @@ export default function AdminDashboard() {
         </div>
 
         {/* Right Header Actions */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5">
+          {/* Quick Home Link */}
+          <Link
+            href="/"
+            className="p-2 bg-slate-800 hover:bg-slate-750 border border-slate-700/60 rounded-lg text-slate-300 transition-colors"
+            title="الصفحة الرئيسية / Home"
+          >
+            <Home className="w-4 h-4 text-brand-blue-400" />
+          </Link>
+
+          {/* Portal Switcher */}
+          <DashboardPortalSwitcher currentRole="admin" />
+
+          {/* Language Switcher */}
+          <LanguageSwitcher />
 
           {/* Standalone PWA Install Button */}
           <InstallButton />

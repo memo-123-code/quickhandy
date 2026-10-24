@@ -1,19 +1,22 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import { 
   Wrench, Shield, Check, X, Bell, Award, 
   TrendingUp, MapPin, Play, CheckSquare, 
   LogOut, Phone, MessageSquare, ShieldAlert,
-  ArrowRight, Landmark, Camera, User, CreditCard, Crosshair
+  ArrowRight, Landmark, Camera, User, CreditCard, Crosshair, Home
 } from "lucide-react";
 import dynamic from "next/dynamic";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
 import { SkeletonCard } from "@/components/ui/SkeletonCard";
 import SmartNegotiationChat from "@/components/ui/SmartNegotiationChat";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
+import DashboardPortalSwitcher from "@/components/DashboardPortalSwitcher";
 
 const Map = dynamic(() => import("@/components/InteractiveMap"), {
   ssr: false,
@@ -398,8 +401,8 @@ export default function ProviderDashboard() {
     }
   };
 
-  const handleLogout = () => {
-    router.push("/login");
+  const handleLogout = async () => {
+    await signOut({ callbackUrl: "/login" });
   };
 
   return (
@@ -426,34 +429,51 @@ export default function ProviderDashboard() {
       <div className="w-full h-[55vh] md:h-full md:w-[420px] shrink-0 bg-slate-900 border-r border-slate-800 flex flex-col justify-between shadow-2xl z-20">
         
         {/* Header */}
-        <div className="p-5 border-b border-slate-800 flex items-center justify-between bg-slate-950/40">
-          <div className="flex items-center gap-2">
-            <div className="p-2 bg-brand-orange-500 rounded-lg">
+        <div className="p-4 sm:p-5 border-b border-slate-800 flex items-center justify-between bg-slate-950/40 gap-2">
+          <Link href="/" className="flex items-center gap-2 hover:opacity-90 transition-opacity" title="الصفحة الرئيسية / Home">
+            <div className="p-2 bg-brand-orange-500 rounded-lg shrink-0">
               <Wrench className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h1 dir="auto" className="text-sm font-bold text-white">QuickHandy</h1>
-              <p dir="auto" className="text-[10px] text-brand-orange-400 font-semibold">PROVIDER PORTAL</p>
+              <h1 dir="auto" className="text-sm font-bold text-white leading-tight">QuickHandy</h1>
+              <p dir="auto" className="text-[10px] text-brand-orange-400 font-semibold leading-tight">PROVIDER PORTAL</p>
             </div>
-          </div>
+          </Link>
 
-          {/* Notifications & Toggle */}
-          <div className="flex items-center gap-3 relative">
-            <button 
-              onClick={() => {
-                setIsNotificationsOpen(!isNotificationsOpen);
-                if (hasUnreadNotifications) setHasUnreadNotifications(false);
-              }}
-              className="relative p-2 text-slate-400 hover:text-white transition-colors rounded-full hover:bg-slate-800 focus:outline-none"
+          {/* Controls & Navigation */}
+          <div className="flex items-center gap-1.5 shrink-0">
+            {/* Quick Home Link */}
+            <Link
+              href="/"
+              className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors"
+              title="الصفحة الرئيسية / Home"
             >
-              <Bell className="w-5 h-5" />
-              {hasUnreadNotifications && (
-                <span className="absolute top-1.5 end-1.5 flex h-2.5 w-2.5">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-orange-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-brand-orange-500 border-2 border-slate-900"></span>
-                </span>
-              )}
-            </button>
+              <Home className="w-4 h-4 text-orange-400" />
+            </Link>
+
+            {/* Portal Switcher */}
+            <DashboardPortalSwitcher currentRole="provider" />
+
+            <LanguageSwitcher />
+
+            {/* Notifications & Toggle */}
+            <div className="relative">
+              <button 
+                onClick={() => {
+                  setIsNotificationsOpen(!isNotificationsOpen);
+                  if (hasUnreadNotifications) setHasUnreadNotifications(false);
+                }}
+                className="relative p-2 text-slate-400 hover:text-white transition-colors rounded-lg hover:bg-slate-800 focus:outline-none"
+                title="Notifications"
+              >
+                <Bell className="w-4 h-4" />
+                {hasUnreadNotifications && (
+                  <span className="absolute top-1.5 end-1.5 flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-orange-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-brand-orange-500"></span>
+                  </span>
+                )}
+              </button>
 
             {/* Notifications Dropdown */}
             {isNotificationsOpen && (
@@ -477,6 +497,7 @@ export default function ProviderDashboard() {
                 </div>
               </div>
             )}
+          </div>
 
             <button
               onClick={() => {
@@ -508,6 +529,14 @@ export default function ProviderDashboard() {
                   isOnline ? "translate-x-5" : "translate-x-0"
                 }`} />
               </div>
+            </button>
+
+            <button 
+              onClick={handleLogout}
+              className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors"
+              title="Logout / تسجيل الخروج"
+            >
+              <LogOut className="w-4 h-4" />
             </button>
           </div>
         </div>
