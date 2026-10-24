@@ -3,9 +3,11 @@
 import React, { useState } from "react";
 import { Download, CheckCircle, Smartphone } from "lucide-react";
 import { usePwaStore } from "@/store/usePwaStore";
+import { useLanguageStore } from "@/store/useLanguageStore";
 
 export default function InstallButton() {
   const { deferredPrompt, setDeferredPrompt, isInstallable, setIsInstallable, isInstalled, setIsInstalled, isIOS } = usePwaStore();
+  const { language } = useLanguageStore();
   const [showIosTooltip, setShowIosTooltip] = useState(false);
 
   const handleInstallClick = async () => {
@@ -43,7 +45,8 @@ export default function InstallButton() {
   if (isInstalled) {
     return (
       <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/30 rounded-lg text-emerald-400 text-xs font-bold">
-        <CheckCircle className="w-3.5 h-3.5" /> App Installed
+        <CheckCircle className="w-3.5 h-3.5" />
+        <span>{language === "ar" ? "تم تثبيت التطبيق" : "App Installed"}</span>
       </div>
     );
   }
@@ -53,26 +56,31 @@ export default function InstallButton() {
       <button
         onClick={handleInstallClick}
         className="flex items-center gap-1.5 px-4 py-2.5 sm:px-3 sm:py-1.5 bg-gradient-to-r from-brand-blue-600 to-brand-blue-500 hover:from-brand-blue-500 hover:to-brand-blue-400 text-white font-bold rounded-lg text-sm sm:text-xs shadow-md shadow-brand-blue-600/20 transition-all hover:scale-105 active:scale-95"
-        title="Install QuickHandy Admin PWA"
+        title={language === "ar" ? "تثبيت تطبيق QuickHandy" : "Install QuickHandy App"}
       >
         <Download className="w-4 h-4 sm:w-3.5 sm:h-3.5 animate-bounce" />
-        <span>Install App</span>
+        <span>{language === "ar" ? "تثبيت التطبيق" : "Install App"}</span>
       </button>
 
       {/* iOS Safari Instruction Popover */}
       {showIosTooltip && isIOS && (
         <div className="absolute end-0 mt-2 w-64 bg-slate-900 border border-slate-800 rounded-xl shadow-2xl p-3 text-xs space-y-2 z-50 animate-fadeIn">
           <div className="flex items-center gap-1.5 text-brand-orange-500 font-bold">
-            <Smartphone className="w-4 h-4" /> Install on iOS / Safari
+            <Smartphone className="w-4 h-4" />
+            <span>{language === "ar" ? "التثبيت على آيفون (Safari)" : "Install on iOS / Safari"}</span>
           </div>
           <p dir="auto" className="text-[11px] text-slate-300 leading-relaxed">
-            Tap the <strong className="text-white">Share icon ⎋</strong> at the bottom of Safari, then scroll down and select <strong className="text-white">'Add to Home Screen'</strong>.
+            {language === "ar" ? (
+              <>اضغط على أيقونة المشاركة <strong className="text-white">⎋</strong> أسفل المتصفح، ثم مرر لأسفل واختر <strong className="text-white">'إضافة إلى الصفحة الرئيسية'</strong>.</>
+            ) : (
+              <>Tap the <strong className="text-white">Share icon ⎋</strong> at the bottom of Safari, then scroll down and select <strong className="text-white">'Add to Home Screen'</strong>.</>
+            )}
           </p>
           <button
             onClick={() => setShowIosTooltip(false)}
             className="w-full py-2 bg-slate-800 hover:bg-slate-750 text-slate-300 rounded font-semibold text-[11px]"
           >
-            Got it
+            {language === "ar" ? "حسناً، فهمت" : "Got it"}
           </button>
         </div>
       )}

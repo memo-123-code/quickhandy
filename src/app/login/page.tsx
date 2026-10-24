@@ -15,8 +15,15 @@ type Role = "CLIENT" | "PROVIDER" | "ADMIN";
 
 export default function LoginPage() {
   const router = useRouter();
-  const { language } = useLanguageStore();
-  const t = dictionary[language]?.auth?.login || dictionary.en.auth.login;
+  const language = useLanguageStore((state) => state.language);
+  const [mounted, setMounted] = useState(false);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const currentLang = mounted ? language : "ar";
+  const t = dictionary[currentLang]?.auth?.login || dictionary.ar.auth.login;
 
   const [role, setRole] = useState<Role>("CLIENT");
   const [email, setEmail] = useState("");
@@ -117,9 +124,13 @@ export default function LoginPage() {
             <span>{t.backToHome}</span>
           </Link>
 
-          <Link href="/" className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-300 hover:text-white transition-colors">
-            <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
-            <span>Quick<span className="text-blue-400">Handy</span></span>
+          <Link href="/" className="inline-flex items-center gap-2 group hover:opacity-90 transition-opacity">
+            <div className="p-1.5 bg-gradient-to-tr from-brand-blue-600 to-brand-orange-500 rounded-lg shadow-md group-hover:scale-105 transition-transform">
+              <Wrench className="w-3.5 h-3.5 text-white" />
+            </div>
+            <span className="text-sm font-extrabold tracking-tight text-white">
+              Quick<span className="text-brand-orange-500">Handy</span>
+            </span>
           </Link>
         </div>
         

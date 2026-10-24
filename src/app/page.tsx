@@ -6,7 +6,7 @@ import {
   Wrench, Shield, Zap, Clock, Star, Users, ArrowRight, 
   CheckCircle2, Droplet, Flashlight, Hammer, Wind, 
   Paintbrush, Grid, Tv, Flame, Layers, Radio, Sparkles,
-  Phone, MessageSquare, Navigation
+  Phone, MessageSquare, Navigation, HeartPulse, Pill
 } from "lucide-react";
 import { toast } from "sonner";
 import { useLanguageStore } from "@/store/useLanguageStore";
@@ -50,6 +50,8 @@ export default function LandingPage() {
     { name: "Gypsum Board", desc: "Ceiling design, drywalls, decorative plaster installations", icon: Layers, color: "text-sky-400" },
     { name: "Satellite Dish Tech", desc: "Receiver setup, dish alignment, signal tuning", icon: Radio, color: "text-emerald-400" },
     { name: "Cleaning Services", desc: "Deep home cleaning, post-construction cleaning", icon: Sparkles, color: "text-pink-400" },
+    { name: "Nursing", desc: "In-home nursing care, IV fluids, injections, wound care, elderly assistance", icon: HeartPulse, color: "text-rose-400" },
+    { name: "Pharmacy", desc: "Prescription delivery, OTC medications, medical supplies from local pharmacies", icon: Pill, color: "text-emerald-400" },
   ];
 
   return (

@@ -55,11 +55,37 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${outfit.variable} ${cairo.variable} dark`}>
+    <html lang="ar" dir="rtl" className={`${outfit.variable} ${cairo.variable} dark font-cairo`}>
       <head>
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="mobile-web-app-capable" content="yes" />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  var lang = 'ar';
+                  var stored = localStorage.getItem('language-storage');
+                  if (stored) {
+                    var parsed = JSON.parse(stored);
+                    if (parsed && parsed.state && parsed.state.language) {
+                      lang = parsed.state.language;
+                    }
+                  } else {
+                    var m = document.cookie.match(/app_lang=(ar|en)/);
+                    if (m) lang = m[1];
+                  }
+                  document.documentElement.lang = lang;
+                  document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+                  if (lang !== 'ar') {
+                    document.documentElement.classList.remove('font-cairo');
+                  }
+                } catch(e) {}
+              })();
+            `,
+          }}
+        />
       </head>
       <body className="font-sans antialiased text-slate-100 min-h-screen selection:bg-brand-blue-500 selection:text-white">
         <PwaRegister />

@@ -11,8 +11,15 @@ import LanguageSwitcher from "@/components/LanguageSwitcher";
 
 export default function SignupPage() {
   const router = useRouter();
-  const { language } = useLanguageStore();
-  const t = dictionary[language]?.auth?.signup || dictionary.en.auth.signup;
+  const language = useLanguageStore((state) => state.language);
+  const [mounted, setMounted] = useState(false);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const currentLang = mounted ? language : "ar";
+  const t = dictionary[currentLang]?.auth?.signup || dictionary.ar.auth.signup;
 
   const [role, setRole] = useState<"CLIENT" | "PROVIDER">("CLIENT");
   const [name, setName] = useState("");
@@ -261,11 +268,13 @@ export default function SignupPage() {
                       onChange={(e) => setCategory(e.target.value)}
                       className="w-full px-3 py-2.5 rounded-xl glass-input text-sm bg-slate-900"
                     >
-                      <option value="Plumbing">{language === "ar" ? "سباكة (سباك)" : "Plumbing (Plumber)"}</option>
-                      <option value="Electrical">{language === "ar" ? "كهرباء (كهربائي)" : "Electrical (Electrician)"}</option>
-                      <option value="Carpentry">{language === "ar" ? "نجارة (نجار)" : "Carpentry (Carpenter)"}</option>
-                      <option value="HVAC">{language === "ar" ? "تكييف وتبريد (فني تكييف)" : "HVAC (AC Technician)"}</option>
-                      <option value="Appliance Repair">{language === "ar" ? "صيانة أجهزة منزلية" : "Appliance Repair"}</option>
+                      <option value="Plumbing">{currentLang === "ar" ? "سباكة (سباك)" : "Plumbing (Plumber)"}</option>
+                      <option value="Electrical">{currentLang === "ar" ? "كهرباء (كهربائي)" : "Electrical (Electrician)"}</option>
+                      <option value="Carpentry">{currentLang === "ar" ? "نجارة (نجار)" : "Carpentry (Carpenter)"}</option>
+                      <option value="HVAC">{currentLang === "ar" ? "تكييف وتبريد (فني تكييف)" : "HVAC (AC Technician)"}</option>
+                      <option value="Appliance Repair">{currentLang === "ar" ? "صيانة أجهزة منزلية" : "Appliance Repair"}</option>
+                      <option value="Nursing">{currentLang === "ar" ? "خدمات تمريض ورعاية صحية (تمريض منزلي)" : "Home Nursing & Healthcare"}</option>
+                      <option value="Pharmacy">{currentLang === "ar" ? "صيدليات ومستلزمات علاجية (صيدلي)" : "Pharmacy & Medical Supplies"}</option>
                     </select>
                   </div>
 

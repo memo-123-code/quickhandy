@@ -21,13 +21,19 @@ export const dictionary = {
         "Moving & Packing": "Moving & Packing",
         "Aluminum & Glass": "Aluminum & Glass",
         "Pest Control": "Pest Control",
-        "Security & CCTV": "Security & CCTV"
+        "Security & CCTV": "Security & CCTV",
+        "Nursing": "Nursing & Healthcare",
+        "Pharmacy": "Pharmacy & Medicine"
       }
     },
     landingPage: {
       nav: {
         signIn: "Sign In",
-        register: "Register"
+        register: "Register",
+        signOut: "Sign Out",
+        dashboard: "Dashboard",
+        profile: "Profile",
+        installApp: "Install App"
       },
       hero: {
         badge: "On-Demand Home Services Dispatch",
@@ -70,7 +76,9 @@ export const dictionary = {
           "Blacksmith / Welder": "Metal doors, window bars, gates, welding repairs",
           "Gypsum Board": "Ceiling design, drywalls, decorative plaster installations",
           "Satellite Dish Tech": "Receiver setup, dish alignment, signal tuning",
-          "Cleaning Services": "Deep home cleaning, post-construction cleaning"
+          "Cleaning Services": "Deep home cleaning, post-construction cleaning",
+          "Nursing": "In-home nursing care, IV fluids, injections, wound care, elderly assistance",
+          "Pharmacy": "Prescription delivery, OTC medications, medical supplies from local pharmacies"
         }
       },
       footer: {
@@ -152,13 +160,19 @@ export const dictionary = {
         "Moving & Packing": "نقل عفش وتغليف",
         "Aluminum & Glass": "ألوميتال وزجاج",
         "Pest Control": "مكافحة حشرات",
-        "Security & CCTV": "كاميرات مراقبة وأنظمة أمنية"
+        "Security & CCTV": "كاميرات مراقبة وأنظمة أمنية",
+        "Nursing": "خدمات تمريض ورعاية صحية",
+        "Pharmacy": "صيدليات وتوصيل أدوية"
       }
     },
     landingPage: {
       nav: {
         signIn: "تسجيل الدخول",
-        register: "إنشاء حساب"
+        register: "إنشاء حساب",
+        signOut: "تسجيل الخروج",
+        dashboard: "لوحة التحكم",
+        profile: "الملف الشخصي",
+        installApp: "تثبيت التطبيق"
       },
       hero: {
         badge: "خدمات منزلية عند الطلب",
@@ -201,7 +215,9 @@ export const dictionary = {
           "Blacksmith / Welder": "الأبواب المعدنية، الحماية، البوابات، اللحام",
           "Gypsum Board": "تصميم الأسقف، الجدران الجافة، الديكورات",
           "Satellite Dish Tech": "إعداد الرسيفر، ضبط الدش، تقوية الإشارة",
-          "Cleaning Services": "التنظيف العميق، التنظيف بعد التشطيب"
+          "Cleaning Services": "التنظيف العميق، التنظيف بعد التشطيب",
+          "Nursing": "تمريض منزلي، تركيب محاليل وحقن، غيار جروح، ورعاية كبار السن",
+          "Pharmacy": "توصيل سريع للروشتات والأدوية والمستلزمات الطبية من أقرب صيدلية"
         }
       },
       footer: {

@@ -9,7 +9,7 @@ import {
   MapPin, Clock, Calendar, ShieldCheck, Star, Phone, 
   MessageSquare, AlertCircle, X, Search, LogOut, CheckCircle, Navigation, Crosshair,
   Paintbrush, Grid, Tv, Flame, Layers, Radio, Sparkles, User,
-  Zap, Snowflake, LayoutGrid, WashingMachine, Anvil, Satellite, Truck, AppWindow, Bug, Cctv, Loader2, Home
+  Zap, Snowflake, LayoutGrid, WashingMachine, Anvil, Satellite, Truck, AppWindow, Bug, Cctv, Loader2, Home, HeartPulse, Pill
 } from "lucide-react";
 import dynamic from "next/dynamic";
 import { toast } from "sonner";
@@ -146,6 +146,8 @@ export default function ClientDashboard() {
       "Gypsum Board": { min: 120, max: 210 },
       "Satellite Dish Tech": { min: 80, max: 150 },
       "Cleaning Services": { min: 60, max: 120 },
+      "Nursing": { min: 100, max: 250 },
+      "Pharmacy": { min: 30, max: 80 },
     };
 
     const rateInfo = egpRates[service] || { min: 100, max: 200 };
@@ -170,6 +172,8 @@ export default function ClientDashboard() {
     { id: "Gypsum Board", name: "Gypsum Board", icon: Layers, color: "text-sky-500", bg: "bg-sky-500/10", border: "border-sky-500/20" },
     { id: "Satellite Dish Tech", name: "Satellite Tech", icon: Satellite, color: "text-emerald-500", bg: "bg-emerald-500/10", border: "border-emerald-500/20" },
     { id: "Cleaning Services", name: "Cleaning Services", icon: Sparkles, color: "text-pink-500", bg: "bg-pink-500/10", border: "border-pink-500/20" },
+    { id: "Nursing", name: "Nursing", icon: HeartPulse, color: "text-rose-400", bg: "bg-rose-500/10", border: "border-rose-500/20" },
+    { id: "Pharmacy", name: "Pharmacy", icon: Pill, color: "text-emerald-400", bg: "bg-emerald-500/10", border: "border-emerald-500/20" },
     { id: "Moving & Packing", name: "Moving & Packing", icon: Truck, color: "text-yellow-500", bg: "bg-yellow-500/10", border: "border-yellow-500/20" },
     { id: "Aluminum & Glass", name: "Aluminum & Glass", icon: AppWindow, color: "text-cyan-500", bg: "bg-cyan-500/10", border: "border-cyan-500/20" },
     { id: "Pest Control", name: "Pest Control", icon: Bug, color: "text-lime-500", bg: "bg-lime-500/10", border: "border-lime-500/20" },
@@ -609,9 +613,13 @@ export default function ClientDashboard() {
               <div className="p-4 rounded-xl bg-slate-950 border border-slate-850 flex items-start gap-3">
                 <ShieldCheck className="w-5 h-5 text-brand-orange-500 shrink-0 mt-0.5" />
                 <div>
-                  <h4 dir="auto" className="text-xs font-bold text-slate-200">QuickHandy Safety Guarantee</h4>
+                  <h4 dir="auto" className="text-xs font-bold text-slate-200">
+                    {language === "ar" ? "ضمان الأمان والموثوقية من QuickHandy" : "QuickHandy Safety Guarantee"}
+                  </h4>
                   <p dir="auto" className="text-[10px] text-slate-400 mt-1 leading-relaxed">
-                    All service providers are fully background-checked, licensed, and insured. Your satisfaction is guaranteed on every task.
+                    {language === "ar" 
+                      ? "جميع مقدمي الخدمات يخضعون لفحص السجل الجنائي والتحقق من الهوية والمهنية. نضمن لك جودة العمل ورضاك التام."
+                      : "All service providers are fully background-checked, licensed, and insured. Your satisfaction is guaranteed on every task."}
                   </p>
                 </div>
               </div>
